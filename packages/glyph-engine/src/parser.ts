@@ -374,11 +374,19 @@ export function compileSemantics(input: CompileSemanticsInput): CompiledSemantic
       nodes.push(node);
       if (node.kind !== "elided") readingOrder.push(nodeId);
 
-      // One mapping per source lexeme. The host lexeme carries the node; bound
-      // modifier lexemes reference it through `boundTo`.
+      // One mapping per source lexeme. A glyph draft's trailing lexemes are the
+      // modifier words bound to it, and reference it through `boundTo`. A
+      // literal-escape draft's trailing lexemes are more unsupported words that
+      // merged into the same cartouche, and stay classified as unsupported —
+      // labelling them "modifier" hid them from the leak scanner, which
+      // collects literal payload text by classification.
+      const continuationClass: TokenClassification =
+        draft.node.kind === "literal-escape" ? "unsupported" : "modifier";
+
       draft.lexemes.forEach((lexeme, lexemeIndex) => {
         const isHost = lexemeIndex === 0;
         counters.payload += isHost ? 0 : 1;
+        const classification = isHost ? draft.classification : continuationClass;
         tokenMappings.push(
           Object.freeze({
             payloadRef: isHost ? payloadRef : ordinalId("p", counters.payload),
@@ -388,8 +396,8 @@ export function compileSemantics(input: CompileSemanticsInput): CompiledSemantic
             sourceText: lexeme.text,
             sourceStart: lexeme.start,
             sourceEnd: lexeme.end,
-            classification: isHost ? draft.classification : "modifier",
-            ...(isHost ? {} : { boundTo: nodeId }),
+            classification,
+            ...(isHost || classification !== "modifier" ? {} : { boundTo: nodeId }),
           }),
         );
       });

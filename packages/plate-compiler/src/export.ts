@@ -184,7 +184,21 @@ export function exportPrivate(
     productionPngSha256?: string;
   }>,
 ): PrivateExport {
-  const clauseSheet = buildClauseSheet(plate);
+  // Built with the public artifact hashes the caller supplied, so the sheet the
+  // manifest digests is byte-identical to the sheet callers write. Digesting a
+  // sheet built without them made `verifyArtifactDigests` report tampering on
+  // an untampered pair.
+  const clauseSheet = buildClauseSheet(plate, {
+    ...(publicArtifacts?.canonicalSvgSha256 === undefined
+      ? {}
+      : { canonicalSvg: publicArtifacts.canonicalSvgSha256 }),
+    ...(publicArtifacts?.printSvgSha256 === undefined
+      ? {}
+      : { printSvg: publicArtifacts.printSvgSha256 }),
+    ...(publicArtifacts?.productionPngSha256 === undefined
+      ? {}
+      : { productionPng: publicArtifacts.productionPngSha256 }),
+  });
   const clauseSheetMarkdown = renderClauseSheetMarkdown(clauseSheet);
 
   const manifest: PrivateEncodingManifest = Object.freeze({

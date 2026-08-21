@@ -122,6 +122,11 @@ describe("Gate 6: print validation", () => {
       expect(placement.bounds.x + placement.bounds.width).toBeLessThanOrEqual(
         safeArea.x + safeArea.width + 1,
       );
+      // The bottom edge matters as much as the others: without it a glyph
+      // pushed off the foot of the plate satisfies every remaining assertion.
+      expect(placement.bounds.y + placement.bounds.height).toBeLessThanOrEqual(
+        safeArea.y + safeArea.height + 1,
+      );
     }
   });
 

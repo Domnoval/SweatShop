@@ -37,10 +37,19 @@ export const CORRUPTION_BANDS: readonly CorruptionBand[] = Object.freeze([
   }),
 ]);
 
+/**
+ * The band a normalized level falls in.
+ *
+ * The declared ranges are inclusive integer pairs (0–15, 16–35, …), so testing
+ * `ui >= lower && ui <= upper` leaves every fractional value between two bands
+ * matching nothing — and a loop that falls through to its last element reports
+ * corruption 15.5 as an Event Field. Each band therefore runs up to where the
+ * next one starts, which is total over the whole range.
+ */
 export function corruptionBand(level: number): CorruptionBand {
   const ui = clamp01(level) * 100;
-  for (const band of CORRUPTION_BANDS) {
-    if (ui >= band.uiRange[0] && ui <= band.uiRange[1]) return band;
+  for (let index = 0; index < CORRUPTION_BANDS.length - 1; index += 1) {
+    if (ui < CORRUPTION_BANDS[index + 1]!.uiRange[0]) return CORRUPTION_BANDS[index]!;
   }
   return CORRUPTION_BANDS[CORRUPTION_BANDS.length - 1]!;
 }

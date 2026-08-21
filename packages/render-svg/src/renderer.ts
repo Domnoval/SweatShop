@@ -205,24 +205,17 @@ export function renderScene(input: SceneInput): RenderedScene {
     }
   }
 
-  // Permutation: the node at `permutedOrder[i]` takes the layout slot that
-  // `originalOrder[i]` authored. The canonical AST is untouched; only which
-  // glyph sits where changes.
+  // Permutation is already resolved into the layout by `applyPermutations`, so
+  // every placement here is final: it carries the glyph's own geometry and its
+  // own modifier marks, positioned where that glyph actually prints. The
+  // renderer deliberately does no slot remapping — doing it here would mean
+  // reading the destination slot's modifier stack and painting another glyph's
+  // marks.
   const placementByNode = new Map(layout.placements.map((placement) => [placement.nodeId, placement]));
-  const slotFor = new Map<NodeId, PlacedGlyph>(placementByNode);
-  for (const operation of corruption.operations) {
-    if (operation.kind !== "reversible-permutation") continue;
-    operation.originalOrder.forEach((originalId, index) => {
-      const occupant = operation.permutedOrder[index];
-      const slot = placementByNode.get(originalId);
-      if (occupant !== undefined && slot !== undefined) slotFor.set(occupant, slot);
-    });
-  }
-
-  const renderList = layout.placements
-    .map((placement) => ({ nodeId: placement.nodeId, slot: slotFor.get(placement.nodeId)! }))
-    .filter((entry) => entry.slot !== undefined)
-    .sort((a, b) => a.slot.readingIndex - b.slot.readingIndex || (a.nodeId < b.nodeId ? -1 : 1));
+  const renderList = [...layout.placements].sort(
+    (a, b) =>
+      a.readingIndex - b.readingIndex || (a.nodeId < b.nodeId ? -1 : a.nodeId > b.nodeId ? 1 : 0),
+  );
 
   // ── Canonical payload ───────────────────────────────────────────────────
   const payloadChildren: string[] = [];
@@ -233,15 +226,14 @@ export function renderScene(input: SceneInput): RenderedScene {
   const omittedNodeIds: NodeId[] = [];
   let modifierCounter = 0;
 
-  for (const entry of renderList) {
-    const { nodeId, slot } = entry;
+  for (const slot of renderList) {
+    const nodeId = slot.nodeId;
     if (dropped.has(nodeId)) {
       omittedNodeIds.push(nodeId);
       continue;
     }
 
-    const source = placementByNode.get(nodeId)!;
-    const geometryId = substitution.get(nodeId) ?? source.geometryId;
+    const geometryId = substitution.get(nodeId) ?? slot.geometryId;
     const record = geometry.get(geometryId);
     const ink = geometry.inkBounds(geometryId);
     const inkCentre = { x: ink.x + ink.width / 2, y: ink.y + ink.height / 2 };
@@ -250,18 +242,26 @@ export function renderScene(input: SceneInput): RenderedScene {
     const matrix = glyphMatrix(slot, inkCentre, mirrored.get(nodeId), offset.x, offset.y);
     const mask = occlusion.get(nodeId);
 
-    const attributes: Attribute[] = [
-      ["id", nodeId],
-      ["transform", formatMatrix(matrix)],
-    ];
-    if (mask !== undefined) attributes.push(["mask", `url(#${mask.maskId})`]);
+    const glyphGroup = group(
+      [
+        ["id", nodeId],
+        ["transform", formatMatrix(matrix)],
+      ],
+      record.paths.map((path) => selfClosing("path", pathAttributes(path, palette.ink))),
+      0,
+    );
 
+    // A `mask` resolves in the user space established for the element that
+    // references it — which, on an element carrying its own `transform`, is the
+    // glyph's local viewBox space, not plate space. The occlusion shapes are
+    // computed from plate-space bounds, so referencing the mask from the
+    // transformed group would scale and translate them off the glyph entirely
+    // and conceal nothing. Carrying the mask on an untransformed wrapper keeps
+    // the mask's user space equal to plate space, where the shapes already are.
     payloadChildren.push(
-      group(
-        attributes,
-        record.paths.map((path) => selfClosing("path", pathAttributes(path, palette.ink))),
-        0,
-      ),
+      mask === undefined
+        ? glyphGroup
+        : group([["mask", `url(#${mask.maskId})`]], [glyphGroup], 0),
     );
     renderedNodeIds.push(nodeId);
 
@@ -383,7 +383,7 @@ export function renderScene(input: SceneInput): RenderedScene {
   // transforms without disturbing the payload layer.
   const transformMarks: string[] = [];
   for (const [nodeId, axis] of [...mirrored.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
-    const slot = slotFor.get(nodeId);
+    const slot = placementByNode.get(nodeId);
     if (slot === undefined) continue;
     const b = slot.bounds;
     const d =

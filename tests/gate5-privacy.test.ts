@@ -132,7 +132,10 @@ describe("Gate 5: privacy scan", () => {
       ["SOURCE_PHRASE", `<svg>${SECRET_PHRASE}</svg>`],
       ["SEED", `<svg>${SECRET_SEED}</svg>`],
       ["ABSOLUTE_POSIX_PATH", '<svg d="/home/artist/plates/x.svg"/>'],
-      ["WINDOWS_PATH", '<svg d="C:\\\\Users\\\\artist\\\\plate.svg"/>'],
+      ["WINDOWS_PATH", "<svg>C:\\Users\\artist\\plate.svg</svg>"],
+      // The UNC form is a separate branch of the pattern; exercising only the
+      // drive-letter form hid that it could never match a real network path.
+      ["WINDOWS_PATH", "<svg>\\\\studio-mac\\plates\\master.svg</svg>"],
       ["FILE_URL", '<svg><image href="file:///tmp/x.png"/></svg>'],
       ["ENVIRONMENT_VARIABLE", "<svg>AWS_SECRET_ACCESS_KEY</svg>"],
       ["TIMESTAMP", "<svg>2026-08-21T09:15:00Z</svg>"],

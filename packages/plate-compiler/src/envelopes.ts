@@ -51,13 +51,20 @@ export function buildEnvelopes(
         node.kind === "glyph"
           ? node.modifierIds.map((modifierId) => {
               const modifierRecord = grammar.modifier(modifierId);
+              const markRecord = geometry.get(modifierRecord.geometryId);
+              const markInk = geometry.inkBounds(modifierRecord.geometryId);
               return Object.freeze({
                 modifierId,
                 geometryId: modifierRecord.geometryId,
-                viewBox: geometry.get(modifierRecord.geometryId).viewBox,
-                inkBounds: geometry.inkBounds(modifierRecord.geometryId),
+                viewBox: markRecord.viewBox,
+                inkBounds: markInk,
                 slotIndex: modifierRecord.slotIndex,
                 scale: modifierRecord.scale,
+                // Measured from the mark's own paths. A modifier drawn at
+                // stroke 5 in a 40-unit box is far finer, relative to the plate,
+                // than its host drawn at stroke 8 in a 100-unit box.
+                minStrokeViewBoxUnits: narrowestStroke(markRecord.paths, markInk),
+                minimumPrintStrokePt: markRecord.minimumPrintStrokePt,
               });
             })
           : [];

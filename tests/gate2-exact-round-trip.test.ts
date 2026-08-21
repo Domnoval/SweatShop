@@ -18,6 +18,7 @@ import {
   preserveSourcePayload,
   recoverSourceText,
 } from "@studio137/plate-core";
+import { glyphNodes } from "@studio137/glyph-engine";
 import { compilePlate, exportPrivate } from "@studio137/plate-compiler";
 import { decodeExact, decodePlate, openManifest, sealManifest } from "@studio137/private-manifest";
 
@@ -152,22 +153,32 @@ describe("Gate 2: exact round trip", () => {
   it("recovers the authored reading order after a permutation", () => {
     // A high corruption level in exact mode reorders clauses; the manifest
     // records the original, so the reading is recoverable.
+    const phrase = "not signal all body threshold very witness";
     const plate = compilePlate(
       requestFor({
-        phrase: "signal survives body void structure threshold witness",
-        seed: "permute-me",
+        phrase,
+        seed: "s4",
         outputSize: OUTPUT_PRESETS["poster-24x36"],
-        density: 20,
+        density: 30,
         corruptionLevel: 75,
+        layoutFamily: "clause-columns",
         mode: "exact",
       }),
     );
-    const decoded = decodePlate(openManifest(exportPrivate(plate, key).container, key));
-    expect(decoded.phrase).toBe("signal survives body void structure threshold witness");
 
     const permutations = plate.presentation.corruption.operations.filter(
       (operation) => operation.kind === "reversible-permutation",
     );
+    // Guard the guard: without this, a fixture that stops permuting turns the
+    // loop below into a no-op and the test passes while recovery is broken.
+    expect(permutations.length).toBeGreaterThan(0);
+    expect(permutations.some((p) => p.permutedOrder.some((id, i) => id !== p.originalOrder[i]))).toBe(
+      true,
+    );
+
+    const decoded = decodePlate(openManifest(exportPrivate(plate, key).container, key));
+    expect(decoded.phrase).toBe(phrase);
+
     for (const permutation of permutations) {
       expect(decoded.readingOrder[permutation.clauseIndex]).toEqual([
         ...permutation.originalOrder,
@@ -175,10 +186,41 @@ describe("Gate 2: exact round trip", () => {
     }
   });
 
-  it("refuses to seal an exact-mode plate carrying an irreversible site", () => {
-    // Exact mode rejects destructive operations at plan time, so a high
-    // corruption level simply produces no lossy operations rather than a plate
-    // that claims exactness it cannot deliver.
+  it("keeps a permuted glyph's own modifier marks attached to it", () => {
+    // A permutation exchanges positions, never identity. Rendering the
+    // destination slot's modifier stack would detach authored marks from their
+    // root and re-attach them to whichever glyph moved in.
+    const plate = compilePlate(
+      requestFor({
+        phrase: "not signal all body threshold very witness",
+        seed: "s4",
+        outputSize: OUTPUT_PRESETS["poster-24x36"],
+        density: 30,
+        corruptionLevel: 75,
+        layoutFamily: "clause-columns",
+        mode: "exact",
+      }),
+    );
+    expect(
+      plate.presentation.corruption.operations.some((o) => o.kind === "reversible-permutation"),
+    ).toBe(true);
+
+    const placed = new Map(
+      plate.presentation.layout.placements.map((placement) => [placement.nodeId, placement]),
+    );
+    let withMarks = 0;
+    for (const node of glyphNodes(plate.ast)) {
+      const placement = placed.get(node.nodeId);
+      expect(placement, node.nodeId).toBeDefined();
+      expect([...placement!.modifiers.map((m) => m.modifierId)].sort()).toEqual(
+        [...node.modifierIds].sort(),
+      );
+      if (node.modifierIds.length > 0) withMarks += 1;
+    }
+    expect(withMarks).toBeGreaterThan(0);
+  });
+
+  it("plans no destructive operation in exact mode even at maximum corruption", () => {
     const plate = compilePlate(
       requestFor({
         phrase: "signal survives body",
@@ -193,5 +235,44 @@ describe("Gate 2: exact round trip", () => {
     expect(
       plate.presentation.corruption.corruptionSites.every((site) => site.reversible),
     ).toBe(true);
+  });
+
+  it("refuses to decode a sealed manifest that claims exact mode over an irreversible site", () => {
+    // Forge the manifest the planner would never emit, seal it for real, and
+    // confirm the decoder rejects it. Asserting only on compilePlate's output
+    // proved nothing about the decoder's guard, which is what protects a
+    // hand-edited or downgraded manifest.
+    const plate = compilePlate(
+      requestFor({
+        phrase: "signal survives body",
+        seed: "forged",
+        outputSize: OUTPUT_PRESETS["poster-24x36"],
+        density: 20,
+        corruptionLevel: 40,
+        mode: "exact",
+      }),
+    );
+    const honest = exportPrivate(plate, key).manifest;
+    const forged = {
+      ...honest,
+      corruptionSites: [
+        ...honest.corruptionSites,
+        {
+          operationId: "op999999",
+          kind: "lossy-payload" as const,
+          nodeIds: ["g000001"] as readonly string[],
+          clauseIndex: 0,
+          reversible: false,
+        },
+      ],
+    };
+
+    const reopened = openManifest(sealManifest(forged, key), key);
+    expect(() => decodePlate(reopened)).toThrowError(PlateError);
+    try {
+      decodePlate(reopened);
+    } catch (error) {
+      expect((error as PlateError).code).toBe("EXACT_MODE_VIOLATION");
+    }
   });
 });

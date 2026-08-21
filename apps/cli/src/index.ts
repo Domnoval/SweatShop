@@ -26,13 +26,11 @@ import {
 } from "@studio137/plate-core";
 import {
   artifactFilenames,
-  buildClauseSheet,
   buildTranslationCard,
   compilePlate,
   exportPrivate,
   exportProductionPng,
   exportPublic,
-  renderClauseSheetMarkdown,
 } from "@studio137/plate-compiler";
 import {
   decodePlate,
@@ -45,21 +43,55 @@ import { GOLDEN_BASENAME, GOLDEN_REQUEST } from "./golden.js";
 
 type Options = Readonly<Record<string, string | boolean>>;
 
+/** Options that never take a value. Everything else requires one. */
+const BOOLEAN_FLAGS: ReadonlySet<string> = new Set(["no-png", "help"]);
+
+/**
+ * Parse `--name value`, `--name=value`, and boolean flags.
+ *
+ * A value is never inferred to be missing just because it begins with `--`: a
+ * phrase is arbitrary text, and "--THE SIGNAL--" is a phrase a plate should be
+ * able to carry. Treating it as a flag silently dropped both the value and the
+ * option, so `--phrase "--THE SIGNAL--"` failed claiming no phrase was given.
+ * A genuinely missing value is an explicit error rather than a silent default,
+ * and `--name=value` is always available when a value is ambiguous.
+ */
 function parseArgs(argv: readonly string[]): Readonly<{ command: string; options: Options }> {
   const [command = "help", ...rest] = argv;
   const options: Record<string, string | boolean> = {};
+
   for (let index = 0; index < rest.length; index += 1) {
     const token = rest[index]!;
     if (!token.startsWith("--")) continue;
-    const name = token.slice(2);
-    const next = rest[index + 1];
-    if (next === undefined || next.startsWith("--")) {
-      options[name] = true;
-    } else {
-      options[name] = next;
-      index += 1;
+
+    const body = token.slice(2);
+    const equals = body.indexOf("=");
+    if (equals >= 0) {
+      options[body.slice(0, equals)] = body.slice(equals + 1);
+      continue;
     }
+
+    if (BOOLEAN_FLAGS.has(body)) {
+      options[body] = true;
+      continue;
+    }
+
+    const next = rest[index + 1];
+    if (next === undefined) {
+      throw new PlateError("INVALID_REQUEST", `--${body} requires a value`);
+    }
+    // Only a token that names another known option is treated as a missing
+    // value; anything else is taken literally, so values may start with "--".
+    if (next.startsWith("--") && BOOLEAN_FLAGS.has(next.slice(2))) {
+      throw new PlateError(
+        "INVALID_REQUEST",
+        `--${body} requires a value (use --${body}=<value> if the value begins with "--")`,
+      );
+    }
+    options[body] = next;
+    index += 1;
   }
+
   return { command, options };
 }
 
@@ -198,15 +230,10 @@ function runCompile(request: PlateRequest, options: Options, basename?: string):
     });
     masterKey.fill(0);
 
-    const sheet = buildClauseSheet(plate, {
-      canonicalSvg: publicExport.canonicalSvgSha256,
-      printSvg: publicExport.printSvgSha256,
-      ...(productionPngSha256 === undefined ? {} : { productionPng: productionPngSha256 }),
-    });
-
+    // Write the exact sheet the manifest digested, rather than rebuilding one.
     written.push(
       writeArtifact(directory, name("privateManifest"), privateExport.container),
-      writeArtifact(directory, name("clauseSheet"), renderClauseSheetMarkdown(sheet)),
+      writeArtifact(directory, name("clauseSheet"), privateExport.clauseSheetMarkdown),
     );
   }
 

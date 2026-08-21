@@ -31,6 +31,14 @@ export type ModifierEnvelope = Readonly<{
   slotIndex: number;
   /** Size relative to the host root. */
   scale: number;
+  /**
+   * Narrowest stroke in *this mark*, in its own viewBox units.
+   *
+   * A modifier is drawn at its own weight, not the host's, so print safety has
+   * to measure it against its own geometry.
+   */
+  minStrokeViewBoxUnits: number;
+  minimumPrintStrokePt: number;
 }>;
 
 export type EnvelopeKind = "glyph" | "separator" | "literal-escape";

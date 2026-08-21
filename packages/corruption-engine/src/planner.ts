@@ -57,6 +57,13 @@ export type CorruptibleNode = Readonly<{
   coreAnchor: boolean;
 }>;
 
+/** One clause's slot exchange: `permutedOrder[i]` takes the slot `originalOrder[i]` authored. */
+export type PlannedPermutation = Readonly<{
+  clauseIndex: number;
+  originalOrder: readonly NodeId[];
+  permutedOrder: readonly NodeId[];
+}>;
+
 export type PlanCorruptionInput = Readonly<{
   nodes: readonly CorruptibleNode[];
   layout: LayoutPlan;
@@ -103,6 +110,53 @@ function selectEligible(
       return rng.nextBool(Math.min(1, rate * factor));
     }),
   );
+}
+
+/**
+ * Which clauses permute, and into what order.
+ *
+ * Pure and side-effect free so it can be called twice with identical results:
+ * once by the compiler, to relocate glyphs before surface corruption is planned
+ * against their final positions, and once inside `planCorruption`, to record the
+ * operation and its inverse. `fork` derives from a stream's immutable digest
+ * rather than its draw position, so both calls see the same sequence.
+ */
+export function computePermutations(
+  nodes: readonly CorruptibleNode[],
+  level: number,
+  rng: DeterministicStream,
+): readonly PlannedPermutation[] {
+  const permutationStream = rng.fork("permutation");
+  const permutations: PlannedPermutation[] = [];
+  const clauseIndices = [...new Set(nodes.map((node) => node.clauseIndex))].sort((a, b) => a - b);
+
+  for (const clauseIndex of clauseIndices) {
+    const clauseNodes = nodes.filter((node) => node.clauseIndex === clauseIndex);
+    const order = clauseNodes.map((node) => node.nodeId);
+
+    if (level < INTERRUPTED_THRESHOLD || order.length < 2) continue;
+    const chance = (level - INTERRUPTED_THRESHOLD) / (1 - INTERRUPTED_THRESHOLD);
+    if (!permutationStream.nextBool(chance * 0.7)) continue;
+
+    // Anchors keep their slots so the clause retains a fixed point to read from.
+    const movable = clauseNodes.filter((node) => protectionFactor(node, level) > 0);
+    if (movable.length < 2) continue;
+
+    const movableIds = movable.map((node) => node.nodeId);
+    const shuffled = permutationStream.shuffle(movableIds);
+    if (shuffled.every((id, index) => id === movableIds[index])) continue;
+
+    const swapMap = new Map(movableIds.map((id, index) => [id, shuffled[index]!]));
+    permutations.push(
+      Object.freeze({
+        clauseIndex,
+        originalOrder: Object.freeze([...order]),
+        permutedOrder: Object.freeze(order.map((id) => swapMap.get(id) ?? id)),
+      }),
+    );
+  }
+
+  return Object.freeze(permutations);
 }
 
 export function planCorruption(input: PlanCorruptionInput): CorruptionPlan {
@@ -211,48 +265,39 @@ export function planCorruption(input: PlanCorruptionInput): CorruptionPlan {
   // ── Reversible permutation ──────────────────────────────────────────────
   // Nodes swap the layout slots they occupy. The authored order is recorded, so
   // the reading is recoverable even though the plate now reads out of sequence.
-  const permutationStream = rng.fork("permutation");
+  //
+  // The selection itself lives in `computePermutations` so the compiler can
+  // apply it to the layout *before* masks and decoys are planned. Occlusion
+  // geometry is derived from placement bounds, and a mask computed against a
+  // glyph's pre-permutation position conceals empty field once that glyph moves.
   const effectiveReadingOrder: Record<number, readonly NodeId[]> = {};
-  const clauseIndices = [...new Set(nodes.map((node) => node.clauseIndex))].sort((a, b) => a - b);
+  for (const clauseIndex of [...new Set(nodes.map((node) => node.clauseIndex))].sort(
+    (a, b) => a - b,
+  )) {
+    effectiveReadingOrder[clauseIndex] = Object.freeze(
+      nodes.filter((node) => node.clauseIndex === clauseIndex).map((node) => node.nodeId),
+    );
+  }
 
-  for (const clauseIndex of clauseIndices) {
-    const clauseNodes = nodes.filter((node) => node.clauseIndex === clauseIndex);
-    const order = clauseNodes.map((node) => node.nodeId);
-    effectiveReadingOrder[clauseIndex] = Object.freeze([...order]);
-
-    if (level < INTERRUPTED_THRESHOLD || order.length < 2) continue;
-    const chance = (level - INTERRUPTED_THRESHOLD) / (1 - INTERRUPTED_THRESHOLD);
-    if (!permutationStream.nextBool(chance * 0.7)) continue;
-
-    // Anchors keep their slots so the clause retains a fixed point to read from.
-    const movable = clauseNodes.filter((node) => protectionFactor(node, level) > 0);
-    if (movable.length < 2) continue;
-
-    const movableIds = movable.map((node) => node.nodeId);
-    const shuffled = permutationStream.shuffle(movableIds);
-    if (shuffled.every((id, index) => id === movableIds[index])) continue;
-
-    const swapMap = new Map(movableIds.map((id, index) => [id, shuffled[index]!]));
-    const permuted = order.map((id) => swapMap.get(id) ?? id);
-
+  for (const permutation of computePermutations(nodes, level, rng)) {
     const operationId = nextOperationId();
     operations.push(
       Object.freeze({
         kind: "reversible-permutation" as const,
         operationId,
-        clauseIndex,
-        originalOrder: Object.freeze([...order]),
-        permutedOrder: Object.freeze(permuted),
+        clauseIndex: permutation.clauseIndex,
+        originalOrder: permutation.originalOrder,
+        permutedOrder: permutation.permutedOrder,
       }),
     );
     inverseOperations.push(
       Object.freeze({
         operationId,
-        appliesTo: Object.freeze([...order]),
+        appliesTo: permutation.originalOrder,
         inverse: Object.freeze({
           kind: "restore-order" as const,
-          clauseIndex,
-          originalOrder: Object.freeze([...order]),
+          clauseIndex: permutation.clauseIndex,
+          originalOrder: permutation.originalOrder,
         }),
       }),
     );
@@ -260,12 +305,12 @@ export function planCorruption(input: PlanCorruptionInput): CorruptionPlan {
       Object.freeze({
         operationId,
         kind: "reversible-permutation" as const,
-        nodeIds: Object.freeze([...order]),
-        clauseIndex,
+        nodeIds: permutation.originalOrder,
+        clauseIndex: permutation.clauseIndex,
         reversible: true,
       }),
     );
-    effectiveReadingOrder[clauseIndex] = Object.freeze(permuted);
+    effectiveReadingOrder[permutation.clauseIndex] = permutation.permutedOrder;
   }
 
   // ── Recorded occlusion ──────────────────────────────────────────────────

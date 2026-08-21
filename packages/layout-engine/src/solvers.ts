@@ -34,9 +34,11 @@ import {
 const TAU = Math.PI * 2;
 
 /** Fraction of placements permitted to overlap, by density. */
-function collisionLimit(density: number): number {
+export function collisionLimitFor(density: number): number {
   return 0.05 + density * 0.35;
 }
+
+const collisionLimit = collisionLimitFor;
 
 function envelopeMap(nodes: readonly GlyphEnvelope[]): ReadonlyMap<string, GlyphEnvelope> {
   return new Map(nodes.map((node) => [node.nodeId, node]));

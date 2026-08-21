@@ -70,10 +70,18 @@ export const DENSITY_BANDS: readonly DensityBand[] = Object.freeze([
   }),
 ]);
 
+/**
+ * The band a normalized density falls in.
+ *
+ * The declared ranges are inclusive integer pairs (0–20, 21–45, …), so a
+ * fractional value such as 20.5 matches no band, and a loop that falls through
+ * to its last element would label an Inscription plate a Black Field. Each band
+ * therefore runs up to where the next one starts.
+ */
 export function densityBand(density: number): DensityBand {
   const ui = clamp01(density) * 100;
-  for (const band of DENSITY_BANDS) {
-    if (ui >= band.uiRange[0] && ui <= band.uiRange[1]) return band;
+  for (let index = 0; index < DENSITY_BANDS.length - 1; index += 1) {
+    if (ui < DENSITY_BANDS[index + 1]!.uiRange[0]) return DENSITY_BANDS[index]!;
   }
   return DENSITY_BANDS[DENSITY_BANDS.length - 1]!;
 }

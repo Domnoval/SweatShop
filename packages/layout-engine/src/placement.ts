@@ -21,10 +21,25 @@ import {
   type ResolvedOutput,
 } from "@studio137/plate-core";
 
-import type { GlyphEnvelope, PlacedGlyph, PlacedModifier } from "./types.js";
+import type { GlyphEnvelope, LayoutPlan, PlacedGlyph, PlacedModifier } from "./types.js";
 
 /** Points per inch in the SVG/PDF coordinate convention. */
 const POINTS_PER_INCH = 72;
+
+/**
+ * Relative slack when comparing a stroke against its print minimum.
+ *
+ * The solver sizes a glyph at exactly the safety floor, then `placeGlyph`
+ * quantizes the scale to six decimals. That rounding can shave a fraction of a
+ * micro-point off, so an exact `<` comparison rejects the very layout the
+ * solver just produced — reporting "0.750pt < 0.75pt". The slack is far below
+ * any physical significance and exists purely to absorb the quantization step.
+ */
+const STROKE_TOLERANCE = 1e-6;
+
+function belowMinimum(points: number, minimum: number): boolean {
+  return points < minimum * (1 - STROKE_TOLERANCE);
+}
 
 export function strokePoints(
   strokeViewBoxUnits: number,
@@ -192,7 +207,7 @@ export function enforceSafety(
     if (envelope === undefined) continue;
     const points = strokePoints(envelope.minStrokeViewBoxUnits, placement.scale, output);
     minimumStrokePt = Math.min(minimumStrokePt, points);
-    if (points < envelope.minimumPrintStrokePt) {
+    if (belowMinimum(points, envelope.minimumPrintStrokePt)) {
       undersized.push(
         `${placement.nodeId} (${points.toFixed(3)}pt < ${envelope.minimumPrintStrokePt}pt)`,
       );
@@ -202,16 +217,20 @@ export function enforceSafety(
         (candidate) => candidate.modifierId === modifier.modifierId,
       );
       if (modifierEnvelope === undefined) continue;
+      // Measured against the mark's own narrowest stroke and its own declared
+      // minimum. Using the host's stroke width here passed marks that print
+      // well under the floor, because a modifier's geometry is finer and its
+      // viewBox smaller than its host's.
       const modifierPoints = strokePoints(
-        envelope.minStrokeViewBoxUnits,
+        modifierEnvelope.minStrokeViewBoxUnits,
         modifier.scale,
         output,
       );
       minimumStrokePt = Math.min(minimumStrokePt, modifierPoints);
-      if (modifierPoints < envelope.minimumPrintStrokePt) {
+      if (belowMinimum(modifierPoints, modifierEnvelope.minimumPrintStrokePt)) {
         undersized.push(
           `${placement.nodeId}/${modifier.modifierId} ` +
-            `(${modifierPoints.toFixed(3)}pt < ${envelope.minimumPrintStrokePt}pt)`,
+            `(${modifierPoints.toFixed(3)}pt < ${modifierEnvelope.minimumPrintStrokePt}pt)`,
         );
       }
     }
@@ -286,5 +305,89 @@ export function enforceSafety(
     collisions,
     outsideSafeArea,
     diagnostics: Object.freeze(diagnostics),
+  });
+}
+
+/**
+ * One clause's slot exchange: `permutedOrder[i]` takes the slot that
+ * `originalOrder[i]` authored.
+ *
+ * Declared structurally rather than imported, because the corruption engine
+ * depends on this package and not the other way round.
+ */
+export type SlotExchange = Readonly<{
+  clauseIndex: number;
+  originalOrder: readonly string[];
+  permutedOrder: readonly string[];
+}>;
+
+/**
+ * Relocate permuted glyphs onto the slots they now occupy.
+ *
+ * A permutation exchanges *positions*, never identity. The glyph that moves
+ * keeps its own authored geometry and its own modifier marks, and is re-solved
+ * into the destination slot's centre, size, and orientation.
+ *
+ * Resolving this here rather than at render time is what keeps the invariant
+ * intact. A renderer that reached for the destination slot's `modifiers` array
+ * would paint the marks of whichever glyph *used* to sit there — silently
+ * detaching authored payload marks from their root and attaching them to
+ * another. It also lets every later stage — occlusion masks, decoy exclusion,
+ * atmosphere — see final positions, so a mask can no longer be computed against
+ * a glyph's pre-permutation bounds and end up concealing empty field.
+ */
+export function applyPermutations(
+  layout: LayoutPlan,
+  exchanges: readonly SlotExchange[],
+  envelopes: readonly GlyphEnvelope[],
+  output: ResolvedOutput,
+  collisionLimit: number,
+): LayoutPlan {
+  if (exchanges.length === 0) return layout;
+
+  const placementByNode = new Map(layout.placements.map((placement) => [placement.nodeId, placement]));
+  const envelopeByNode = new Map(envelopes.map((envelope) => [envelope.nodeId, envelope]));
+  const relocated = new Map<string, PlacedGlyph>();
+
+  for (const exchange of exchanges) {
+    exchange.originalOrder.forEach((slotNodeId, index) => {
+      const occupantId = exchange.permutedOrder[index];
+      if (occupantId === undefined || occupantId === slotNodeId) return;
+
+      const slot = placementByNode.get(slotNodeId);
+      const slotEnvelope = envelopeByNode.get(slotNodeId);
+      const occupant = envelopeByNode.get(occupantId);
+      if (slot === undefined || slotEnvelope === undefined || occupant === undefined) return;
+
+      // `scale` is target size divided by the slot glyph's longest ink
+      // dimension, so the slot's intended size is recoverable and can be
+      // re-applied to a glyph whose own ink extent differs.
+      const slotLongest = Math.max(slotEnvelope.inkBounds.width, slotEnvelope.inkBounds.height);
+      relocated.set(
+        occupantId,
+        placeGlyph(occupant, slot.centre, slot.scale * slotLongest, slot.rotation, slot.readingIndex),
+      );
+    });
+  }
+
+  if (relocated.size === 0) return layout;
+
+  const placements = layout.placements
+    .map((placement) => relocated.get(placement.nodeId) ?? placement)
+    .sort(
+      (a, b) =>
+        a.readingIndex - b.readingIndex || (a.nodeId < b.nodeId ? -1 : a.nodeId > b.nodeId ? 1 : 0),
+    );
+
+  // Moved glyphs occupy different space, so print safety and collision budget
+  // are re-checked against the arrangement that will actually be printed.
+  const safety = enforceSafety(placements, envelopeByNode, layout.safeArea, output, collisionLimit);
+
+  return Object.freeze({
+    ...layout,
+    placements: Object.freeze(placements),
+    readingOrder: Object.freeze(placements.map((placement) => placement.nodeId)),
+    minimumStrokePt: safety.minimumStrokePt,
+    diagnostics: Object.freeze([...layout.diagnostics, ...safety.diagnostics]),
   });
 }

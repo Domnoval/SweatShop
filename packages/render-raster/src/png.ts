@@ -99,6 +99,7 @@ export function scrubPng(input: Uint8Array, dpi: number): ScrubResult {
 
   let offset = PNG_SIGNATURE.length;
   let sawPhys = false;
+  let sawIend = false;
 
   while (offset + 8 <= input.length) {
     const length = view.getUint32(offset, false);
@@ -126,7 +127,17 @@ export function scrubPng(input: Uint8Array, dpi: number): ScrubResult {
     }
 
     offset += total;
-    if (type === "IEND") break;
+    if (type === "IEND") {
+      sawIend = true;
+      break;
+    }
+  }
+
+  // A file truncated between chunk boundaries simply ends the loop, which would
+  // otherwise emit a headless PNG as a production artifact. Requiring the
+  // terminator makes truncation an error rather than a silently corrupt file.
+  if (!sawIend) {
+    throw new PlateError("INVALID_REQUEST", "PNG ended before its IEND chunk");
   }
 
   const size = kept.reduce((sum, part) => sum + part.length, 0);

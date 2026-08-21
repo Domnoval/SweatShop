@@ -50,8 +50,14 @@ import {
   type TokenMapping,
 } from "@studio137/glyph-engine";
 import { createSubstrate, type SubstrateGuide } from "@studio137/substrate-engine";
-import { layoutSolver, type LayoutPlan } from "@studio137/layout-engine";
 import {
+  applyPermutations,
+  collisionLimitFor,
+  layoutSolver,
+  type LayoutPlan,
+} from "@studio137/layout-engine";
+import {
+  computePermutations,
   planAtmosphere,
   planCorruption,
   planDecoys,
@@ -170,7 +176,7 @@ export function compilePlate(
   // ── Layout ──────────────────────────────────────────────────────────────
   const envelopes = buildEnvelopes(semantics.ast, grammar, geometry);
   const solver = layoutSolver(request.layoutFamily);
-  const layout = solver.solve({
+  const authoredLayout = solver.solve({
     nodes: envelopes,
     bounds: layoutBounds,
     density: request.density,
@@ -178,7 +184,6 @@ export function compilePlate(
     rng: streams.layout,
     output,
   });
-  diagnostics.push(...layout.diagnostics);
   geometry.verifyIntegrity();
   integrity.push({ stage: "layout", digest: registryDigest(geometry) });
 
@@ -202,6 +207,23 @@ export function compilePlate(
     }),
   );
 
+  // Permutation is resolved into the layout before anything else is planned
+  // against it. Occlusion masks, decoy exclusion zones, and atmosphere all read
+  // placement bounds, and a glyph that moves afterwards leaves every one of
+  // them pointing at the field it used to occupy.
+  const permutations = computePermutations(
+    corruptibleNodes,
+    request.corruptionLevel,
+    streams.corruption,
+  );
+  const layout = applyPermutations(
+    authoredLayout,
+    permutations,
+    envelopes,
+    output,
+    collisionLimitFor(request.density),
+  );
+
   const corruption = planCorruption({
     nodes: corruptibleNodes,
     layout,
@@ -214,6 +236,8 @@ export function compilePlate(
   integrity.push({ stage: "corruption-planning", digest: registryDigest(geometry) });
 
   // ── Decoys and atmosphere ───────────────────────────────────────────────
+  diagnostics.push(...layout.diagnostics);
+
   const decoys = planDecoys({
     layout,
     density: request.density,

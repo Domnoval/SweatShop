@@ -50,29 +50,64 @@ const MINIMUM_SECRET_LENGTH = 4;
 const ALLOWED_ID = /^(?:(?:g|m|s|e|x|decoy|mask)\d{6}|substrate|decoys-behind|canonical-payload|reversible-transforms|payload-masks|decoys-front|atmosphere|registration|print-boundaries)$/u;
 
 /**
- * Blank out markup structure, preserving byte offsets.
+ * Attribute values this renderer generates from a closed vocabulary.
  *
- * Element names, attribute names, and the values of purely structural
- * attributes are vocabulary this renderer chooses — they cannot carry a secret,
- * but they *can* collide with one. A seed of "boundaries" is a real seed, and
- * refusing to export because the file contains `id="print-boundaries"` would be
- * a false positive that blocks legitimate work.
+ * Masking is decided by the *shape of the value*, not by a list of attribute
+ * names. A name-based allowlist has to enumerate every attribute whose value is
+ * machine-chosen, and the ones it misses turn ordinary words into false leaks:
+ * a seed of "none" matched `fill="none"`, "round" matched `stroke-linecap`, and
+ * "matrix" matched every transform — each blocking a legitimate export with
+ * PRIVACY_LEAK. Shape-matching cannot over-mask a real leak either, because a
+ * phrase or seed that leaked into an artifact would have to be spelled as a
+ * colour, a number, a matrix, or path data to be masked.
+ */
+const MACHINE_VALUE = new RegExp(
+  "^(?:" +
+    // Enumerated SVG keywords
+    "none|round|butt|square|miter|bevel|geometricPrecision|userSpaceOnUse|objectBoundingBox" +
+    // sRGB hex colours
+    "|#[0-9a-fA-F]{3,8}" +
+    // Local references, e.g. url(#mask000001)
+    "|url\\(#[A-Za-z]+[0-9]+\\)" +
+    // Lengths, opacities, viewBox tuples, dash arrays
+    "|-?[0-9]*\\.?[0-9]+(?:mm|px|pt|in|%)?" +
+    "|[-0-9.eE, ]+" +
+    // Canonical matrices
+    "|matrix\\([-0-9.eE ]+\\)" +
+    // Path data
+    "|[MmLlHhVvCcSsQqTtAaZz][MmLlHhVvCcSsQqTtAaZz0-9eE.,\\- ]*" +
+    // The SVG namespace
+    "|https?://www\\.w3\\.org/[^\"]*" +
+    ")$",
+  "u",
+);
+
+/**
+ * Blank markup structure, preserving byte offsets.
  *
- * Offsets are preserved by substituting spaces, so a finding still points at the
- * right place in the original artifact.
+ * Element names, attribute names, and machine-generated attribute values are
+ * vocabulary this renderer chooses — they cannot carry a secret, but they can
+ * collide with one. Any attribute value that is *not* machine-shaped stays
+ * fully scannable, which is where a real leak would land.
+ *
+ * Offsets are preserved by substituting spaces, so a finding still points at
+ * the right place in the original artifact.
  */
 function maskStructuralTokens(content: string): string {
   const blank = (length: number): string => " ".repeat(length);
 
-  return content
-    // Element names, opening and closing.
-    .replace(/<\/?([a-zA-Z][\w:.-]*)/gu, (match) => blank(match.length))
-    // Structural attribute values: identifiers this renderer generates itself.
-    .replace(/\b(?:id|mask|xmlns|maskUnits|clip-path|shape-rendering)\s*=\s*"([^"]*)"/gu, (match) =>
-      blank(match.length),
-    )
-    // Attribute names everywhere else; their values stay scannable.
-    .replace(/\b([a-zA-Z][\w:.-]*)\s*=\s*"/gu, (match) => blank(match.length));
+  return (
+    content
+      // Whole attribute when its value is machine-generated; otherwise only the
+      // `name="` prefix and the closing quote, leaving the value in place.
+      .replace(/([a-zA-Z][\w:.-]*)\s*=\s*"([^"]*)"/gu, (match, _name: string, value: string) => {
+        if (MACHINE_VALUE.test(value) || ALLOWED_ID.test(value)) return blank(match.length);
+        const prefix = match.length - value.length - 1;
+        return blank(prefix) + value + " ";
+      })
+      // Element names, opening and closing.
+      .replace(/<\/?([a-zA-Z][\w:.-]*)/gu, (match) => blank(match.length))
+  );
 }
 
 type PatternRule = Readonly<{ code: string; message: string; pattern: RegExp }>;
@@ -92,7 +127,7 @@ const PATTERN_RULES: readonly PatternRule[] = Object.freeze([
   {
     code: "WINDOWS_PATH",
     message: "Artifact contains a Windows path or UNC share",
-    pattern: /(?:[A-Za-z]:\\\\?|\\\\\\\\[A-Za-z0-9_-]+\\)/u,
+    pattern: /(?:[A-Za-z]:\\|\\\\[A-Za-z0-9_.-]+\\)/u,
   },
   {
     code: "FILE_URL",
