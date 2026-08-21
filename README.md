@@ -47,6 +47,10 @@ gates — built so the canon drops in as data.
 Every plate this build produces should be treated as a test print. See
 [`bible/encoding/`](./bible/encoding/) for exactly what the artist still owns.
 
+New to the vocabulary? [`bible/GLOSSARY.md`](./bible/GLOSSARY.md) defines every
+term this project uses — canon, plate, glyph, grammar, engine, phase — in plain
+language.
+
 ---
 
 ## Quick start
@@ -147,6 +151,7 @@ packages/
   artifact-security/  Public artifact leakage scanning
   plate-compiler/     compilePlate, the two export paths, clause sheet
 apps/cli/             The trusted local process
+bible/GLOSSARY.md     Plain definitions for every term used here
 bible/encoding/       Canon documents
 tests/                Verification gates 1–6
 ```
