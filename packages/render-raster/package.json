@@ -1,0 +1,14 @@
+{
+  "name": "@studio137/render-raster",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic SVG rasterization and PNG metadata scrubbing",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

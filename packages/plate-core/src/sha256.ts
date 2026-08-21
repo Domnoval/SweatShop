@@ -38,8 +38,13 @@ function rotr(x: number, n: number): number {
 /** SHA-256 over raw bytes. Returns a 32-byte digest. */
 export function sha256Bytes(input: Uint8Array): Uint8Array {
   const bitLength = input.length * 8;
-  // message + 0x80 + zero padding + 8-byte big-endian length, to a 64-byte multiple
-  const paddedLength = (((input.length + 9) >>> 6) + 1) << 6;
+  // message + 0x80 + zero padding + 8-byte big-endian length, rounded up to a
+  // 64-byte multiple. That is ceil((len + 9) / 64) blocks — note *ceil*, not
+  // floor-plus-one: when len + 9 is already an exact multiple of 64 (len % 64
+  // === 55) the message plus its terminator and length field fill the final
+  // block exactly, and adding another block would place the length field in the
+  // wrong position and produce a digest that is not SHA-256.
+  const paddedLength = ((input.length + 9 + 63) >>> 6) << 6;
   const buffer = new Uint8Array(paddedLength);
   buffer.set(input);
   buffer[input.length] = 0x80;

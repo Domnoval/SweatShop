@@ -1,7 +1,23 @@
+import { createHash, randomBytes } from "node:crypto";
+
 import { describe, expect, it } from "vitest";
 
 import { base64ToBytes, base64ToUtf8, bytesToBase64, utf8ToBase64 } from "./base64.js";
-import { fromHex, sha256Domain, sha256Hex, toHex } from "./sha256.js";
+import { fromHex, sha256Bytes, sha256Domain, sha256Hex, toHex } from "./sha256.js";
+
+/**
+ * `node:crypto` as a differential oracle.
+ *
+ * The implementation deliberately avoids `node:crypto` so the browser preview
+ * worker and the Node export process share one code path. A *test* is exactly
+ * where the platform primitive earns its keep: hand-picked published vectors
+ * only cover the lengths someone thought to pick, and the padding bug this
+ * suite now guards against lived in a length class none of them touched.
+ */
+const nodeSha256 = (input: string | Uint8Array): string =>
+  typeof input === "string"
+    ? createHash("sha256").update(input, "utf8").digest("hex")
+    : createHash("sha256").update(Buffer.from(input)).digest("hex");
 
 describe("sha256", () => {
   // FIPS 180-4 published test vectors. These pin the pure-TS implementation the
@@ -21,6 +37,40 @@ describe("sha256", () => {
     expect(sha256Hex("a".repeat(1_000_000))).toBe(
       "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
     );
+  });
+
+  it("agrees with node:crypto at every length across five block boundaries", () => {
+    // The padding length is `ceil((len + 9) / 64)` blocks. The interesting case
+    // is `len % 64 === 55`, where the message, its 0x80 terminator, and the
+    // 8-byte length field fill the final block exactly. An off-by-one there
+    // appends a spurious block and silently produces a non-SHA-256 digest.
+    const mismatches: number[] = [];
+    for (let length = 0; length <= 320; length += 1) {
+      const input = "a".repeat(length);
+      if (sha256Hex(input) !== nodeSha256(input)) mismatches.push(length);
+    }
+    expect(mismatches).toEqual([]);
+  });
+
+  it("agrees with node:crypto on the exact-fit boundary lengths", () => {
+    for (const length of [55, 119, 183, 247, 311]) {
+      expect(length % 64).toBe(55);
+      const input = "a".repeat(length);
+      expect(sha256Hex(input), `length ${length}`).toBe(nodeSha256(input));
+    }
+  });
+
+  it("agrees with node:crypto on arbitrary binary input", () => {
+    for (let length = 0; length <= 200; length += 1) {
+      const bytes = new Uint8Array(randomBytes(length));
+      expect(toHex(sha256Bytes(bytes)), `length ${length}`).toBe(nodeSha256(bytes));
+    }
+  });
+
+  it("agrees with node:crypto on multi-byte and astral text", () => {
+    for (const sample of ["", "مرحبا", "線 signal", "\u{1F701}".repeat(20), "é".repeat(37)]) {
+      expect(sha256Hex(sample)).toBe(nodeSha256(sample));
+    }
   });
 
   it("round trips hex", () => {
@@ -51,6 +101,18 @@ describe("base64", () => {
     const samples = ["مرحبا", "é́", "\u{1F701}\u{10FFFF}", "線\n\t  "];
     for (const sample of samples) {
       expect(base64ToUtf8(utf8ToBase64(sample))).toBe(sample);
+    }
+  });
+
+  it("agrees with Buffer on arbitrary binary input", () => {
+    // Same reasoning as the SHA-256 oracle: a hand-rolled codec's bugs live in
+    // the remainder cases, and only exhaustive comparison finds them.
+    for (let length = 0; length <= 200; length += 1) {
+      const bytes = new Uint8Array(randomBytes(length));
+      expect(bytesToBase64(bytes), `length ${length}`).toBe(Buffer.from(bytes).toString("base64"));
+      expect(Array.from(base64ToBytes(Buffer.from(bytes).toString("base64")))).toEqual(
+        Array.from(bytes),
+      );
     }
   });
 
