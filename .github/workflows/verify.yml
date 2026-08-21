@@ -1,0 +1,45 @@
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # A clean install from the committed lockfile is itself part of spec
+      # Phase 9: a fresh environment must reproduce the golden fixture exactly.
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Verification gates
+        run: pnpm test
+
+      - name: Reproduce the golden fixture from a clean environment
+        run: |
+          pnpm golden --no-png
+          # The public artifacts must be reproducible without any key present.
+          test -f artifacts/golden-signal.canonical.svg
+          test -f artifacts/golden-signal.print.svg
+
+      - name: Confirm no private material was written without a key
+        run: |
+          if ls artifacts/*.s137 >/dev/null 2>&1; then
+            echo "A private manifest was written without a master key"; exit 1
+          fi
+          if grep -qa "SIGNAL SURVIVES" artifacts/golden-signal.canonical.svg; then
+            echo "The source phrase leaked into a public artifact"; exit 1
+          fi
