@@ -1,0 +1,13 @@
+{
+  "name": "@studio137/plate-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared types, Zod schemas, version contract, and deterministic RNG",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  }
+}

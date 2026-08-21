@@ -1,0 +1,15 @@
+{
+  "name": "@studio137/corruption-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Grammatical corruption, occlusion, and decoy planning",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/layout-engine": "workspace:*"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@studio137/artifact-security",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Public artifact leakage scanning and metadata policy",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*"
+  }
+}

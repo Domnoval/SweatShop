@@ -1,0 +1,13 @@
+{
+  "name": "@studio137/substrate-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mathematical substrate samplers",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*"
+  }
+}

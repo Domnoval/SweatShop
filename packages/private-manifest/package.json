@@ -1,0 +1,16 @@
+{
+  "name": "@studio137/private-manifest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Encrypted encoding manifest container and exact decoder",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-engine": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "zod": "^3.24.1"
+  }
+}

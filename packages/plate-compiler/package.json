@@ -1,0 +1,21 @@
+{
+  "name": "@studio137/plate-compiler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "compilePlate orchestration across every engine",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/glyph-engine": "workspace:*",
+    "@studio137/substrate-engine": "workspace:*",
+    "@studio137/layout-engine": "workspace:*",
+    "@studio137/corruption-engine": "workspace:*",
+    "@studio137/render-svg": "workspace:*",
+    "@studio137/private-manifest": "workspace:*",
+    "@studio137/artifact-security": "workspace:*"
+  }
+}

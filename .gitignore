@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Generated plate artifacts. Never commit private manifests.
+artifacts/
+*.private.s137
+*.clause-sheet.pdf
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db

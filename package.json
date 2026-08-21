@@ -1,0 +1,31 @@
+{
+  "name": "studio137",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Studio 137 Phrase-to-Plate Generator — deterministic semantic glyph compiler and production-art renderer",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "golden": "tsx apps/cli/src/index.ts golden",
+    "compile": "tsx apps/cli/src/index.ts compile",
+    "geometry:hash": "tsx scripts/generate-geometry-integrity.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "fast-check": "^3.23.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

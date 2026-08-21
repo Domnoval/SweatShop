@@ -1,0 +1,15 @@
+{
+  "name": "@studio137/layout-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Canon-approved deterministic layout solvers",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/substrate-engine": "workspace:*"
+  }
+}

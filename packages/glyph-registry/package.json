@@ -1,0 +1,14 @@
+{
+  "name": "@studio137/glyph-registry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Versioned grammar and locked authored glyph geometry registries",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "zod": "^3.24.1"
+  }
+}

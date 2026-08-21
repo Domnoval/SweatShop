@@ -1,0 +1,17 @@
+{
+  "name": "@studio137/render-svg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic canonical SVG scene serializer",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/layout-engine": "workspace:*",
+    "@studio137/substrate-engine": "workspace:*",
+    "@studio137/corruption-engine": "workspace:*"
+  }
+}

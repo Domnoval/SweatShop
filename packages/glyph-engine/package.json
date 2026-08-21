@@ -1,0 +1,14 @@
+{
+  "name": "@studio137/glyph-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Phrase lexer, semantic parser, and canonical plate AST builder",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*"
+  }
+}

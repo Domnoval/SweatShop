@@ -1,0 +1,16 @@
+{
+  "name": "@studio137/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local trusted-process CLI for compiling and exporting plates",
+  "bin": {
+    "s137": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/plate-compiler": "workspace:*",
+    "@studio137/private-manifest": "workspace:*",
+    "@studio137/artifact-security": "workspace:*"
+  }
+}
