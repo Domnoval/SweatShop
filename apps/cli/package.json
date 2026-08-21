@@ -11,6 +11,7 @@
     "@studio137/plate-core": "workspace:*",
     "@studio137/plate-compiler": "workspace:*",
     "@studio137/private-manifest": "workspace:*",
-    "@studio137/artifact-security": "workspace:*"
+    "@studio137/artifact-security": "workspace:*",
+    "@studio137/render-raster": "workspace:*"
   }
 }

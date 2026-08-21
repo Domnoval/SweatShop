@@ -17,6 +17,7 @@
     "geometry:hash": "tsx scripts/generate-geometry-integrity.ts"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^22.10.2",
     "fast-check": "^3.23.2",
     "tsx": "^4.19.2",
