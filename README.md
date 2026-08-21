@@ -187,7 +187,7 @@ composition, and rasterized PNG pixel hashes byte for byte.
 
 ## Verification gates
 
-`pnpm test` runs 152 tests, including spec §26's gates:
+`pnpm test` runs 200 tests, including spec §26's gates:
 
 | Gate | Checks |
 | --- | --- |
@@ -198,6 +198,13 @@ composition, and rasterized PNG pixel hashes byte for byte.
 | 5 — Privacy scan | Real artifacts clean; every prohibited class caught when injected |
 | 6 — Print validation | Units, area guards, safe area, templates, background and alpha policy |
 | 7 — Authorship review | **Human. Not automatable.** |
+
+A passing test is not evidence on its own. Every gate assertion added to
+close a defect is **counter-verified**: the defect is reintroduced and the
+test observed to fail, then the fix restored. Six original tests turned out
+to pass without proving anything — a loop over an empty array, a leak check
+that never went through the export path, a PNG scrub asserted against a file
+that carried nothing to scrub — and were rewritten rather than trusted.
 
 ```bash
 pnpm test        # the suite
