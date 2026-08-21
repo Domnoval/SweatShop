@@ -14,10 +14,22 @@
     "test:watch": "vitest",
     "golden": "tsx apps/cli/src/index.ts golden",
     "compile": "tsx apps/cli/src/index.ts compile",
-    "geometry:hash": "tsx scripts/generate-geometry-integrity.ts"
+    "geometry:hash": "tsx scripts/generate-geometry-integrity.ts",
+    "golden:hash": "tsx scripts/generate-golden-hashes.ts"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
+    "@studio137/artifact-security": "workspace:*",
+    "@studio137/corruption-engine": "workspace:*",
+    "@studio137/glyph-engine": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/layout-engine": "workspace:*",
+    "@studio137/plate-compiler": "workspace:*",
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/private-manifest": "workspace:*",
+    "@studio137/render-raster": "workspace:*",
+    "@studio137/render-svg": "workspace:*",
+    "@studio137/substrate-engine": "workspace:*",
     "@types/node": "^22.10.2",
     "fast-check": "^3.23.2",
     "tsx": "^4.19.2",

@@ -11,6 +11,39 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
+      '@studio137/artifact-security':
+        specifier: workspace:*
+        version: link:packages/artifact-security
+      '@studio137/corruption-engine':
+        specifier: workspace:*
+        version: link:packages/corruption-engine
+      '@studio137/glyph-engine':
+        specifier: workspace:*
+        version: link:packages/glyph-engine
+      '@studio137/glyph-registry':
+        specifier: workspace:*
+        version: link:packages/glyph-registry
+      '@studio137/layout-engine':
+        specifier: workspace:*
+        version: link:packages/layout-engine
+      '@studio137/plate-compiler':
+        specifier: workspace:*
+        version: link:packages/plate-compiler
+      '@studio137/plate-core':
+        specifier: workspace:*
+        version: link:packages/plate-core
+      '@studio137/private-manifest':
+        specifier: workspace:*
+        version: link:packages/private-manifest
+      '@studio137/render-raster':
+        specifier: workspace:*
+        version: link:packages/render-raster
+      '@studio137/render-svg':
+        specifier: workspace:*
+        version: link:packages/render-svg
+      '@studio137/substrate-engine':
+        specifier: workspace:*
+        version: link:packages/substrate-engine
       '@types/node':
         specifier: ^22.10.2
         version: 22.20.1

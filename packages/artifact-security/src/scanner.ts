@@ -40,6 +40,41 @@ export type LeakFinding = Readonly<{
 /** Substrings shorter than this are too collision-prone to scan for. */
 const MINIMUM_SECRET_LENGTH = 4;
 
+/**
+ * Public identifiers a scrubbed artifact is allowed to carry.
+ *
+ * Ordinal node ids (spec §14.2) and the scene layer names. Anything else in an
+ * `id` is a finding — which is what makes it safe to exclude id values from the
+ * secret search below.
+ */
+const ALLOWED_ID = /^(?:(?:g|m|s|e|x|decoy|mask)\d{6}|substrate|decoys-behind|canonical-payload|reversible-transforms|payload-masks|decoys-front|atmosphere|registration|print-boundaries)$/u;
+
+/**
+ * Blank out markup structure, preserving byte offsets.
+ *
+ * Element names, attribute names, and the values of purely structural
+ * attributes are vocabulary this renderer chooses — they cannot carry a secret,
+ * but they *can* collide with one. A seed of "boundaries" is a real seed, and
+ * refusing to export because the file contains `id="print-boundaries"` would be
+ * a false positive that blocks legitimate work.
+ *
+ * Offsets are preserved by substituting spaces, so a finding still points at the
+ * right place in the original artifact.
+ */
+function maskStructuralTokens(content: string): string {
+  const blank = (length: number): string => " ".repeat(length);
+
+  return content
+    // Element names, opening and closing.
+    .replace(/<\/?([a-zA-Z][\w:.-]*)/gu, (match) => blank(match.length))
+    // Structural attribute values: identifiers this renderer generates itself.
+    .replace(/\b(?:id|mask|xmlns|maskUnits|clip-path|shape-rendering)\s*=\s*"([^"]*)"/gu, (match) =>
+      blank(match.length),
+    )
+    // Attribute names everywhere else; their values stay scannable.
+    .replace(/\b([a-zA-Z][\w:.-]*)\s*=\s*"/gu, (match) => blank(match.length));
+}
+
 type PatternRule = Readonly<{ code: string; message: string; pattern: RegExp }>;
 
 /**
@@ -123,6 +158,30 @@ const PATTERN_RULES: readonly PatternRule[] = Object.freeze([
   },
 ]);
 
+/**
+ * Every `id` in an SVG must be an ordinal node id or a known layer name.
+ *
+ * Spec §14.2 forbids deriving ids from source text hashes. Checking the shape of
+ * each id is what lets the secret search skip id values without opening a hole.
+ */
+function scanIdentifiers(content: string): readonly LeakFinding[] {
+  const findings: LeakFinding[] = [];
+  for (const match of content.matchAll(/\bid\s*=\s*"([^"]*)"/gu)) {
+    const value = match[1] ?? "";
+    if (!ALLOWED_ID.test(value)) {
+      findings.push(
+        Object.freeze({
+          code: "NON_ORDINAL_ID",
+          message:
+            "Artifact contains an id that is neither an ordinal node id nor a known layer name",
+          offset: match.index,
+        }),
+      );
+    }
+  }
+  return Object.freeze(findings);
+}
+
 function findSecret(haystack: string, secret: string, code: string, message: string): LeakFinding | undefined {
   if (secret.length < MINIMUM_SECRET_LENGTH) return undefined;
   const direct = haystack.indexOf(secret);
@@ -142,6 +201,11 @@ export type ScanOptions = Readonly<{
    * substring checks still run over the whole stream.
    */
   patternRules?: boolean;
+  /**
+   * Blank markup structure before searching for secrets. On by default; set
+   * false to scan raw content, as the injected-leak tests do.
+   */
+  maskStructure?: boolean;
 }>;
 
 /**
@@ -158,6 +222,11 @@ export function scanPublicArtifact(
 ): readonly LeakFinding[] {
   const findings: LeakFinding[] = [];
 
+  // Secrets are searched in the artifact minus its own markup vocabulary;
+  // structural rules still run against the original text.
+  const searchable =
+    options.maskStructure === false ? content : maskStructuralTokens(content);
+
   const secretChecks: readonly (readonly [string, string, string])[] = [
     [secrets.phrase, "SOURCE_PHRASE", "Artifact contains the source phrase"],
     [secrets.normalizedPhrase, "NORMALIZED_PHRASE", "Artifact contains the normalized phrase"],
@@ -167,13 +236,13 @@ export function scanPublicArtifact(
   ];
 
   for (const [secret, code, message] of secretChecks) {
-    const finding = findSecret(content, secret, code, message);
+    const finding = findSecret(searchable, secret, code, message);
     if (finding !== undefined) findings.push(finding);
   }
 
   for (const payload of secrets.literalPayloads) {
     const finding = findSecret(
-      content,
+      searchable,
       payload,
       "LITERAL_PAYLOAD",
       "Artifact contains literal escape payload text",
@@ -186,7 +255,7 @@ export function scanPublicArtifact(
 
   for (const ref of secrets.payloadRefs) {
     const finding = findSecret(
-      content,
+      searchable,
       ref,
       "PAYLOAD_REF",
       "Artifact contains a private manifest payload reference",
@@ -206,6 +275,7 @@ export function scanPublicArtifact(
         );
       }
     }
+    findings.push(...scanIdentifiers(content));
   }
 
   return Object.freeze(findings);
@@ -247,7 +317,24 @@ const PNG_ALLOWED_CHUNKS: ReadonlySet<string> = new Set([
  * finding.
  */
 export function scanPublicPng(bytes: Uint8Array, secrets: ScanSecrets): readonly LeakFinding[] {
-  const findings: LeakFinding[] = [...scanPublicBytes(bytes, secrets, { patternRules: false })];
+  // Chunk type fields are PNG's own vocabulary. Blanking them before the
+  // whole-stream secret search stops a seed like "phys" from matching the
+  // `pHYs` header — a collision, not a leak.
+  const masked = bytes.slice();
+  for (let offset = PNG_SIGNATURE.length; offset + 8 <= masked.length; ) {
+    const chunkLength = new DataView(masked.buffer, masked.byteOffset, masked.byteLength).getUint32(
+      offset,
+      false,
+    );
+    masked.fill(0x20, offset + 4, offset + 8);
+    const step = 12 + chunkLength;
+    if (step <= 0 || offset + step > masked.length) break;
+    offset += step;
+  }
+
+  const findings: LeakFinding[] = [
+    ...scanPublicBytes(masked, secrets, { patternRules: false, maskStructure: false }),
+  ];
 
   for (let index = 0; index < PNG_SIGNATURE.length; index += 1) {
     if (bytes[index] !== PNG_SIGNATURE[index]) {
@@ -290,7 +377,7 @@ export function scanPublicPng(bytes: Uint8Array, secrets: ScanSecrets): readonly
       );
     } else if (type !== "IDAT") {
       const payload = latin1.decode(bytes.subarray(offset + 8, offset + 8 + length));
-      for (const finding of scanPublicArtifact(payload, secrets)) {
+      for (const finding of scanPublicArtifact(payload, secrets, { maskStructure: false })) {
         findings.push(Object.freeze({ ...finding, offset: offset + 8 + finding.offset }));
       }
     }
