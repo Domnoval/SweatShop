@@ -179,6 +179,10 @@ begins, locale-dependent ordering, and system-dependent object iteration.
 - SHA-256 is pure TypeScript, so a browser preview worker and the Node export
   process agree bit for bit.
 
+This is verified rather than asserted: CI installs from a frozen lockfile on a
+different machine and reproduces the golden fixture's canonical SVG, print
+composition, and rasterized PNG pixel hashes byte for byte.
+
 ---
 
 ## Verification gates
@@ -234,7 +238,7 @@ quiet a failing check. A changed golden hash means the artwork changed.
 | 6 — Corruption and decoys | ✅ |
 | 7 — Artifact pipeline | ✅ Five classes; clause sheet is Markdown, PDF adapter pending |
 | 8 — Interactive editor | ❌ Not started — CLI only |
-| 9 — Security and reproducibility | ✅ Gates 1–6; clean-install reproduction not yet exercised in CI |
+| 9 — Security and reproducibility | ✅ Gates 1–6, plus clean-install reproduction verified in CI |
 | 10 — Physical proof | ❌ No template is `physicallyValidated` |
 | 11 — Expansion | ❌ Five layout families declared but unimplemented; they fail loudly |
 
@@ -259,7 +263,7 @@ quiet a failing check. A changed golden hash means the artwork changed.
 6. ✅ Public SVG and PNG contain no private payload or machine metadata
 7. ✅ All five artifact classes export successfully
 8. ⚠️ Interface communicates reversibility and print constraints — CLI does; no GUI
-9. ⚠️ Clean environment reproduces the golden fixture — gated, not yet CI-verified
+9. ✅ Clean environment reproduces the golden fixture — CI reproduces it from a frozen lockfile on different hardware, matching the pinned SVG, print, and PNG pixel hashes
 10. ❌ Physical 24×36 proof passes inspection
 
 Only after all ten pass should Printful automation, cloud hosting, or additional
