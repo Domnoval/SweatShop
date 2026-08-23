@@ -29,18 +29,62 @@ No such codebase was found. Searched and ruled out:
 Higgsfield independently confirmed they do not hold the source either. The
 handoff document is the entire deliverable.
 
-### Decisions taken that diverge from the spec
+## `symbolpaintermk137.html`
 
-The interactive painter is being built here, as this repository's unstarted
-Phase 8 editor, driving the existing deterministic compiler. Four decisions are
-settled and take precedence over the handoff where they conflict:
+The Forge itself, committed for reference. A single-file SVG instrument: 1,005
+lines, no dependencies, no build step.
+
+**Correction to an earlier claim in this file.** It previously stated that the
+canon grammar would be "the Forge's 19 concepts," landing as `grammar/v2` and
+resolving this project's Phase 0 blocker. That was wrong, and it was written
+before the Forge's source was available. The source is now here, and it shows
+the two systems are not the same kind of machine.
+
+[`bible/GLOSSARY.md`](../bible/GLOSSARY.md) is accurate on the arithmetic —
+there are exactly 19 concepts and exactly 170 synonyms. But those concepts do
+not name glyphs. Each maps to a *composition recipe*:
+
+```js
+solar:{mode:"phyllotaxis",arch:"mandala",palette:"bone",
+       brushes:["geometry","astro","alchemy"],planet:"sol",
+       words:["SOL","LUX","SORATH"],fold:12}
+```
+
+Engine, architecture, palette, symbol families, kamea, magic words, symmetry
+fold. No drawn mark anywhere in it.
+
+| | Phrase-to-Plate (this repo) | The Forge |
+| --- | --- | --- |
+| Grammar maps a word to | one authored glyph | a whole composition recipe |
+| Kind of system | logographic | correspondence (777-style) |
+| Reversible | yes — exact mode decodes to the source phrase | no |
+| Marks come from | authored vector geometry, locked and hashed | Unicode pools in Noto fonts, 16 procedural figures, kamea sigil paths |
+
+So the Forge's correspondence table belongs in this project's **presentation**
+layer, not its glyph registry — `mode` corresponds to a layout family,
+`palette` to a palette, `fold` to symmetry. Dropping it into
+`packages/glyph-registry` would be a category error.
+
+**This project's glyph vocabulary remains unsolved.** The Forge does not supply
+it. What the Forge does supply is the closest available seed geometry: 16
+authored vector marks in its `GEO` table — `vesica`, `seed`, `flower`,
+`metatron`, `merkaba`, `pentagram`, `hexagram`, `unicursal`, `triquetra`,
+`triskele`, `vegvisir`, `valknut`, `eye`, `ankh`, `spiral`, `monad`. These are
+sacred-geometry figures with no assigned meanings, not a logography.
+
+One production hazard worth recording: the `alchemy`, `astro`, `runic`,
+`hebrew`, `hiero`, and `trigram` pools are Unicode codepoints rendered through
+Noto font families with Segoe fallbacks. Any print path must convert them to
+outlines first, or output depends on which fonts the rendering machine happens
+to have.
+
+### Decisions that stand
 
 | Decision | Consequence |
 | --- | --- |
-| **Canon grammar is the Forge's 19 concepts**, not the spec's 9 root families | Lands as `grammar/v2`. Resolves the Phase 0 blocker named in the README. Requires authored geometry for the full concept set. |
 | **One rendering path — always `compilePlate()`** | No separate preview renderer. Nothing can drift from what prints. Live interaction is throttled rather than approximated. |
 | **Canonical artwork state is the compiler's request contract** | The spec's canonical/UI state split maps onto the existing Zod `PlateRequest`, not a new parallel model. |
-| **First physical product is garment (DTG/DTF)** | The current 24×36 poster templates are not sufficient. See the README's Phase 10 gap: `minimumPrintStrokePt: 0.75` is unvalidated and no template is `physicallyValidated`. |
+| **First physical product is garment** | DTG, DTF, and all-over print, across multiple garment base colours. The current 24×36 poster templates are not sufficient, and art may not assume a ground colour. See the README's Phase 10 gap: `minimumPrintStrokePt: 0.75` is unvalidated and no template is `physicallyValidated`. |
 
 Where the handoff and this repository conflict, the conflict is documented and
 the least destructive compliant approach is chosen — the spec is not followed
