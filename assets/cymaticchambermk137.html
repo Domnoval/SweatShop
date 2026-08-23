@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cymatic Resonance Chamber · MK·137</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&family=Noto+Sans+Runic&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#05070a;--ink:#070b10;--panel:#0a0f16;
+  --line:#16202c;--line-2:#22303f;
+  --bone:#cdd6df;--dim:#6b7785;--faint:#3c4651;
+  --geo:#5ef2c4;--vio:#8a7ff0;--gold:#e8c46a;--cy:#56c9ff;--hot:#ff5d5d;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--void);color:var(--bone);font-family:var(--mono);-webkit-font-smoothing:antialiased;letter-spacing:.02em;overflow:hidden;height:100dvh}
+.u-sym{font-family:"Noto Sans Symbols","Segoe UI Symbol",var(--mono)}
+.u-sym2{font-family:"Noto Sans Symbols 2","Segoe UI Symbol",var(--mono)}
+.u-run{font-family:"Noto Sans Runic","Segoe UI Historic",var(--mono)}
+.rig{display:grid;grid-template-rows:auto 1fr;height:100dvh;
+  background:radial-gradient(1200px 700px at 50% -20%,rgba(138,127,240,.06),transparent 60%),var(--void)}
+/* ── top telemetry bar ── */
+.bar{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+.mark{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.mark b{color:var(--gold);letter-spacing:.2em}
+.bar .tel{display:flex;gap:16px;flex:1;flex-wrap:wrap;justify-content:center;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.tel .v{color:var(--bone)}.tel .vg{color:var(--geo)}.tel .vv{color:var(--vio)}
+.engage{flex:0 0 auto;background:linear-gradient(180deg,#0c1620,#070d14);border:1px solid var(--geo);color:var(--geo);
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;padding:9px 18px;border-radius:3px;cursor:pointer;
+  box-shadow:0 0 0 1px rgba(94,242,196,.15),0 0 18px -4px rgba(94,242,196,.4);transition:.18s;position:relative;overflow:hidden}
+.engage:hover{box-shadow:0 0 0 1px rgba(94,242,196,.3),0 0 26px -2px rgba(94,242,196,.6);color:#dffff4}
+.engage.live{border-color:var(--vio);color:var(--vio);box-shadow:0 0 0 1px rgba(138,127,240,.25),0 0 22px -4px rgba(138,127,240,.5)}
+.engage.live .dotp{background:var(--vio)}
+.engage .dotp{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--geo);margin-right:8px;vertical-align:middle;animation:pp 1.8s ease-in-out infinite}
+@keyframes pp{0%,100%{opacity:.35}50%{opacity:1}}
+/* ── main split ── */
+.stage{display:grid;grid-template-columns:1fr 332px;gap:0;min-height:0}
+@media(max-width:880px){.stage{grid-template-columns:1fr}.panel{display:none}}
+/* ── the tube ── */
+.stagewrap{position:relative;display:grid;place-items:center;padding:26px;min-height:0;overflow:hidden}
+.tube{position:relative;width:min(82vh,100%);aspect-ratio:1;border-radius:14px;overflow:hidden;
+  border:1px solid var(--line-2);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),inset 0 0 60px -10px rgba(0,0,0,.9),0 40px 120px -40px rgba(0,0,0,.9);
+  background:#04060a}
+#gl,#sym,.glass{position:absolute;inset:0;width:100%;height:100%}
+#sym{pointer-events:none}
+.glass{pointer-events:none;border-radius:14px;
+  background:
+    radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,.06),transparent 42%),
+    radial-gradient(140% 140% at 50% 52%,transparent 55%,rgba(0,0,0,.55) 100%),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);
+  mix-blend-mode:normal;opacity:.9}
+.reticle{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s}
+.reticle.on{opacity:.5}
+.reticle::before,.reticle::after{content:"";position:absolute;background:rgba(94,242,196,.25)}
+.reticle::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
+.reticle::after{top:50%;left:0;right:0;height:1px;transform:translateY(-.5px)}
+.hud{position:absolute;left:14px;bottom:12px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);pointer-events:none;line-height:1.7}
+.hud .row b{color:var(--geo)}.hud .row i{color:var(--vio);font-style:normal}
+.hud2{position:absolute;right:14px;top:12px;text-align:right;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);pointer-events:none;line-height:1.7}
+.hud2 .n{color:var(--bone)}
+.boot{position:absolute;inset:0;display:grid;place-items:center;background:#04060a;z-index:5;transition:opacity .6s;text-align:center}
+.boot.gone{opacity:0;pointer-events:none}
+.boot .ring{width:54px;height:54px;border:1px solid var(--line-2);border-top-color:var(--geo);border-radius:50%;margin:0 auto 16px;animation:spin 1.1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.boot .bt{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+.boot .bt b{color:var(--gold)}
+/* ── control panel ── */
+.panel{border-left:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--void));overflow-y:auto;padding:20px 18px 30px}
+.panel::-webkit-scrollbar{width:8px}.panel::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+.sec{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin:18px 0 10px;display:flex;justify-content:space-between}
+.sec:first-child{margin-top:0}.sec .v{color:var(--vio);letter-spacing:.08em}
+.knobs{display:flex;gap:14px;justify-content:center}
+.knobwrap{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1}
+.knob{--p:30%;width:84px;height:84px;border-radius:50%;cursor:ns-resize;position:relative;touch-action:none;
+  background:conic-gradient(var(--geo) var(--p),#121b27 var(--p));
+  box-shadow:0 0 14px -6px rgba(94,242,196,.5)}
+.knob::after{content:"";position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#15202c,#0a121a);border:1px solid var(--line-2)}
+.knob .tick{position:absolute;left:50%;top:9px;width:2px;height:22px;background:var(--geo);border-radius:2px;transform-origin:50% 33px;transform:translateX(-50%) rotate(0deg);z-index:2;box-shadow:0 0 6px rgba(94,242,196,.8)}
+.knobwrap.vio .knob{background:conic-gradient(var(--vio) var(--p),#121b27 var(--p));box-shadow:0 0 14px -6px rgba(138,127,240,.5)}
+.knobwrap.vio .knob .tick{background:var(--vio);box-shadow:0 0 6px rgba(138,127,240,.8)}
+.knoblab{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.knobval{font-size:18px;font-weight:700;color:var(--bone);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.knobwrap.vio .knobval{color:#cfc8ff}
+.ctl{margin:12px 0}
+.ctl label{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:5px}
+.ctl label b{color:var(--geo);font-weight:700;font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--line-2);border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--geo);box-shadow:0 0 6px rgba(94,242,196,.6)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:var(--geo)}
+.seg{display:flex;flex-wrap:wrap;gap:3px}
+.seg button{flex:1 1 auto;min-width:46px;background:#070d14;border:1px solid var(--line-2);color:var(--dim);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 5px;cursor:pointer;border-radius:2px;transition:.14s}
+.seg button:hover{color:var(--bone);border-color:var(--faint)}
+.seg button[aria-pressed=true]{color:var(--ink);font-weight:700;border-color:transparent;background:var(--geo)}
+.toggles{display:flex;flex-direction:column;gap:4px}
+.tg{display:flex;align-items:center;justify-content:space-between;background:#070d14;border:1px solid var(--line-2);border-radius:2px;padding:7px 10px;cursor:pointer;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.tg:hover{color:var(--bone)}
+.tg .pip{width:26px;height:14px;border-radius:8px;background:#1a2531;position:relative;transition:.16s}
+.tg .pip::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--faint);transition:.16s}
+.tg[aria-pressed=true]{color:var(--bone)}
+.tg[aria-pressed=true] .pip{background:rgba(94,242,196,.3)}
+.tg[aria-pressed=true] .pip::after{left:14px;background:var(--geo);box-shadow:0 0 6px rgba(94,242,196,.7)}
+.tape{margin-top:8px;border:1px solid var(--line);border-radius:3px;background:#04070b;padding:9px 11px;font-size:10px;line-height:1.75;color:var(--dim);letter-spacing:.02em;min-height:74px}
+.tape .k{color:var(--faint);text-transform:uppercase;letter-spacing:.16em}
+.tape .a{color:var(--gold)}.tape .g{color:var(--geo)}.tape .v{color:var(--vio)}
+.foot{margin-top:14px;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);line-height:1.8}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="rig">
+  <div class="bar">
+    <div class="mark">Studio 137 · <b>α 1/137</b> · resonance chamber</div>
+    <div class="tel">
+      <span>mode <span class="vg" id="tMode">3 · 2</span></span>
+      <span>ƒ <span class="v" id="tFreq">—</span> hz</span>
+      <span>nodes <span class="vv" id="tNodes">0</span></span>
+      <span>field <span class="v" id="tField">standby</span></span>
+      <span>tick <span class="v" id="tTick">0</span></span>
+    </div>
+    <button class="engage" id="engage"><span class="dotp"></span>Engage</button>
+  </div>
+  <div class="stage">
+    <div class="stagewrap">
+      <div class="tube">
+        <canvas id="gl"></canvas>
+        <svg id="sym" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+          <defs><filter id="sg" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDev="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter></defs>
+          <g id="agents"></g>
+        </svg>
+        <div class="glass"></div>
+        <div class="reticle" id="reticle"></div>
+        <div class="hud">
+          <div class="row">plate ƒ(x,y) = sin <b>aπx</b> sin <i>bπy</i> − sin <i>bπx</i> sin <b>aπy</b></div>
+          <div class="row">nodal set · |ƒ| → 0 · symbols settle by ∇ƒ²</div>
+        </div>
+        <div class="hud2">
+          <div>MK·137 / chladni</div>
+          <div class="n" id="hMode">a3 · b2</div>
+        </div>
+        <div class="boot" id="boot">
+          <div>
+            <div class="ring"></div>
+            <div class="bt">apparatus on standby · press <b>Engage</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <aside class="panel">
+      <div class="sec">Resonance <span class="v">modal numbers</span></div>
+      <div class="knobs">
+        <div class="knobwrap" id="wrapA">
+          <div class="knob" id="knobA"><div class="tick"></div></div>
+          <div class="knoblab">mode a</div><div class="knobval" id="valA">3.0</div>
+        </div>
+        <div class="knobwrap vio" id="wrapB">
+          <div class="knob" id="knobB"><div class="tick"></div></div>
+          <div class="knoblab">mode b</div><div class="knobval" id="valB">2.0</div>
+        </div>
+      </div>
+
+      <div class="sec">Excitation</div>
+      <div class="ctl"><label>Symbols on the plate <b id="vCount">220</b></label><input id="count" type="range" min="40" max="420" value="220"></div>
+      <div class="ctl"><label>Settle rate <b id="vRate">0.50</b></label><input id="rate" type="range" min="10" max="100" value="50"></div>
+      <div class="ctl"><label>Spread along node <b id="vSpread">0.40</b></label><input id="spread" type="range" min="0" max="100" value="40"></div>
+      <div class="ctl"><label>Glyph scale <b id="vScale">22</b></label><input id="gscale" type="range" min="10" max="44" value="22"></div>
+
+      <div class="sec">Plate type</div>
+      <div class="seg" id="pool">
+        <button data-p="alchemy" aria-pressed="true">Alchemy</button>
+        <button data-p="astro">Astro</button>
+        <button data-p="runic">Runic</button>
+        <button data-p="mixed">Mixed</button>
+      </div>
+
+      <div class="sec">Instrument</div>
+      <div class="toggles">
+        <button class="tg" id="tgField" aria-pressed="true">Resonance field<span class="pip"></span></button>
+        <button class="tg" id="tgSound" aria-pressed="false">Sonify the mode<span class="pip"></span></button>
+        <button class="tg" id="tgReticle" aria-pressed="true">Reticle<span class="pip"></span></button>
+      </div>
+      <div class="ctl" style="margin-top:10px"><label>Volume <b id="vVol">40</b></label><input id="vol" type="range" min="0" max="100" value="40"></div>
+
+      <div class="sec">Derivation</div>
+      <div class="tape" id="tape">—</div>
+
+      <div class="foot">no clock · tick is the sanctioned moving number<br>see the wave · hear the wave · symbols obey it</div>
+    </aside>
+  </div>
+</div>
+<script>
+(()=>{
+"use strict";
+const $=s=>document.querySelector(s), clamp=(v,a,b)=>v<a?a:v>b?b:v, PI=Math.PI;
+
+/* ───────────── plate math (matches the shader exactly) ───────────── */
+function plate(x,y,a,b){
+  return Math.sin(a*PI*x)*Math.sin(b*PI*y) - Math.sin(b*PI*x)*Math.sin(a*PI*y);
+}
+
+/* ───────────── state ───────────── */
+let targetA=3.0,targetB=2.0,curA=3.0,curB=2.0;
+let show=0, live=false, sound=false, showField=true, reticleOn=true;
+let nCount=220, rate=0.5, spreadAmt=0.4, gscale=22, vol=0.40, pool='alchemy';
+let tick=0, nearNodes=0;
+const BASE=65.41; // C2 — modal freq scales the audible interval
+
+/* ───────────── glyph pools (char + font class) ───────────── */
+const ALCH="🜀🜁🜂🜃🜄🜅🜆🜇🜈🜉🜊🜋🜌🜍🜎🜏🜐🜑🜒🜔🜕🜖🜗🜚🜛🜜🜝🜞🜟🜠".split("").map(c=>[c,"u-sym2"]);
+const ASTRO="☉☽☿♀♁♂♃♄♅♆⛢♈♉♊♋♌♍♎♏♐♑♒♓".split("").map(c=>[c,"u-sym"]);
+const RUNE="ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ".split("").map(c=>[c,"u-run"]);
+function poolSet(p){return p==='astro'?ASTRO:p==='runic'?RUNE:p==='mixed'?ALCH.concat(ASTRO,RUNE):ALCH;}
+const COLS=["var(--gold)","var(--gold)","var(--gold)","var(--vio)","var(--cy)","var(--bone)"];
+
+/* ───────────── WebGL field ───────────── */
+const cv=$("#gl"), gl=cv.getContext("webgl",{antialias:true,alpha:false});
+const VS=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
+const FS=`precision highp float;uniform vec2 uRes;uniform float uA,uB,uT,uShow;
+float plate(vec2 q){return sin(uA*3.14159265*q.x)*sin(uB*3.14159265*q.y)-sin(uB*3.14159265*q.x)*sin(uA*3.14159265*q.y);}
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes;
+  float f=plate(uv);float a=abs(f);
+  float line=smoothstep(0.075,0.0,a);
+  float reg=0.5+0.5*sign(f);
+  vec3 vd=vec3(0.018,0.028,0.045);
+  vec3 field=mix(vec3(0.03,0.07,0.10),vec3(0.06,0.045,0.12),reg);
+  vec3 glow=mix(vec3(0.37,0.95,0.77),vec3(0.54,0.50,0.94),0.5+0.5*sin(uT*0.45+uv.x*1.3));
+  vec3 col=vd + field*0.55*uShow + glow*line*(0.35+0.65*uShow);
+  vec2 d=uv-0.5; col*=1.0-dot(d,d)*0.85;          // lens vignette
+  col+=glow*0.04*uShow*(0.5+0.5*sin(uT*1.7));      // faint phosphor bloom
+  gl_FragColor=vec4(col,1.0);
+}`;
+function sh(t,src){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))console.warn(gl.getShaderInfoLog(s));return s;}
+const prog=gl.createProgram();
+gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(prog);gl.useProgram(prog);
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 3,-1, -1,3]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+const U={res:gl.getUniformLocation(prog,"uRes"),a:gl.getUniformLocation(prog,"uA"),
+  b:gl.getUniformLocation(prog,"uB"),t:gl.getUniformLocation(prog,"uT"),show:gl.getUniformLocation(prog,"uShow")};
+function sizeCanvas(){
+  const r=cv.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
+  cv.width=Math.max(2,r.width*dpr);cv.height=Math.max(2,r.height*dpr);
+  gl.viewport(0,0,cv.width,cv.height);
+}
+addEventListener("resize",sizeCanvas);
+
+/* ───────────── symbol agents (the Chladni sand) ───────────── */
+const NS=$("#agents"); NS.style.opacity="0"; NS.style.transition="opacity 1.1s ease";
+let agents=[];
+function buildAgents(){
+  NS.textContent="";agents=[];const set=poolSet(pool);
+  for(let i=0;i<nCount;i++){
+    const g=set[(Math.random()*set.length)|0];
+    const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("class",g[1]);t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","central");t.setAttribute("font-size",gscale);
+    t.setAttribute("fill",COLS[(Math.random()*COLS.length)|0]);
+    t.setAttribute("filter","url(#sg)");t.textContent=g[0];
+    NS.appendChild(t);
+    agents.push({x:Math.random()*0.94+0.03,y:Math.random()*0.94+0.03,el:t});
+  }
+}
+function rescaleGlyphs(){agents.forEach(a=>a.el.setAttribute("font-size",gscale));}
+const H=0.0015;
+function stepAgents(){
+  if(!live)return;
+  const a=curA,b=curB,sp=spreadAmt*0.011;nearNodes=0;
+  for(let i=0;i<agents.length;i++){
+    const A=agents[i];let x=A.x,y=A.y;
+    const f0=plate(x,y,a,b);
+    const gx=(plate(x+H,y,a,b)-plate(x-H,y,a,b))/(2*H);
+    const gy=(plate(x,y+H,a,b)-plate(x,y-H,a,b))/(2*H);
+    const g2=gx*gx+gy*gy+1e-9;
+    // Newton step toward the level set ƒ=0, glided by `rate`
+    x-=rate*f0*gx/g2; y-=rate*f0*gy/g2;
+    // tangential drift → spread ALONG the nodal line (iron-filings settle)
+    const gl_=Math.sqrt(g2);
+    if(gl_>1e-4){const tx=-gy/gl_,ty=gx/gl_,j=(Math.random()-0.5)*sp;x+=tx*j;y+=ty*j;}
+    x=clamp(x,0.02,0.98);y=clamp(y,0.02,0.98);
+    A.x=x;A.y=y;
+    A.el.setAttribute("x",(x*1000).toFixed(1));
+    A.el.setAttribute("y",((1-y)*1000).toFixed(1)); // flip → align with shader uv
+    if(Math.abs(f0)<0.045)nearNodes++;
+  }
+}
+
+/* ───────────── rotary knobs (vertical-drag, audio-grade) ───────────── */
+function makeKnob(knob,valEl,getV,setV,min,max){
+  function render(v){const pct=(v-min)/(max-min);
+    knob.style.setProperty("--p",(pct*100).toFixed(1)+"%");
+    knob.querySelector(".tick").style.transform=`translateX(-50%) rotate(${(-150+pct*300).toFixed(1)}deg)`;
+    valEl.textContent=v.toFixed(1);}
+  let drag=false,sy=0,sv=0;
+  knob.addEventListener("pointerdown",e=>{drag=true;sy=e.clientY;sv=getV();knob.setPointerCapture(e.pointerId);e.preventDefault();});
+  knob.addEventListener("pointermove",e=>{if(!drag)return;
+    const v=clamp(sv+(sy-e.clientY)*((max-min)/220),min,max);setV(v);render(v);});
+  knob.addEventListener("pointerup",e=>{drag=false;try{knob.releasePointerCapture(e.pointerId);}catch(_){}});
+  knob.addEventListener("dblclick",()=>{const v=Math.round(getV());setV(v);render(v);}); // detent to integer
+  render(getV());return render;
+}
+const renderA=makeKnob($("#knobA"),$("#valA"),()=>targetA,v=>targetA=v,1,8);
+const renderB=makeKnob($("#knobB"),$("#valB"),()=>targetB,v=>targetB=v,1,8);
+
+/* ───────────── audio — sonify the mode you can see ───────────── */
+let actx,o1,o2,master,lp,lfo,lfg;
+function initAudio(){
+  if(actx)return;
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  master=actx.createGain();master.gain.value=0;
+  lp=actx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=1500;lp.Q.value=0.6;
+  o1=actx.createOscillator();o2=actx.createOscillator();o1.type="sine";o2.type="triangle";
+  o1.connect(master);o2.connect(master);master.connect(lp);lp.connect(actx.destination);
+  lfo=actx.createOscillator();lfo.frequency.value=0.28;lfg=actx.createGain();lfg.gain.value=6; // shimmer
+  lfo.connect(lfg);lfg.connect(o1.detune);lfg.connect(o2.detune);
+  o1.start();o2.start();lfo.start();
+}
+function setVol(){if(!actx)return;const tgt=(live&&sound)?vol*0.42:0;
+  master.gain.setTargetAtTime(tgt,actx.currentTime,0.08);}
+function setAudioFreq(){if(!actx)return;
+  o1.frequency.setTargetAtTime(BASE*curA,actx.currentTime,0.06);
+  o2.frequency.setTargetAtTime(BASE*curB,actx.currentTime,0.06);}
+
+/* ───────────── boot / engage ───────────── */
+function engage(){
+  if(live)return;live=true;
+  initAudio();
+  sound=true;const ts=$("#tgSound");ts.setAttribute("aria-pressed","true");
+  setVol();setAudioFreq();
+  NS.style.opacity="1";                       // glyphs fly in & settle
+  if(reticleOn)$("#reticle").classList.add("on");
+  $("#boot").classList.add("gone");
+  $("#tField").textContent="live";
+  const b=$("#engage");b.classList.add("live");b.lastChild.textContent="Live";
+}
+$("#engage").addEventListener("click",engage);
+
+/* ───────────── telemetry ───────────── */
+function tele(){
+  $("#tMode").textContent=curA.toFixed(1)+" · "+curB.toFixed(1);
+  $("#tFreq").textContent=Math.round(BASE*curA)+"/"+Math.round(BASE*curB);
+  $("#tNodes").textContent=nearNodes;
+  $("#tTick").textContent=tick;
+  $("#hMode").textContent="a"+curA.toFixed(1)+" · b"+curB.toFixed(1);
+}
+function tape(){
+  $("#tape").innerHTML=
+   '<span class="k">mode</span>&nbsp; a<span class="g">'+curA.toFixed(2)+'</span> · b<span class="v">'+curB.toFixed(2)+'</span><br>'+
+   '<span class="k">plate</span>&nbsp; ƒ = sin(aπx)sin(bπy) − sin(bπx)sin(aπy)<br>'+
+   '<span class="k">settle</span>&nbsp; Δ = −ƒ·∇ƒ / |∇ƒ|² &nbsp;→&nbsp; |ƒ| → 0<br>'+
+   '<span class="k">on node</span>&nbsp; <span class="g">'+nearNodes+'</span> / '+agents.length+
+   ' glyphs · <span class="k">ƒ</span> <span class="v">'+Math.round(BASE*curA)+'·'+Math.round(BASE*curB)+'</span> hz';
+}
+
+/* ───────────── loop ───────────── */
+let t0=performance.now();
+function frame(now){
+  const tsec=(now-t0)/1000;
+  curA+=(targetA-curA)*0.10; curB+=(targetB-curB)*0.10;   // morph ease
+  show+=((live?1:0)-show)*0.045;
+  // draw field
+  gl.uniform2f(U.res,cv.width,cv.height);
+  gl.uniform1f(U.a,curA);gl.uniform1f(U.b,curB);gl.uniform1f(U.t,tsec);
+  gl.uniform1f(U.show,showField?show:show*0.12);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  stepAgents();
+  setAudioFreq();
+  tick++;
+  if(tick%3===0)tele();
+  if(tick%12===0)tape();
+  requestAnimationFrame(frame);
+}
+
+/* ───────────── control wiring ───────────── */
+$("#count").addEventListener("input",e=>{nCount=+e.target.value;$("#vCount").textContent=nCount;buildAgents();if(live)NS.style.opacity="1";});
+$("#rate").addEventListener("input",e=>{rate=+e.target.value/100;$("#vRate").textContent=rate.toFixed(2);});
+$("#spread").addEventListener("input",e=>{spreadAmt=+e.target.value/100;$("#vSpread").textContent=spreadAmt.toFixed(2);});
+$("#gscale").addEventListener("input",e=>{gscale=+e.target.value;$("#vScale").textContent=gscale;rescaleGlyphs();});
+$("#vol").addEventListener("input",e=>{vol=+e.target.value/100;$("#vVol").textContent=e.target.value;setVol();});
+$("#pool").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [...$("#pool").children].forEach(x=>x.setAttribute("aria-pressed",x===b));pool=b.dataset.p;buildAgents();if(live)NS.style.opacity="1";});
+function toggle(id,set){const el=$(id);el.addEventListener("click",()=>{const v=el.getAttribute("aria-pressed")!=="true";el.setAttribute("aria-pressed",v);set(v);});}
+toggle("#tgField",v=>showField=v);
+toggle("#tgSound",v=>{sound=v;setVol();});
+toggle("#tgReticle",v=>{reticleOn=v;$("#reticle").classList.toggle("on",v&&live);});
+
+/* ───────────── go ───────────── */
+buildAgents();sizeCanvas();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
