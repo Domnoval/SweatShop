@@ -26,7 +26,13 @@ import {
   MINIMUM_PRINT_STROKE_PT,
   type GeometrySource,
 } from "./geometry.v1.js";
+import {
+  GEOMETRY_V2_IS_PROVISIONAL,
+  GEOMETRY_V2_SOURCE,
+  GEOMETRY_V2_VERSION,
+} from "./geometry.v2.js";
 import { GEOMETRY_V1_INTEGRITY } from "./geometry-integrity.v1.js";
+import { GEOMETRY_V2_INTEGRITY } from "./geometry-integrity.v2.js";
 import type { GeometryRegistry, GlyphGeometryRecord } from "./types.js";
 
 /**
@@ -59,10 +65,10 @@ function envelopeFromInkBounds(
   ]);
 }
 
-function buildRecord(source: GeometrySource): GlyphGeometryRecord {
+function buildRecord(source: GeometrySource, version: string): GlyphGeometryRecord {
   return Object.freeze({
     id: source.id,
-    version: GEOMETRY_VERSION,
+    version,
     viewBox: source.viewBox,
     paths: source.paths,
     anchors: source.anchors,
@@ -108,7 +114,7 @@ class LockedGeometryRegistry implements GeometryRegistry {
           { id: source.id, inkBounds: source.inkBounds },
         );
       }
-      records.set(source.id, buildRecord(source));
+      records.set(source.id, buildRecord(source, version));
       bounds.set(
         source.id,
         Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY }),
@@ -179,10 +185,35 @@ export function createGeometryRegistry(): GeometryRegistry {
   );
 }
 
-/** Shared singleton. The registry is immutable, so one instance is sufficient. */
+/**
+ * `geometry/v2` — the studio's own authored marks, extracted from the draw
+ * registry into locked path data.
+ *
+ * Deliberately not reachable from `defaultRegistries()` and not listed in
+ * `SUPPORTED_VERSIONS`. No grammar resolves a word to a `mark-*` id yet, so a
+ * plate pinning v2 today would load real geometry and then find nothing to say
+ * with it. Making it loadable and verifiable is a separate step from making it
+ * compilable, and conflating the two is how a half-wired vocabulary ships.
+ */
+export function createGeometryRegistryV2(): GeometryRegistry {
+  return new LockedGeometryRegistry(
+    GEOMETRY_V2_VERSION,
+    GEOMETRY_V2_IS_PROVISIONAL,
+    GEOMETRY_V2_SOURCE,
+    GEOMETRY_V2_INTEGRITY,
+  );
+}
+
+/** Shared singletons. A registry is immutable, so one instance each suffices. */
 let cached: GeometryRegistry | undefined;
+let cachedV2: GeometryRegistry | undefined;
 
 export function geometryRegistry(): GeometryRegistry {
   cached ??= createGeometryRegistry();
   return cached;
+}
+
+export function geometryRegistryV2(): GeometryRegistry {
+  cachedV2 ??= createGeometryRegistryV2();
+  return cachedV2;
 }

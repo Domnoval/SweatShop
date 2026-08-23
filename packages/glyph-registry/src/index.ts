@@ -13,6 +13,12 @@
 export * from "./types.js";
 export * from "./grammar-types.js";
 export * from "./geometry.v1.js";
+export {
+  GEOMETRY_V2_IS_PROVISIONAL,
+  GEOMETRY_V2_SOURCE,
+  GEOMETRY_V2_VERSION,
+} from "./geometry.v2.js";
+export { GEOMETRY_V2_INTEGRITY } from "./geometry-integrity.v2.js";
 export * from "./geometry-registry.js";
 export {
   GRAMMAR_IS_PROVISIONAL,
