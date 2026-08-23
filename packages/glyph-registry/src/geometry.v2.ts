@@ -9,7 +9,7 @@
  * locked path data. Every primitive became a path because `LockedPath` exposes
  * `d` and nothing else, so no downstream engine can reinterpret a shape.
  *
- * 6 of 52 marks are NOT here. Each was refused for a stated
+ * 2 of 52 marks are NOT here. Each was refused for a stated
  * reason rather than approximated — see the quarantine list at the foot of this
  * file. Substituting a wrong glyph is the one thing this pipeline refuses to do.
  */
@@ -77,6 +77,39 @@ export const GEOMETRY_V2_SOURCE: readonly GeometrySource[] = Object.freeze([
       modifierSlots: Object.freeze([p(70.7183, 27.824), p(70.7183, 72.176), p(29.2817, 72.176), p(29.2817, 27.824)]),
     }),
     inkBounds: Object.freeze([17.6276, 15.35, 82.3724, 84.65] as const),
+  },
+  {
+    id: "mark-flower",
+    viewBox: MARK_VIEWBOX,
+    paths: Object.freeze([
+    stroke("M30.75 60.65 A 11 11 0 0 0 30.75 39.35", 1),
+    stroke("M39.00 69.05 A 11 11 0 0 0 28.00 50.00", 1),
+    stroke("M49.60 72.00 A 11 11 0 0 0 31.15 61.35", 1),
+    stroke("M28.00 50.00 A 11 11 0 1 0 39.00 30.95", 1),
+    stroke("M28 50 A 11 11 0 1 0 50 50 A 11 11 0 1 0 28 50 Z", 1),
+    stroke("M33.5 59.5263 A 11 11 0 1 0 55.5 59.5263 A 11 11 0 1 0 33.5 59.5263 Z", 1),
+    stroke("M61.00 69.05 A 11 11 0 0 0 39.00 69.05", 1),
+    stroke("M31.15 38.65 A 11 11 0 0 0 49.60 28.00", 1),
+    stroke("M33.5 40.4737 A 11 11 0 1 0 55.5 40.4737 A 11 11 0 1 0 33.5 40.4737 Z", 1),
+    stroke("M39 50 A 11 11 0 1 0 61 50 A 11 11 0 1 0 39 50 Z", 1),
+    stroke("M44.5 59.5263 A 11 11 0 1 0 66.5 59.5263 A 11 11 0 1 0 44.5 59.5263 Z", 1),
+    stroke("M68.85 61.35 A 11 11 0 0 0 50.40 72.00", 1),
+    stroke("M39.00 30.95 A 11 11 0 0 0 61.00 30.95", 1),
+    stroke("M44.5 40.4737 A 11 11 0 1 0 66.5 40.4737 A 11 11 0 1 0 44.5 40.4737 Z", 1),
+    stroke("M50 50 A 11 11 0 1 0 72 50 A 11 11 0 1 0 50 50 Z", 1),
+    stroke("M72.00 50.00 A 11 11 0 0 0 61.00 69.05", 1),
+    stroke("M50.40 28.00 A 11 11 0 0 0 68.85 38.65", 1),
+    stroke("M61.00 30.95 A 11 11 0 0 0 72.00 50.00", 1),
+    stroke("M69.25 39.35 A 11 11 0 0 0 69.25 60.65", 1),
+    stroke("M28 50 A 22 22 0 1 0 72 50 A 22 22 0 1 0 28 50 Z", 1.4),
+    ]),
+    anchors: Object.freeze({
+      center: p(50, 50),
+      entry: p(27.3, 50),
+      exit: p(72.7, 50),
+      modifierSlots: Object.freeze([p(64.528, 35.472), p(64.528, 64.528), p(35.472, 64.528), p(35.472, 35.472)]),
+    }),
+    inkBounds: Object.freeze([27.3, 27.3, 72.7, 72.7] as const),
   },
   {
     id: "mark-fruit",
@@ -238,6 +271,54 @@ export const GEOMETRY_V2_SOURCE: readonly GeometrySource[] = Object.freeze([
     inkBounds: Object.freeze([13.75, 13.25, 86.25, 86.75] as const),
   },
   {
+    id: "mark-sriyantra",
+    viewBox: MARK_VIEWBOX,
+    paths: Object.freeze([
+    stroke("M50.0 20.5 L24.0 75.5 L76.0 75.5Z", 0.8),
+    stroke("M50.0 25.5 L30.0 66.5 L70.0 66.5Z", 0.8),
+    stroke("M50.0 31.5 L35.0 56.5 L65.0 56.5Z", 0.8),
+    stroke("M50.0 37.5 L40.0 49.5 L60.0 49.5Z", 0.8),
+    stroke("M50.0 79.5 L23.0 24.5 L77.0 24.5Z", 0.8),
+    stroke("M50.0 70.5 L29.0 30.5 L71.0 30.5Z", 0.8),
+    stroke("M50.0 61.5 L34.5 37.5 L65.5 37.5Z", 0.8),
+    stroke("M50.0 53.5 L39.5 43.5 L60.5 43.5Z", 0.8),
+    stroke("M50.0 47.5 L44.0 45.5 L56.0 45.5Z", 0.8),
+    fill("M48.4 50 A 1.6 1.6 0 1 0 51.6 50 A 1.6 1.6 0 1 0 48.4 50 Z"),
+    fill("M81.1 50 A 0.9 0.9 0 1 0 82.9 50 A 0.9 0.9 0 1 0 81.1 50 Z"),
+    fill("M71.7274 72.6274 A 0.9 0.9 0 1 0 73.5274 72.6274 A 0.9 0.9 0 1 0 71.7274 72.6274 Z"),
+    fill("M49.1 82 A 0.9 0.9 0 1 0 50.9 82 A 0.9 0.9 0 1 0 49.1 82 Z"),
+    fill("M26.4726 72.6274 A 0.9 0.9 0 1 0 28.2726 72.6274 A 0.9 0.9 0 1 0 26.4726 72.6274 Z"),
+    fill("M17.1 50 A 0.9 0.9 0 1 0 18.9 50 A 0.9 0.9 0 1 0 17.1 50 Z"),
+    fill("M26.4726 27.3726 A 0.9 0.9 0 1 0 28.2726 27.3726 A 0.9 0.9 0 1 0 26.4726 27.3726 Z"),
+    fill("M49.1 18 A 0.9 0.9 0 1 0 50.9 18 A 0.9 0.9 0 1 0 49.1 18 Z"),
+    fill("M71.7274 27.3726 A 0.9 0.9 0 1 0 73.5274 27.3726 A 0.9 0.9 0 1 0 71.7274 27.3726 Z"),
+    fill("M86.3698 57.4134 A 0.9 0.9 0 1 0 88.1698 57.4134 A 0.9 0.9 0 1 0 86.3698 57.4134 Z"),
+    fill("M80.6958 71.1117 A 0.9 0.9 0 1 0 82.4958 71.1117 A 0.9 0.9 0 1 0 80.6958 71.1117 Z"),
+    fill("M70.2117 81.5958 A 0.9 0.9 0 1 0 72.0117 81.5958 A 0.9 0.9 0 1 0 70.2117 81.5958 Z"),
+    fill("M56.5134 87.2698 A 0.9 0.9 0 1 0 58.3134 87.2698 A 0.9 0.9 0 1 0 56.5134 87.2698 Z"),
+    fill("M41.6866 87.2698 A 0.9 0.9 0 1 0 43.4866 87.2698 A 0.9 0.9 0 1 0 41.6866 87.2698 Z"),
+    fill("M27.9883 81.5958 A 0.9 0.9 0 1 0 29.7883 81.5958 A 0.9 0.9 0 1 0 27.9883 81.5958 Z"),
+    fill("M17.5042 71.1117 A 0.9 0.9 0 1 0 19.3042 71.1117 A 0.9 0.9 0 1 0 17.5042 71.1117 Z"),
+    fill("M11.8302 57.4134 A 0.9 0.9 0 1 0 13.6302 57.4134 A 0.9 0.9 0 1 0 11.8302 57.4134 Z"),
+    fill("M11.8302 42.5866 A 0.9 0.9 0 1 0 13.6302 42.5866 A 0.9 0.9 0 1 0 11.8302 42.5866 Z"),
+    fill("M17.5042 28.8883 A 0.9 0.9 0 1 0 19.3042 28.8883 A 0.9 0.9 0 1 0 17.5042 28.8883 Z"),
+    fill("M27.9883 18.4042 A 0.9 0.9 0 1 0 29.7883 18.4042 A 0.9 0.9 0 1 0 27.9883 18.4042 Z"),
+    fill("M41.6866 12.7302 A 0.9 0.9 0 1 0 43.4866 12.7302 A 0.9 0.9 0 1 0 41.6866 12.7302 Z"),
+    fill("M56.5134 12.7302 A 0.9 0.9 0 1 0 58.3134 12.7302 A 0.9 0.9 0 1 0 56.5134 12.7302 Z"),
+    fill("M70.2117 18.4042 A 0.9 0.9 0 1 0 72.0117 18.4042 A 0.9 0.9 0 1 0 70.2117 18.4042 Z"),
+    fill("M80.6958 28.8883 A 0.9 0.9 0 1 0 82.4958 28.8883 A 0.9 0.9 0 1 0 80.6958 28.8883 Z"),
+    fill("M86.3698 42.5866 A 0.9 0.9 0 1 0 88.1698 42.5866 A 0.9 0.9 0 1 0 86.3698 42.5866 Z"),
+    stroke("M6 6 L94 6 L94 94 L6 94 Z", 0.6),
+    ]),
+    anchors: Object.freeze({
+      center: p(50, 50),
+      entry: p(5.7, 50),
+      exit: p(94.3, 50),
+      modifierSlots: Object.freeze([p(78.352, 21.648), p(78.352, 78.352), p(21.648, 78.352), p(21.648, 21.648)]),
+    }),
+    inkBounds: Object.freeze([5.7, 5.7, 94.3, 94.3] as const),
+  },
+  {
     id: "mark-tree",
     viewBox: MARK_VIEWBOX,
     paths: Object.freeze([
@@ -297,6 +378,20 @@ export const GEOMETRY_V2_SOURCE: readonly GeometrySource[] = Object.freeze([
       modifierSlots: Object.freeze([p(69.3728, 28.722), p(69.3728, 65.778), p(30.6272, 65.778), p(30.6272, 28.722)]),
     }),
     inkBounds: Object.freeze([19.73, 18.3, 80.27, 76.2] as const),
+  },
+  {
+    id: "mark-goldenspiral",
+    viewBox: MARK_VIEWBOX,
+    paths: Object.freeze([
+    stroke("M52.4 50.0L52.5 50.3L52.5 50.6L52.5 50.9L52.5 51.3L52.4 51.6L52.2 52.0L52.1 52.3L51.8 52.6L51.6 52.9L51.3 53.2L50.9 53.5L50.5 53.7L50.0 53.9L49.6 54.0L49.1 54.1L48.5 54.1L48.0 54.0L47.4 53.9L46.9 53.7L46.3 53.4L45.8 53.0L45.3 52.6L44.8 52.1L44.4 51.5L44.0 50.8L43.8 50.1L43.6 49.4L43.4 48.5L43.4 47.7L43.5 46.8L43.7 45.9L44.0 45.0L44.5 44.1L45.1 43.3L45.7 42.4L46.6 41.7L47.5 41.0L48.5 40.4L49.7 40.0L50.9 39.6L52.2 39.4L53.6 39.4L55.0 39.5L56.5 39.8L58.0 40.3L59.4 41.0L60.8 41.9L62.1 43.0L63.3 44.3L64.5 45.8L65.4 47.5L66.2 49.3L66.8 51.3L67.1 53.4L67.2 55.6L67.0 57.9L66.5 60.3L65.7 62.6L64.6 65.0L63.2 67.2L61.5 69.4L59.4 71.4L57.0 73.2L54.4 74.8L51.4 76.1L48.2 77.0L44.8 77.6L41.2 77.8L37.5 77.5L33.7 76.8L29.9 75.6L26.1 73.9L22.4 71.6L18.9 68.8L15.7 65.5L12.7 61.7L10.1 57.5L8.0 52.7L6.4 47.6", 1.4),
+    ]),
+    anchors: Object.freeze({
+      center: p(36.8, 58.6),
+      entry: p(5.7, 58.6),
+      exit: p(67.9, 58.6),
+      modifierSlots: Object.freeze([p(56.704, 45.864), p(56.704, 71.336), p(16.896, 71.336), p(16.896, 45.864)]),
+    }),
+    inkBounds: Object.freeze([5.7, 38.7, 67.9, 78.5] as const),
   },
   {
     id: "mark-pentagram",
@@ -574,6 +669,21 @@ export const GEOMETRY_V2_SOURCE: readonly GeometrySource[] = Object.freeze([
       modifierSlots: Object.freeze([p(69.478, 33.432), p(69.478, 76.568), p(42.022, 76.568), p(42.022, 33.432)]),
     }),
     inkBounds: Object.freeze([34.3, 21.3, 77.2, 88.7] as const),
+  },
+  {
+    id: "mark-ouroboros",
+    viewBox: MARK_VIEWBOX,
+    paths: Object.freeze([
+    stroke("M 66.2090691760442 24.755870455763105 A 30 30 0 1 0 79.40199733523724 44.039920076148164", 3.2),
+    fill("M 74.40199733523724 38.039920076148164 L 85.40199733523724 44.039920076148164 L 74.40199733523724 50.039920076148164Z"),
+    ]),
+    anchors: Object.freeze({
+      center: p(51.9072, 49.9757),
+      entry: p(18.4125, 49.9757),
+      exit: p(85.402, 49.9757),
+      modifierSlots: Object.freeze([p(73.3439, 29.7673), p(73.3439, 70.1841), p(30.4706, 70.1841), p(30.4706, 29.7673)]),
+    }),
+    inkBounds: Object.freeze([18.4125, 18.4, 85.402, 81.5514] as const),
   },
   {
     id: "mark-valknut",
@@ -1146,10 +1256,6 @@ export { MIN_PRINT_STROKE_PT };
 /**
  * Refused during extraction, with the reason each was refused:
  *
- * - flower: drawn through a <clipPath> — the extracted paths are the unclipped lattice, which is a different mark
- * - sriyantra: ink escapes the 0..100 viewBox — [5.7, -28.4, 94.3, 124.4]; renders only because the viewport crops it
- * - goldenspiral: ink escapes the 0..100 viewBox — [-257.8, -447, 853.4, 781.4]; renders only because the viewport crops it
  * - loshu: depends on 9 <text> element(s) — resolves through a system font, so it is not authored geometry and would not survive print
- * - ouroboros: ink escapes the 0..100 viewBox — [64.0232, -12.7556, 127.1986, 50.3958]; renders only because the viewport crops it
  * - baphomet: depends on 5 <text> element(s) — resolves through a system font, so it is not authored geometry and would not survive print
  */

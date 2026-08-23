@@ -20,6 +20,7 @@ import {
   derivePlateId,
   insetRect,
   parsePlateRequest,
+  PlateError,
   preserveSourcePayload,
   requestDigest,
   resolveOutput,
@@ -128,6 +129,55 @@ function decoyGeometryIds(geometry: GeometryRegistry): readonly string[] {
   );
 }
 
+/**
+ * Refuse to compile when a loaded registry disagrees with the pinned contract.
+ *
+ * `assertSupportedVersions` answers a different question: can this build execute
+ * the requested contract at all. It never looks at which registry was actually
+ * handed in. Nothing else did either, so swapping in a `geometry/v2` registry
+ * while the plate still declared `geometry/v1` produced a plate compiled under
+ * one vocabulary and stamped with the name of another — reproducible, verifiable,
+ * and wrong. Every artifact would carry a version string that does not describe it.
+ *
+ * The contract is the plate's identity: `derivePlateId` hashes it, the manifest
+ * seals it, and Gate 3 pins output against it. So this fails closed rather than
+ * preferring either side.
+ */
+function assertRegistriesMatchContract(
+  grammar: ExtendedGrammarRegistry,
+  geometry: GeometryRegistry,
+  versions: VersionContract,
+): void {
+  const mismatched: { field: string; contract: string; loaded: string }[] = [];
+
+  if (grammar.version !== versions.grammarVersion) {
+    mismatched.push({
+      field: "grammarVersion",
+      contract: versions.grammarVersion,
+      loaded: grammar.version,
+    });
+  }
+  if (geometry.version !== versions.geometryVersion) {
+    mismatched.push({
+      field: "geometryVersion",
+      contract: versions.geometryVersion,
+      loaded: geometry.version,
+    });
+  }
+
+  if (mismatched.length > 0) {
+    throw new PlateError(
+      "UNSUPPORTED_VERSION",
+      `The loaded registries do not match the pinned version contract: ${mismatched
+        .map((m) => `${m.field} contract=${m.contract} loaded=${m.loaded}`)
+        .join(", ")}. A plate must declare the vocabulary it was actually ` +
+        `compiled from; compiling under one and stamping another silently ` +
+        `mislabels every artifact it produces.`,
+      { mismatched },
+    );
+  }
+}
+
 export function compilePlate(
   input: unknown,
   registries: CompilerRegistries = defaultRegistries(),
@@ -135,6 +185,7 @@ export function compilePlate(
   const { grammar, geometry, versions } = registries;
 
   assertSupportedVersions(versions);
+  assertRegistriesMatchContract(grammar, geometry, versions);
   geometry.verifyIntegrity();
   const integrity: PathIntegritySnapshot[] = [
     { stage: "registry-load", digest: registryDigest(geometry) },
