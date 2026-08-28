@@ -242,7 +242,7 @@ quiet a failing check. A changed golden hash means the artwork changed.
 | Phase | State |
 | --- | --- |
 | 0 — Canon audit | ⚠️ Provisional grammar in place; **artist approval outstanding** |
-| 1 — Canonical glyph registry | ⚠️ 18 placeholder records with full contract; **artist redraw outstanding** |
+| 1 — Canonical glyph registry | ⚠️ `geometry/v2`: 68 records under full contract — 50 authored marks lowered from the studio's draw registry, plus the 18 original placeholders carried forward; 2 of 52 marks quarantined rather than approximated; **artist redraw outstanding** |
 | 2 — Semantic compiler core | ✅ |
 | 3 — Deterministic random system | ✅ |
 | 4 — First layout and substrate | ✅ Concentric Rings + Clause Columns; Alpha Radial Lattice + five more |

@@ -247,6 +247,20 @@ export type Reading = Readonly<{
   /** True when expansion hit its ceiling and `candidateCount` is a floor. */
   truncated: boolean;
   /**
+   * True when the READING set itself was clipped, so `readings` is a sample of
+   * what the figure admits and its length is a floor rather than a total.
+   *
+   * Distinct from `truncated`, which is about `candidateCount` — the letter
+   * sequences expanded FROM the readings. Nothing recorded that this set had
+   * been clipped, so the receipt printed 64 as if it were the count: a saturn
+   * figure of ABBAABBAABBAABBAABBAABBA admits 72 and the plate said 64, with no
+   * mark on it to say the number was a ceiling. It matters beyond the receipt —
+   * a dropped reading may be the one that spells a word, so `matches` can be
+   * short and `auditVocabulary`'s recovery rates too high, and until this flag
+   * existed the audit could not tell.
+   */
+  readingsClipped: boolean;
+  /**
    * True when a loop could be hung on more than one visit — two arrivals at one
    * cell from the same direction. The reading is then one of several, not the one.
    */
@@ -272,6 +286,7 @@ const EMPTY_READING: Reading = Object.freeze({
   matches: Object.freeze([]),
   candidateCount: 0,
   truncated: false,
+  readingsClipped: false,
   ambiguousLoops: false,
 });
 
@@ -352,23 +367,43 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
   );
   const ambiguous = placements.some((p) => p.length > 1);
 
+  // The ceiling on how much of the placement product is expanded. It is a work
+  // bound, not a claim: a figure with r ambiguous runs over v visits admits up
+  // to v^r readings, and BETWEEN-shaped words push that past anything worth
+  // materialising. Whether it was reached is recorded and reported — raising it
+  // would only move the number at which the same silence begins.
   const MAX_READINGS = 64;
+  let readingsClipped = false;
+
   let assignments: number[][] = [[]];
   for (const options of placements) {
     const next: number[][] = [];
+    const choices = options.length === 0 ? [-1] : options;
+    let full = false;
     for (const acc of assignments) {
-      for (const choice of options.length === 0 ? [-1] : options) {
-        if (next.length >= MAX_READINGS) break;
+      if (full) break;
+      for (const choice of choices) {
+        // Reached only when there is another tuple to push and no room for it,
+        // so an expansion that exactly fills the ceiling is complete, not
+        // clipped.
+        if (next.length >= MAX_READINGS) {
+          full = true;
+          break;
+        }
         next.push([...acc, choice]);
       }
     }
+    if (full) readingsClipped = true;
     assignments = next;
   }
 
   const readings: number[][] = [];
   for (const lattice of lattices) {
     for (const assignment of assignments) {
-      if (readings.length >= MAX_READINGS) break;
+      if (readings.length >= MAX_READINGS) {
+        readingsClipped = true;
+        break;
+      }
       const perVisit = points.map(() => 0);
       assignment.forEach((visit, runIndex) => {
         if (visit >= 0) perVisit[visit] = perVisit[visit]! + runs[runIndex]!.count;
@@ -447,6 +482,7 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
     matches: Object.freeze([...new Set(matches)].sort()),
     candidateCount,
     truncated,
+    readingsClipped,
     ambiguousLoops: ambiguous,
   });
 }

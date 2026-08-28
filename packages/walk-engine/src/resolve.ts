@@ -32,7 +32,11 @@ export type Resolution = Readonly<{
   letters: readonly ResolvedLetter[];
   /** Cell sequence, the walk's only input. */
   cells: readonly number[];
-  /** Characters dropped as non-letters, in order, with their source positions. */
+  /**
+   * Characters dropped as non-letters, in order, indexed into the string the
+   * caller passed — not into its uppercased form, which is a different string
+   * whenever a character expands under uppercasing.
+   */
   dropped: readonly Readonly<{ index: number; char: string }>[];
 }>;
 
@@ -48,15 +52,27 @@ export function resolve(input: string, order: number, cipher: CipherId = "PYTH")
   const letters: ResolvedLetter[] = [];
   const dropped: { index: number; char: string }[] = [];
 
-  [...input.toUpperCase()].forEach((char, index) => {
-    if (char >= "A" && char <= "Z") {
-      const value = cipherValue(char, cipher);
-      letters.push(
-        Object.freeze({ index: letters.length, letter: char, value, cell: reduceToCell(value, max) }),
-      );
-    } else {
-      dropped.push({ index, char });
+  // Uppercase per source character, not once over the whole string. Some
+  // characters expand — ß to SS, the ligatures ﬁ ﬀ ﬃ to FI FF FFI — so indices
+  // into `input.toUpperCase()` drift past every expansion before them and point
+  // into a string the caller never typed. `resolve("ﬁ!")` used to report the `!`
+  // at index 2; the caller's `!` is at index 1. `dropped` exists so a caller can
+  // point back at what they typed, which is the one thing that index must do.
+  [...input].forEach((sourceChar, index) => {
+    const upper = sourceChar.toUpperCase();
+    let anyLetter = false;
+    for (const char of upper) {
+      if (char >= "A" && char <= "Z") {
+        anyLetter = true;
+        const value = cipherValue(char, cipher);
+        letters.push(
+          Object.freeze({ index: letters.length, letter: char, value, cell: reduceToCell(value, max) }),
+        );
+      }
     }
+    // A character contributing no letter is dropped, reported at its own position
+    // in the caller's string.
+    if (!anyLetter) dropped.push({ index, char: sourceChar });
   });
 
   return Object.freeze({

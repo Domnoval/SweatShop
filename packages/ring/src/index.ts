@@ -93,8 +93,6 @@ export type RingOptions = Readonly<{
 
 const BOX = 220;
 const f = (n: number): string => n.toFixed(4);
-const esc = (s: string): string =>
-  s.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;");
 
 /**
  * A cool-to-warm ramp, fixed rather than computed.
@@ -176,17 +174,24 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   // before placement. That string is delimited verbatim in the emitted file, so
   // a stranger can cut it out and rehash it without trusting this code.
   const ink = composeFigure(figure, envelope, marks);
-  const sheetId = sha256Hex(ink.markup).slice(0, 16);
+  const sheetId = sha256Hex(ink).slice(0, 16);
+
+  // Placed once, and the same string is both measured and emitted. The stroke
+  // gauge is a verdict on the ink that reaches the paper, so what the annotation
+  // measures has to be the bytes the sheet carries and not a reconstruction of
+  // them: two spellings of the placement is two answers to "how thin is this
+  // plate", and the plate would go on being right while the gauge drifted.
+  const placedFigure = placeFigure(ink);
 
   const sheetSvg = composeSheet(
-    ink,
+    placedFigure,
     annotationLayer({
       walk: figure,
       envelope,
       marks,
       choices,
       sheetId,
-      figureStrokesMm: ink.strokesMm,
+      placedFigure,
     }),
   );
   // House rule 4, on the finished artifact rather than on any one layer.
@@ -246,30 +251,24 @@ function placeMarks(
 /* ── the drawing ─────────────────────────────────────────────────────────── */
 
 /**
- * The figure, and every stroke width it paints.
+ * The figure, in figure units, before placement.
  *
- * The widths are collected here, as the markup is emitted, and handed to the
- * annotation layer — which prints the thinnest of them. Recomputing that number
- * from a table of constants somewhere else would let the table and the drawing
- * drift apart, and the drawing would go on being right while the plate said
- * something else. Widths are converted to millimetres at the placement scale,
- * because that is the size the ink is actually laid down at.
+ * This used to hand the annotation layer a list of every stroke width it had
+ * pushed as it emitted, and the annotation printed the thinnest of them. The
+ * list was the defect: it recorded the figure's widths and nothing else, so the
+ * finest ink on the sheet — the kamea numerals, sized by the order of the
+ * square — was never in it, and a `push` forgotten beside a new layer would
+ * have gone the same way. The gauge is measured off the emitted markup now
+ * (`thinnestStrokeMm`), so there is nothing here to keep in step.
  */
-type FigureInk = Readonly<{ markup: string; strokesMm: readonly number[] }>;
-
-/** A stroke width in figure units, at the placement scale, in millimetres. */
-const strokeMm = (units: number): number => units * FIGURE_PLACEMENT.scale;
-
 function composeFigure(
   figure: Walk,
   envelope: EnvelopeFamily,
   marks: readonly PlacedMark[],
-): FigureInk {
+): string {
   const layers: string[] = [];
-  const strokesMm: number[] = [];
 
   const ENVELOPE_STROKE = 0.22;
-  strokesMm.push(strokeMm(ENVELOPE_STROKE));
   layers.push(
     `<g id="envelope" fill="none" stroke-width="${ENVELOPE_STROKE}" stroke-linecap="round">` +
       envelope.bands
@@ -293,8 +292,8 @@ function composeFigure(
                 if (p.role === "fill") return `<path d="${p.d}" fill="#9aa7b4" stroke="none"/>`;
                 // The mark is drawn inside its own scale(m.scale), so the width
                 // that reaches the plate is the authored width through BOTH
-                // scales — the mark's and the sheet placement's.
-                strokesMm.push(strokeMm(p.strokeWidth * m.scale));
+                // scales — the mark's and the sheet placement's. Neither is
+                // restated here: the gauge walks those scales off the markup.
                 return `<path d="${p.d}" stroke-width="${p.strokeWidth}"/>`;
               })
               .join("");
@@ -316,7 +315,6 @@ function composeFigure(
 
   const WALK_STROKE = 1.4;
   const LOOP_STROKE = 1.6;
-  strokesMm.push(strokeMm(WALK_STROKE), strokeMm(LOOP_STROKE));
   layers.push(
     `<g id="walk-line" fill="none" stroke="#ffffff" stroke-width="${WALK_STROKE}" ` +
       `stroke-linejoin="round" stroke-linecap="round">${byRole("line")}</g>`,
@@ -325,10 +323,7 @@ function composeFigure(
       `stroke-linecap="round">${byRole("start-cap")}${byRole("end-cap")}</g>`,
   );
 
-  return Object.freeze({
-    markup: layers.join(""),
-    strokesMm: Object.freeze(strokesMm),
-  });
+  return layers.join("");
 }
 
 /* ── the sheet ───────────────────────────────────────────────────────────── */
@@ -347,16 +342,31 @@ function composeFigure(
  * bytes the drawing number hashes can be cut out of the emitted file by a plain
  * string operation, with no need to match nested groups — or to trust us.
  */
-function composeSheet(ink: FigureInk, annotation: string): string {
-  const place = FIGURE_PLACEMENT;
+function composeSheet(placedFigure: string, annotation: string): string {
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SHEET_W} ${SHEET_H}" ` +
     `width="${SHEET_W}mm" height="${SHEET_H}mm">` +
     `<rect width="${SHEET_W}" height="${SHEET_H}" fill="#07090c"/>` +
-    `<g id="figure" transform="translate(${f(place.x)} ${f(place.y)}) ` +
-    `scale(${f(place.scale)})">${ink.markup}</g><!--/figure-->` +
+    `${placedFigure}` +
     `<g id="annotation">${annotation}</g>` +
     `</svg>`
+  );
+}
+
+/**
+ * The figure, placed: the one spelling of the drawing field on this sheet.
+ *
+ * Written once because two consumers need the identical bytes — the sheet emits
+ * them, and the annotation layer measures them for the stroke gauge. The
+ * closing `</g><!--/figure-->` is part of what is returned, so the delimiter the
+ * legend tells a stranger to cut on is produced in the same place as the tag it
+ * closes.
+ */
+function placeFigure(markup: string): string {
+  const place = FIGURE_PLACEMENT;
+  return (
+    `<g id="figure" transform="translate(${f(place.x)} ${f(place.y)}) ` +
+    `scale(${f(place.scale)})">${markup}</g><!--/figure-->`
   );
 }
 
@@ -447,10 +457,16 @@ function formatLegend(
     "  widest point, which is where the measurement was taken.",
     "",
     "  The gauge in the title block is the thinnest stroke the plate actually",
-    "  paints, measured from the widths the figure emitted, against the garment",
-    "  floors in scripts/build-print-kit.ts — DTF 0.5 mm, DTG on light 0.6 mm,",
+    "  paints, measured off the finished markup, against the garment floors in",
+    "  scripts/build-print-kit.ts — DTF 0.5 mm, DTG on light 0.6 mm,",
     "  DTG on dark 1.0 mm. This is a paper sheet; those floors are a verdict on a",
     "  second profile, not a pass mark for this one.",
+    "",
+    "  Measured means measured: every stroke width in the finished bytes, times",
+    "  the scales above it, over the figure and this annotation alike — the kamea",
+    "  numerals included, which is where the old gauge was wrong. It is rounded",
+    "  down to the last place printed, so the number can understate the finest",
+    "  ink on the sheet but never overstate it.",
     "",
     "THE WALK",
     `  ${figure.steps.length === 0 ? "no letters — nothing was walked" : figure.steps.map((s) => `${s.letter}=${s.value}`).join("  ")}`,
@@ -710,7 +726,22 @@ function formatReceipt(
     `  cells recovered                   ${reading.cells.join("·")}`,
     `  cells walked                      ${digitString(figure.resolution)}`,
     `  identical                         ${reading.cells.join("·") === digitString(figure.resolution) ? "yes" : "NO"}`,
-    `  readings the figure admits        ${reading.readings.length}${reading.ambiguousLoops ? "  (ambiguous: a cell is revisited from the same direction)" : ""}`,
+    // A CEILING IS NOT A COUNT. `read()` stops expanding loop placements at a
+    // work bound, and this line printed whatever survived it as though it were
+    // the total: the saturn figure of ABBAABBAABBAABBAABBAABBA admits 72
+    // readings and the receipt said 64, flat. When the bound was reached the
+    // number is a floor and says so, and the sentence below says what the
+    // missing readings could have cost — a word one of them spells is a word
+    // this receipt cannot return.
+    `  readings the figure admits        ${reading.readingsClipped ? "at least " : ""}${reading.readings.length}${reading.ambiguousLoops ? "  (ambiguous: a cell is revisited from the same direction)" : ""}`,
+    ...(reading.readingsClipped
+      ? [
+          "                                    Expansion hit its ceiling, so that is a floor and not",
+          "                                    a total: readings this figure admits were never",
+          "                                    expanded, and a word one of them spells cannot appear",
+          "                                    below.",
+        ]
+      : []),
     "",
   ];
   if (vocabulary === undefined) {

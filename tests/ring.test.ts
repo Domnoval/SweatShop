@@ -35,8 +35,16 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { sha256Hex } from "@studio137/plate-core";
+import { WORD_CORRESPONDENCE } from "@studio137/glyph-registry";
 import { ring, type RingArtifacts, type RingOptions } from "@studio137/ring";
-import { digitString, read, reduceToCell } from "@studio137/walk-engine";
+import { digitString, read, reduceToCell, SQUARE_IDS, walk } from "@studio137/walk-engine";
+
+// The numeral set is not re-exported from the glyph-registry barrel, so it is
+// reached by path — the same workaround `packages/ring/src/annotate.ts` records.
+// It is needed here to read the numbers back OFF the plate: the annotation layer
+// has no <text>, so the only way to check what the sheet says is to recognise
+// the locked path data it set the digits in.
+import { NUMERALS_V1_SOURCE } from "../packages/glyph-registry/src/numerals.v1.js";
 
 /* ── the battery ─────────────────────────────────────────────────────────── */
 
@@ -599,9 +607,20 @@ const RELATIONS: readonly Relation[] = Object.freeze([
     check: (m, f) => eq(m[1], digitString(f.art.walk.resolution), "the cells the walk laid down"),
   },
   {
+    // "readings the figure admits  64" printed a CEILING as a total: `read()`
+    // stops expanding loop placements at a work bound, and the saturn figure of
+    // ABBAABBAABBAABBAABBAABBA admits 72 while the receipt said 64. The count is
+    // still checked, and so is the disclosure — the "at least" must be present
+    // exactly when the expansion was clipped, in both directions, because a
+    // receipt that always hedged would be as uninformative as one that never
+    // did.
     id: "receipt-readings",
-    pattern: /^readings the figure admits\s+(\d+)/u,
-    check: (m, f) => eq(m[1], f.reading.readings.length, "the readings the figure admits"),
+    pattern: /^readings the figure admits\s+(at least )?(\d+)/u,
+    check: (m, f) =>
+      all(
+        eq(m[2], f.reading.readings.length, "the readings the figure admits"),
+        eq(m[1] !== undefined, f.reading.readingsClipped, "whether the count is printed as a floor"),
+      ),
   },
   {
     id: "receipt-collision",
@@ -1234,5 +1253,257 @@ describe("every mark is inside the viewBox the sheet declares", () => {
       expect(box.maxX, label).toBeLessThanOrEqual(place.x + frame);
       expect(box.maxY, label).toBeLessThanOrEqual(place.y + frame);
     }
+  });
+});
+
+/* ── 8. the stroke gauge is measured, not enumerated ─────────────────────── */
+
+/**
+ * Every stroke the finished sheet paints, in millimetres, read off the emitted
+ * bytes.
+ *
+ * Written here rather than imported so the plate is checked by something other
+ * than the code that drew it. One user unit is one millimetre on this sheet, so
+ * a painted width is an authored `stroke-width` times every `scale(...)` above
+ * it in the group tree.
+ *
+ * Both the width AND the stroke paint are inherited: `<g id="envelope"
+ * stroke-width="0.22">` holds paths that declare no width of their own, and a
+ * walker that reads leaf attributes only misses the finest stroke on most
+ * plates — it reports 0.204 mm for a sheet that paints 0.165. A shape with no
+ * stroke paint in scope, or `stroke="none"`, paints no stroke at all however
+ * wide the attribute says.
+ */
+function paintedStrokesMm(svg: string): readonly number[] {
+  type Frame = Readonly<{ scale: number; width: number | undefined; stroke: string | undefined }>;
+  const stack: Frame[] = [{ scale: 1, width: undefined, stroke: undefined }];
+  const out: number[] = [];
+  for (const token of svg.matchAll(/<(g|path|circle|rect|line|polyline|polygon)\b([^>]*)>|<\/g>/gu)) {
+    if (token[0] === "</g>") {
+      if (stack.length > 1) stack.pop();
+      continue;
+    }
+    const attrs = token[2] ?? "";
+    const parent = stack[stack.length - 1]!;
+    const scaleAttr = attrs.match(/scale\(\s*(-?[\d.]+)/u);
+    const scale = scaleAttr === null ? parent.scale : parent.scale * Number(scaleAttr[1]);
+    const widthAttr = attrs.match(/stroke-width="([\d.]+)"/u);
+    const width = widthAttr === null ? parent.width : Number(widthAttr[1]);
+    const strokeAttr = attrs.match(/\bstroke="([^"]*)"/u);
+    const stroke = strokeAttr === null ? parent.stroke : strokeAttr[1];
+    if (token[1] === "g") {
+      stack.push({ scale, width, stroke });
+      continue;
+    }
+    if (width === undefined || stroke === undefined || stroke === "none") continue;
+    const painted = width * scale;
+    if (painted > 0) out.push(painted);
+  }
+  return out;
+}
+
+/** Path data back to the character the locked set draws it as. */
+const CHARACTER_BY_PATHS = new Map<string, string>(
+  NUMERALS_V1_SOURCE.map((g) => [g.paths.map((p) => p.d).join("|"), g.character] as const),
+);
+
+/**
+ * The number the sheet SETS in the stroke gauge, read back as a string.
+ *
+ * House rule 4 means nothing on the plate is text, so this recognises each glyph
+ * by its locked path data, groups the run by its baseline, and orders it by pen
+ * position — which is exactly what a reader with the numeral set does. Nothing
+ * here is told what the gauge should say.
+ */
+function gaugeOnPlate(svg: string): string {
+  const open = svg.indexOf('<g id="metrology">');
+  if (open < 0) throw new Error("the sheet carries no metrology block");
+  let depth = 0;
+  let close = -1;
+  for (const token of svg.slice(open).matchAll(/<g\b[^>]*>|<\/g>/gu)) {
+    depth += token[0] === "</g>" ? -1 : 1;
+    if (depth === 0) {
+      close = open + token.index + token[0].length;
+      break;
+    }
+  }
+  if (close < 0) throw new Error("the metrology block does not close");
+
+  const rows = new Map<string, { x: number; ch: string }[]>();
+  const run = /<g transform="translate\((-?[\d.]+) (-?[\d.]+)\) scale\((-?[\d.]+)\)">((?:<path[^>]*\/>)+)<\/g>/gu;
+  for (const glyph of svg.slice(open, close).matchAll(run)) {
+    const key = [...glyph[4]!.matchAll(/ d="([^"]*)"/gu)].map((d) => d[1]!).join("|");
+    const character = CHARACTER_BY_PATHS.get(key);
+    if (character === undefined) continue;
+    const baseline = `${glyph[2]}/${glyph[3]}`;
+    const row = rows.get(baseline) ?? [];
+    row.push({ x: Number(glyph[1]), ch: character });
+    rows.set(baseline, row);
+  }
+
+  const set = [...rows.values()].map((row) =>
+    row.sort((a, b) => a.x - b.x).map((c) => c.ch).join(""),
+  );
+  // The gauge is the only run on the sheet shaped "<digits>.<digits> mm"; the
+  // scale bar sets "0", "50" and "mm" on their own baselines and the print
+  // floors set one decimal each. The space between value and unit advances the
+  // pen without drawing, so it does not appear.
+  const gauge = set.filter((t) => /^\d+\.\d+mm$/u.test(t));
+  if (gauge.length !== 1) {
+    throw new Error(`expected exactly one stroke gauge, found ${JSON.stringify(set)}`);
+  }
+  return gauge[0]!.replace(/mm$/u, "");
+}
+
+/** The gauge is set to three places, rounded down; this is that rounding. */
+const toGaugePlaces = (mm: number): string =>
+  (Math.floor(Math.round(mm * 1e6) / 1e3) / 1e3).toFixed(3);
+
+describe("the stroke gauge is the plate's own measured minimum", () => {
+  /**
+   * Words chosen so the thinnest stroke has three different owners: a mark
+   * (DESCENT places seven, the finest at 0.090 mm), the envelope (0.165 mm on a
+   * sheet whose marks are coarser), and the kamea numerals — which is the one
+   * the old gauge could not see, because `kameaBlock` fits its figure height to
+   * the order of the square and that height was in no list.
+   */
+  const GAUGE_WORDS: readonly string[] = Object.freeze([
+    "",
+    "MOON",
+    "TIDE",
+    "DESCENT",
+    "SWEATSHOP",
+    "AS",
+  ]);
+
+  for (const square of SQUARE_IDS) {
+    it(`prints the measured thinnest stroke on ${square}`, () => {
+      for (const word of GAUGE_WORDS) {
+        const art = ring(word, { square, vocabulary: VOCABULARY });
+        const painted = paintedStrokesMm(art.sheetSvg);
+        const thinnest = Math.min(...painted);
+        const printed = gaugeOnPlate(art.sheetSvg);
+        const label = `${square} ${JSON.stringify(word)}`;
+
+        expect(painted.length, `${label}: the plate paints no stroke at all`).toBeGreaterThan(0);
+        // The claim on the plate, and in the legend beside it.
+        expect(printed, `${label}: the gauge is not the measured thinnest stroke`).toBe(
+          toGaugePlaces(thinnest),
+        );
+        // A print-safety verdict may understate the finest ink; it may never
+        // overstate it. The old gauge overstated luna by 9%.
+        expect(Number(printed), `${label}: the gauge is thicker than the ink`).toBeLessThanOrEqual(
+          thinnest,
+        );
+        expect(thinnest - Number(printed), `${label}: the gauge is off by more than it prints`)
+          .toBeLessThan(0.001);
+        // And it really is the minimum, not merely one of the widths.
+        for (const w of painted) expect(w, label).toBeGreaterThanOrEqual(thinnest);
+      }
+    });
+  }
+
+  it("sees the kamea numerals, which shrink with the order of the square", () => {
+    // The defect, stated as the measurement that exposed it. On luna the kamea
+    // sets its numerals at 0.1505 mm — finer than the envelope's 0.165 mm, which
+    // is what the enumerated constant would have reported, and finer than the
+    // 0.204167 mm the constant itself held. MOON and TIDE both walk luna, and
+    // TIDE is the word in this project's one logged collision.
+    for (const word of ["MOON", "TIDE"]) {
+      const art = ring(word);
+      expect(art.walk.square, word).toBe("luna");
+      const thinnest = Math.min(...paintedStrokesMm(art.sheetSvg));
+      expect(thinnest, word).toBeCloseTo(0.1505, 6);
+      expect(gaugeOnPlate(art.sheetSvg), word).toBe("0.150");
+      // The two answers the old constant could give, both wrong here.
+      expect(gaugeOnPlate(art.sheetSvg), word).not.toBe("0.165");
+      expect(gaugeOnPlate(art.sheetSvg), word).not.toBe("0.204");
+    }
+  });
+
+  it("finds the stroke a group declares for the paths inside it", () => {
+    // The envelope's 0.22 units — 0.165 mm at the placement scale — is declared
+    // once on `<g id="envelope">` and inherited by every band. A gauge that read
+    // leaf attributes only would miss it and print 0.204 on a jupiter sheet with
+    // no marks, which is thicker than the ink by a quarter.
+    const art = ring("AS", { vocabulary: VOCABULARY });
+    expect(art.marks.length).toBe(0);
+    expect(art.sheetSvg).toContain('<g id="envelope" fill="none" stroke-width="0.22"');
+    expect(Math.min(...paintedStrokesMm(art.sheetSvg))).toBeCloseTo(0.165, 6);
+    expect(gaugeOnPlate(art.sheetSvg)).toBe("0.165");
+  });
+
+  it("prints one gauge per plate and it is set in the numeral set, not in text", () => {
+    for (const word of BATTERY) {
+      const art = ring(word, { vocabulary: VOCABULARY });
+      expect(() => gaugeOnPlate(art.sheetSvg), JSON.stringify(word.slice(0, 24))).not.toThrow();
+      expect(art.sheetSvg, JSON.stringify(word.slice(0, 24))).not.toMatch(/<text[\s>/]/u);
+    }
+  });
+});
+
+/* ── 9. the receipt discloses a clipped reading set ──────────────────────── */
+
+describe("a ceiling is printed as a ceiling", () => {
+  /**
+   * Twenty-four letters alternating over two saturn cells. Eleven loops hang on
+   * runs that fit more than one visit, so the placement product runs past
+   * `read()`'s expansion ceiling of 64 — and the figure admits 72.
+   */
+  const CLIPPED = "ABBAABBAABBAABBAABBAABBA";
+
+  it("says the count is a floor when the expansion was clipped", () => {
+    const art = ring(CLIPPED, { square: "saturn", vocabulary: VOCABULARY });
+    const reading = read(art.walk.paths, { vocabulary: VOCABULARY });
+
+    expect(reading.readingsClipped).toBe(true);
+    // Distinct from the candidate ceiling, which this figure never reaches.
+    expect(reading.truncated).toBe(false);
+    expect(art.receipt).toMatch(/\n {2}readings the figure admits {8}at least 64\b/u);
+    expect(art.receipt).toContain("Expansion hit its ceiling, so that is a floor and not");
+    // And the prose audit evaluates the new line rather than shrugging at it.
+    expect(
+      report("ABBA…@saturn", auditProse(art, { vocabulary: VOCABULARY })),
+    ).toBe('"ABBA…@saturn"\n');
+  });
+
+  it("prints a bare total when nothing was clipped", () => {
+    // The disclosure has to be a readout, not a disclaimer bolted to every
+    // receipt: the same word on jupiter admits 36 readings and expands all of
+    // them.
+    const art = ring(CLIPPED, { square: "jupiter", vocabulary: VOCABULARY });
+    const reading = read(art.walk.paths, { vocabulary: VOCABULARY });
+    expect(reading.readingsClipped).toBe(false);
+    expect(reading.readings.length).toBe(36);
+    expect(art.receipt).toMatch(/\n {2}readings the figure admits {8}36\b/u);
+    expect(art.receipt).not.toContain("at least");
+    expect(art.receipt).not.toContain("Expansion hit its ceiling");
+  });
+
+  it("clips no reading in the 170-word audit, so its recovery rates mean what they say", () => {
+    // `auditVocabulary` walks every word and reads it back blind. A clipped
+    // reading set can drop the reading that spells a word, which would shorten
+    // `matches` and inflate `recovered` and `uniquelyRecovered` — and the report
+    // carries no field that would say so. This asserts the precondition those
+    // numbers rest on, over exactly the vocabulary, square, cipher and trace the
+    // audit uses by default. The day it stops holding, this fails instead of the
+    // rates quietly drifting.
+    const words = WORD_CORRESPONDENCE.map((w) => w.word.toUpperCase()).sort();
+    expect(words.length).toBe(170);
+
+    const clipped: string[] = [];
+    let widest = 0;
+    for (const word of words) {
+      const figure = walk(word, { square: "jupiter", cipher: "PYTH", trace: "AGRIPPA" });
+      const reading = read(figure.paths, { vocabulary: words, cipher: "PYTH" });
+      if (reading.readingsClipped) clipped.push(word);
+      widest = Math.max(widest, reading.readings.length);
+    }
+    expect(clipped).toEqual([]);
+    // The headroom, recorded so a shrinking margin is visible before it bites.
+    // Measured today: the widest reading set in the whole vocabulary is 2
+    // (BETWEEN, which walks 2-5-2-5 and arrives at one cell twice from the same
+    // direction), against a ceiling of 64.
+    expect(widest).toBeLessThan(64);
   });
 });

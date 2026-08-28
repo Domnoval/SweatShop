@@ -119,21 +119,84 @@ const SIZE_VALUE = 3.2;
 const SIZE_SMALL = 2.4;
 const SIZE_TINY = 2.1;
 
-/** Every figure height this layer sets, so the thinnest numeral is derived. */
-const ALL_SIZES = [SIZE_DRAWING_NO, SIZE_VALUE, SIZE_SMALL, SIZE_TINY] as const;
+/* ── measuring the plate ─────────────────────────────────────────────────
+   The stroke gauge is a print-safety verdict, so it is MEASURED and never
+   enumerated.
+
+   It used to be `Math.min` over a hand-kept list of the four figure heights
+   above, and the list was incomplete: `kameaBlock` fits its own figure height
+   to the order of the square, that height is in no list, and it shrinks as the
+   square gets finer. On luna the kamea numerals are set at 0.1505 mm while the
+   gauge printed 0.165 — 9% thicker than the finest ink on the sheet, under a
+   heading that says it is the thinnest. Eighteen vocabulary words reach luna,
+   TIDE among them. A list of sizes is a second record of what the plate draws;
+   the plate is the first, and only the first can go out of date by being
+   redrawn. So the question is asked of the emitted markup instead. */
 
 /**
- * The thinnest ink this layer puts on the plate, in millimetres.
+ * The thinnest stroke a finished piece of markup actually paints, in
+ * millimetres — or `Infinity` if it paints no stroke at all.
  *
- * The numeral set is one weight — `NUMERAL_METRICS.strokeWidth` units in a
- * 100-unit em — so the finest numeral stroke is the smallest em times that
- * ratio. Compared against the hairline so the answer is the true minimum of
- * everything the layer draws, not just of one family.
+ * One user unit on this sheet is one millimetre, so an authored `stroke-width`
+ * reaches the paper multiplied by every `scale(...)` above it: the figure
+ * placement, a mark's own scale, a numeral's em. Both the width and the stroke
+ * paint are INHERITED down the group tree — `<g id="envelope" stroke-width=
+ * "0.22">` carries paths that declare no width of their own, and a walker that
+ * only reads leaf attributes misses that 0.165 mm stroke entirely and reports
+ * 0.204 for a plate that paints 0.165. So the stack carries the inherited
+ * width and paint as well as the accumulated scale.
+ *
+ * Skipped: `stroke="none"` and anything with no stroke paint in scope, because
+ * a filled shape paints no stroke however wide the attribute says; and a zero
+ * width, which is how the numeral set writes "this path is filled".
  */
-export const ANNOTATION_MIN_STROKE_MM = Math.min(
-  HAIRLINE,
-  ...ALL_SIZES.map((h) => (emOf(h) * NUMERAL_METRICS.strokeWidth) / 100),
-);
+function thinnestStrokeMm(markup: string): number {
+  type Frame = Readonly<{ scale: number; width: number | undefined; stroke: string | undefined }>;
+  const stack: Frame[] = [{ scale: 1, width: undefined, stroke: undefined }];
+  let thinnest = Infinity;
+  const token = /<(g|path|circle|rect|line|polyline|polygon)\b([^>]*)>|<\/g>/gu;
+  let m: RegExpExecArray | null;
+  while ((m = token.exec(markup)) !== null) {
+    if (m[0] === "</g>") {
+      if (stack.length > 1) stack.pop();
+      continue;
+    }
+    const attrs = m[2] ?? "";
+    const parent = stack[stack.length - 1]!;
+    const scaleAttr = /scale\(\s*(-?[\d.]+)/u.exec(attrs);
+    const scale = scaleAttr === null ? parent.scale : parent.scale * Number(scaleAttr[1]);
+    const widthAttr = /stroke-width="([\d.]+)"/u.exec(attrs);
+    const width = widthAttr === null ? parent.width : Number(widthAttr[1]);
+    const strokeAttr = /\bstroke="([^"]*)"/u.exec(attrs);
+    const stroke = strokeAttr === null ? parent.stroke : strokeAttr[1];
+    if (m[1] === "g") {
+      stack.push({ scale, width, stroke });
+      continue;
+    }
+    if (width === undefined || stroke === undefined || stroke === "none") continue;
+    const painted = width * scale;
+    if (painted > 0 && painted < thinnest) thinnest = painted;
+  }
+  return thinnest;
+}
+
+/**
+ * The gauge as it is SET, in millimetres, rounded DOWN to the printed place.
+ *
+ * Three decimals is what the field has room for, and a painted width is a
+ * product of attributes each written to four — so the measurement generally has
+ * more places than the sheet can print. Rounded down rather than to nearest, so
+ * the printed figure can only ever understate the thinnest stroke. Overstating
+ * it is the whole defect this gauge just had: a reader deciding whether the
+ * plate survives a process must not be told the finest line is thicker than it
+ * is. Understating costs a false alarm; overstating costs the print.
+ *
+ * The intermediate round to six places is against binary representation, not
+ * against the measurement: 0.2 arrives as 199.99999999999997 thousandths and
+ * would floor to 0.199, which is not a rounding of anything.
+ */
+const gaugeText = (mm: number): string =>
+  (Math.floor(Math.round(mm * 1e6) / 1e3) / 1e3).toFixed(3);
 
 /* ── typesetting ─────────────────────────────────────────────────────────
    The only path by which a character reaches this sheet. */
@@ -396,11 +459,15 @@ export type AnnotationInput = Readonly<{
   /** SHA of the figure markup, 16 hex characters. */
   sheetId: string;
   /**
-   * Every stroke width the figure actually paints, in millimetres on this sheet
-   * — collected by the composer as it emits, so the minimum printed below is
-   * measured from the drawing rather than restated from a constant.
+   * The figure group EXACTLY as it will be placed on the sheet, its placement
+   * transform included, because the stroke gauge is measured off the markup
+   * rather than told about it.
+   *
+   * A list of widths collected as the composer emits them is a second record of
+   * the drawing, and a second record is a record that can disagree. This is the
+   * drawing.
    */
-  figureStrokesMm: readonly number[];
+  placedFigure: string;
 }>;
 
 /**
@@ -429,7 +496,7 @@ const PROVENANCES: readonly Provenance[] = ["generative", "walk-derived", "parti
  * `FIG_X, FIG_Y` at `FIG_SCALE`.
  */
 export function annotationLayer(input: AnnotationInput): string {
-  const { walk, envelope, marks, choices, sheetId, figureStrokesMm } = input;
+  const { walk, envelope, marks, choices, sheetId, placedFigure } = input;
   const parts: string[] = [];
 
   /* ── frame ─────────────────────────────────────────────────────────────
@@ -500,13 +567,58 @@ export function annotationLayer(input: AnnotationInput): string {
   parts.push(kameaBlock(walk, colA, blockTop, colB - colA, rowSplit - blockTop));
   parts.push(countsBlock(walk, envelope, marks, colB, blockTop, colC - colB, rowSplit - blockTop));
   parts.push(censusBlock(choices, colC, blockTop, SHEET_W - FRAME - colC, rowSplit - blockTop));
-  parts.push(metrologyBlock(figureStrokesMm, colA, rowSplit, colE - colA, blockBottom - rowSplit));
+  // Held open. The metrology block can only be drawn once the rest of the plate
+  // — this layer AND the figure AND the block that follows it — has been
+  // measured, but it belongs here on the sheet.
+  const metrologyAt = parts.length;
+  parts.push("");
   parts.push(drawingNumberBlock(sheetId, colE, rowSplit, SHEET_W - FRAME - colE, blockBottom - rowSplit));
   parts.push(`</g>`);
 
+  /* ── the gauge, measured ────────────────────────────────────────────────
+     THE ORDERING PROBLEM: the gauge is printed inside the block it measures,
+     so it cannot measure itself in one pass. It does not have to. Nothing in
+     the metrology block's stroke widths depends on the number it prints — the
+     scale bar, the axis, the floor ticks and the numeral run are the same ink
+     whether the value reads 0.150 or 0.165, and the value is the same character
+     count either way — so the block is rendered once to learn what IT paints,
+     and rendered again carrying the minimum of that and everything else.
+
+     That the second render measures the same as the first is asserted below,
+     not assumed: it is the one step here that a future edit could quietly
+     falsify, by making a stroke in this block depend on the value it carries. */
+  const metrology = (mm: number): string =>
+    metrologyBlock(mm, colA, rowSplit, colE - colA, blockBottom - rowSplit);
+  const rest = thinnestStrokeMm(placedFigure + parts.join(""));
+  const measured = Math.min(rest, thinnestStrokeMm(metrology(rest)));
+  parts[metrologyAt] = metrology(measured);
+
   const svg = parts.join("");
   assertNoText(svg);
+  assertGaugeIsMeasured(placedFigure + svg, measured);
   return svg;
+}
+
+/**
+ * The gauge on the plate is the plate's own measured minimum, or the build
+ * fails.
+ *
+ * Not decoration: it is what stops the next block added to this layer from
+ * sliding a finer stroke onto the sheet after the gauge has been computed. The
+ * prediction is measurable — add a `stroke-width` finer than the envelope's
+ * 0.165 mm anywhere on this layer and this throws, where before the whole class
+ * of defect was invisible until someone measured a print.
+ */
+function assertGaugeIsMeasured(plate: string, printed: number): void {
+  const actual = thinnestStrokeMm(plate);
+  if (actual !== printed) {
+    throw new PlateError(
+      "INVALID_REQUEST",
+      `the stroke gauge says ${printed} mm and the finished plate paints ${actual} mm. ` +
+        `The gauge is a print-safety verdict; a plate may not carry a stroke it does not report.`,
+      { printed, actual },
+    );
+  }
 }
 
 /* ── block: the kamea ────────────────────────────────────────────────────── */
@@ -612,7 +724,13 @@ function kameaBlock(walk: Walk, x: number, y: number, w: number, h: number): str
 /* ── block: the counts ───────────────────────────────────────────────────── */
 
 /**
- * Five counts, each beside a miniature of the thing it counts.
+ * Six counts, each beside a miniature of the thing it counts.
+ *
+ * Six, not five: the marks row was added beside the other five and the heading
+ * was not. The legend names the same six in the same order — "nodes · cusps ·
+ * segments · loops · activated cells · marks" — so a reader counting rows on
+ * the plate against a heading that said five would have found the plate wrong
+ * and the plate would have been right.
  *
  * Every value is a field, not a derivation. The reader checks each by counting
  * the same shape on the figure — which is the point of the icons, and the reason
@@ -785,15 +903,16 @@ function censusBlock(
  * wrong. Ten-millimetre divisions, so a reader can check it against a ruler at a
  * glance rather than trusting the end labels.
  *
- * THE STROKE GAUGE prints the finest stroke the plate actually paints, measured
- * from the widths the figure emitted, and places it against the three garment
- * floors from `scripts/build-print-kit.ts`. The marker turns ALARM when the
- * measured minimum falls under the finest of them — a hue that is a function of
+ * THE STROKE GAUGE prints the finest stroke the plate actually paints. The
+ * number is handed in already measured — `annotationLayer` walks the assembled
+ * markup's transform tree for it — and placed here against the three garment
+ * floors from `scripts/build-print-kit.ts`. The marker turns ALARM when that
+ * measured minimum falls under the finest of them: a hue that is a function of
  * a comparison between two measured numbers, which is the only kind of hue this
  * sheet is allowed (house rule 5).
  */
 function metrologyBlock(
-  figureStrokesMm: readonly number[],
+  minMm: number,
   x: number,
   y: number,
   w: number,
@@ -818,7 +937,6 @@ function metrologyBlock(
   out.push(setRun("mm", barX + barLen + 3.4, barY + barH / 2 + SIZE_TINY / 2, SIZE_TINY, MUTED));
 
   /* stroke gauge */
-  const minMm = Math.min(...figureStrokesMm, ANNOTATION_MIN_STROKE_MM);
   const gaugeX = x + pad;
   const gaugeW = w - pad * 2 - 18;
   const gaugeY = barY + barH + 12;
@@ -849,9 +967,10 @@ function metrologyBlock(
     `<path d="M${f(mx)} ${f(gaugeY)} L${f(mx - 1.3)} ${f(gaugeY + 2.6)} ` +
       `L${f(mx + 1.3)} ${f(gaugeY + 2.6)} Z" fill="${colour}" stroke="none"/>`,
   );
-  // Three decimals: the finest stroke on this plate is hundredths of a
-  // millimetre, and two decimals would round the reading away.
-  out.push(setRun(`${minMm.toFixed(3)} mm`, mx + 2.6, gaugeY + 5.2, SIZE_SMALL, colour));
+  // Three decimals, rounded down by `gaugeText`: the finest stroke on this plate
+  // is hundredths of a millimetre, two decimals would round the reading away,
+  // and rounding to nearest could print a number thicker than the ink.
+  out.push(setRun(`${gaugeText(minMm)} mm`, mx + 2.6, gaugeY + 5.2, SIZE_SMALL, colour));
 
   out.push(`</g>`);
   return out.join("");

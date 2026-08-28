@@ -186,6 +186,27 @@ describe("resolve refuses nothing", () => {
     expect(r.dropped.map((d) => d.char)).toStrictEqual(["-", "1", " ", "!"]);
   });
 
+  it("indexes dropped characters into the caller's string, not its uppercased form", () => {
+    // Some characters expand under uppercasing — ß to SS, the ligatures to FI,
+    // FF, FFI — so an index into `input.toUpperCase()` drifts past every
+    // expansion before it and points into a string the caller never typed.
+    // `resolve("ﬁ!")` reported the `!` at index 2; it is at index 1.
+    for (const word of ["ﬁ!", "ß!", "ﬃx?", "a-1 B!", "Straße?"]) {
+      const source = [...word];
+      for (const drop of resolve(word, 4, "PYTH").dropped) {
+        expect(source[drop.index]).toBe(drop.char);
+      }
+    }
+  });
+
+  it("still expands a ligature into the letters it stands for", () => {
+    // The index fix must not cost the expansion: house rule 3 says letters
+    // resolve, and ﬁ is two letters however it is encoded.
+    expect(resolve("ﬁ", 4, "PYTH").letters.map((l) => l.letter).join("")).toBe("FI");
+    expect(resolve("ß", 4, "PYTH").letters.map((l) => l.letter).join("")).toBe("SS");
+    expect(resolve("ﬃ", 4, "PYTH").letters.map((l) => l.letter).join("")).toBe("FFI");
+  });
+
   it("returns an empty resolution for input with no letters at all", () => {
     const r = resolve("1234", 4, "PYTH");
     expect(r.letters).toHaveLength(0);
