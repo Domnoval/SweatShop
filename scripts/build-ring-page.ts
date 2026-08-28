@@ -613,7 +613,12 @@ function main(argv: readonly string[]): void {
   }
   process.stdout.write(`\ncorpus digest  ${corpusDigest}\n`);
   process.stdout.write(`page sha256    ${sha256Hex(html)}\n`);
-  process.stdout.write(`wrote          ${out} (${html.length} bytes)\n`);
+  // Byte length, not `html.length` — that is UTF-16 code units, and this page is
+  // full of multibyte characters (·, —), so the two differ by ~500. A number
+  // labelled "bytes" that is not bytes is the failure this project is about.
+  process.stdout.write(
+    `wrote          ${out} (${Buffer.byteLength(html, "utf8")} bytes)\n`,
+  );
 }
 
 main(process.argv.slice(2));

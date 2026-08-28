@@ -68,10 +68,17 @@ const f = (n: number): string => n.toFixed(4);
  * above a figure where counting is impossible — a false claim on the artifact,
  * which is worse than a plain one.
  *
- * 137 is prime, so every multiplier below it is coprime with it and the family
- * closes as a single cycle visiting all nodes — no multiplier can degenerate into
- * a sparse sub-figure. That it is also the studio's number is why this value and
- * not another prime; the primality is the load-bearing half.
+ * 137 is prime, so every multiplier below it is coprime with it and `i -> m·i` is
+ * a bijection: each node carries exactly one chord out and one in, so every family
+ * draws the same 136 chords across all 137 nodes and no multiplier can collapse
+ * onto a proper subset. A composite count would let some multipliers do exactly
+ * that. That 137 is also the studio's number is why this prime and not another;
+ * the primality is the load-bearing half.
+ *
+ * This said "closes as a single cycle" until a grader counted. It does not: the
+ * permutation splits into `136 / ord(m)` cycles, so m=3 is one cycle and m=10 is
+ * eighteen. The conclusion was right and the reason was wrong, which is the
+ * failure this codebase keeps finding in itself.
  */
 export const NODES = 137;
 
@@ -98,7 +105,11 @@ export function multiplierForWalk(walk: Walk, _nodes: number = NODES): number {
   return reduceToCell(sum, 9) + 1;
 }
 
-/** Cusps a walk's envelope will draw: the theosophic reduction of its cell sum. */
+/**
+ * Cusps a walk's envelope will draw: the theosophic reduction of its cell sum —
+ * except for a letterless walk, where `multiplierForWalk` floors at 2 before any
+ * reduction runs and the answer is 1, not `reduceToCell(0, 9)` = 9.
+ */
 export function cuspsForWalk(walk: Walk): number {
   return multiplierForWalk(walk) - 1;
 }

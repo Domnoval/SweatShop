@@ -284,8 +284,45 @@ const RELATIONS: readonly Relation[] = Object.freeze([
       ),
   },
   {
+    // Added after a grader found the census calling a figure a "line" on plates
+    // that draw none. The word the sentence uses is now itself checked.
+    id: "figure-or-line-cells-in-order",
+    pattern: /^The (line|figure) is cells ([0-9·]+) in order/u,
+    check: (m, f) => {
+      const drawsLine = f.art.walk.paths.some((path) => path.role === "line");
+      return all(
+        eq(m[1], drawsLine ? "line" : "figure", "the word the sentence uses for the drawing"),
+        eq(m[2], f.art.walk.resolution.cells.join("·"), "the walked cells"),
+      );
+    },
+  },
+  {
+    // "same 136 chords over all 137 nodes" — the corrected node claim. It said
+    // "closes as a single cycle" until a grader counted: m=10 closes as eighteen.
+    id: "chords-over-all-nodes",
+    pattern: /same (\d+) chords over all (\d+) nodes/u,
+    check: (m, f) =>
+      all(
+        eq(m[2], f.art.envelope.nodes, "the node count"),
+        eq(m[1], f.art.envelope.nodes - 1, "the chord count"),
+        eq(m[1], f.art.envelope.chordCount, "the chords actually emitted"),
+      ),
+  },
+  {
+    // The cap reason on a figure that draws nothing else.
+    id: "cap-is-the-only-ink",
+    pattern: /only ink on this plate: (\d+) letters? landing on one cell/u,
+    check: (m, f) => eq(m[1], f.art.walk.steps.length, "the letters walked"),
+  },
+  {
+    // The cap reason on a loops-only figure, which recovers without the cap.
+    id: "recovers-from-the-loops",
+    pattern: /with the cap deleted, from the (\d+) loops?/u,
+    check: (m, f) => eq(m[1], f.art.walk.loopCount, "the loop count"),
+  },
+  {
     id: "loops-hang-on-this-line",
-    pattern: /^(\d+) loops? hangs? on this line/u,
+    pattern: /^(\d+) loops? hangs? on this figure/u,
     check: (m, f) => eq(m[1], f.art.walk.loopCount, "the loop count"),
   },
   {

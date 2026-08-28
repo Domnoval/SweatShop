@@ -252,8 +252,11 @@ exactly the same picture. Had the SVG moved, the union would have been wrong.
 ## PHASE 5 — paint (complete)
 
 `packages/envelope-engine`. Chords from node `i` to `m·i mod N`; the envelope is an
-epicycloid with `m − 1` cusps. `m` is the walk's cell sum, `N` is magic constant × order.
-DESCENT → 24 cusps, FALL → 12, ACE → 8. **The cusp count is countable off the drawing**,
+epicycloid with `m − 1` cusps. **Superseded later in Phase 7 and left here as the log
+it is:** `N` was magic constant × order and `m` the raw cell sum, giving DESCENT 24 cusps.
+Venus's 1225 nodes made those cusps uncountable, so `N` is now fixed at 137 and `m` is the
+cell sum reduced theosophically — DESCENT 7, FALL 4, ACE 9. See PHASE 7 below.
+**The cusp count is countable off the drawing**,
 so a reader who distrusts the caption can check the picture against it.
 
 Renderer gaps closed: palette was already a parameter; hue is a guide-level channel indexing

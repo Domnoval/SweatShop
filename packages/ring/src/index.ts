@@ -470,8 +470,9 @@ function formatLegend(
     // restated by `multiplierDerivation`, the one place that sentence is
     // written, because this caption was corrected once while the census's copy
     // of the same rule was left behind.
-    `  nodes are fixed at ${envelope.nodes} — prime, so every multiplier below it closes as a`,
-    `  single cycle over all nodes and no family degenerates into a sparse figure.`,
+    `  nodes are fixed at ${envelope.nodes} — prime, so every multiplier below it is coprime`,
+    `  with it: each node carries one chord out and one in, and every family draws the`,
+    `  same ${envelope.nodes - 1} chords over all ${envelope.nodes} nodes. No multiplier collapses onto a subset.`,
     `  ${multiplierDerivation(figure, envelope)}.`,
     `  cusps = multiplier − 1 = ${envelope.cusps}. Count the cusps to check this sheet.`,
     "",
@@ -561,6 +562,10 @@ function gradeChoices(
   // A repeat hangs a loop instead of extending the line, so this is exactly how
   // many points the line keeps (`walk.ts` pushes one per non-repeating step).
   const linePoints = walked - loops;
+  // Asked of the emitted paths rather than inferred from a count: a figure whose
+  // letters all land on one cell draws no line at all, and two census reasons used
+  // to describe one anyway.
+  const hasLine = figure.paths.some((p) => p.role === "line");
   const capped = figure.paths.some((p) => p.role === "start-cap");
   const s = (n: number): string => (n === 1 ? "" : "s");
 
@@ -595,7 +600,7 @@ function gradeChoices(
       reason:
         walked === 0
           ? "No letters, so no cells and no line: this plate carries the envelope alone, and the receipt returns nothing because there is nothing drawn to read. One letter would put one cell on the grid and give every choice below something to derive from."
-          : `The line is cells ${cells} in order — the ${walked} letter${s(walked)} of ${letters} under ${figure.cipher} on ${figure.square}. Everything else on the sheet is downstream of that sequence: the paths, the drawing number, the cusp count, the word the receipt hands back. Change the sequence and they move together, which is why no two of them can disagree about the word.`,
+          : `${hasLine ? "The line is" : "The figure is"} cells ${cells} in order — the ${walked} letter${s(walked)} of ${letters} under ${figure.cipher} on ${figure.square}. Everything else on the sheet is downstream of that sequence: the paths, the drawing number, the cusp count, the word the receipt hands back. Change the sequence and they move together, which is why no two of them can disagree about the word.`,
     }),
     Object.freeze({
       element: "the square",
@@ -610,18 +615,28 @@ function gradeChoices(
       reason:
         loops === 0
           ? "No two consecutive letters here land on one cell, so this sheet hangs no loops and dropping the convention would not change one byte of it. It is recorded because of what it does elsewhere: on DESCENT, where E and N both land on cell 5, the loop is the only mark of the doubled beat and without it the receipt reads back a word one letter short."
-          : `${loops} loop${s(loops)} hang${loops === 1 ? "s" : ""} on this line, one for each pair of consecutive letters on one cell. Drop the convention and ${loops === 1 ? "that beat leaves" : "those beats leave"} no mark at all — the line still has its ${linePoints} points, so the drawing looks finished — and the receipt reads back a word ${loops} letter${s(loops)} short.`,
+          : `${loops} loop${s(loops)} hang${loops === 1 ? "s" : ""} on this figure, one for each pair of consecutive letters on one cell. Drop the convention and ${loops === 1 ? "that beat leaves" : "those beats leave"} no mark at all${hasLine ? ` — the line still has its ${linePoints} point${s(linePoints)}, so the drawing looks finished` : ", and this figure has no line to look finished with: every letter landed on one cell"} — and the receipt reads back a word ${loops} letter${s(loops)} short.`,
     }),
     Object.freeze({
       element: "the start cap",
       provenance: "walk-derived" as const,
-      necessity: capped ? ("load-bearing" as const) : ("answerable" as const),
+      // Load-bearing only where the cap is the sole carrier of the reading. With a
+      // line or a loop present, deleting it still returns the word — verified by
+      // deleting it — so there it is answerable: a claim about a human reader.
+      necessity: capped && !hasLine && loops === 0 ? ("load-bearing" as const) : ("answerable" as const),
       reason: capped
-        ? // Checked, not assumed: `read()` parses the line and the loops and never
-          // looks at the cap, so removing it returns the same word. The cap is not
-          // for the machine — the machine gets direction free from the order of the
-          // points in the path data. It is for the paper (house rule 7).
-          "The cap says which end was spoken first. Without it the ink of this line and the ink of its reversal are the same segments in the same places, so a reader working from the plate alone could start at either end and read the word or its mirror. read() would not notice: it takes direction from the order of the points in the path data, and hands back the same word with the cap deleted. This mark is what puts that ordering in front of an eye."
+        ? // Checked by deleting the cap and re-reading, not assumed — and the answer
+          // depends on what else the figure carries. With a line or a loop present
+          // `read()` recovers the word without the cap. With neither, the cap is the
+          // only ink there is, and `read.ts`'s `capCentre` takes the node from it.
+          // An earlier version of this sentence claimed the cap was always redundant
+          // to the machine. It stopped being true the moment the reader learned to
+          // fall back on it.
+          (hasLine
+            ? `The cap says which end was spoken first. Without it the ink of this line and the ink of its reversal are the same segments in the same places, so a reader working from the plate alone could start at either end and read the word or its mirror. read() does recover this word with the cap deleted — it takes direction from the order of the points in the path data — so on this sheet the cap is for the eye, not the machine.`
+            : loops > 0
+              ? `Every letter here landed on one cell, so there is no line to reverse and the cap distinguishes nothing a reader could otherwise get wrong: this figure's start and end are the same place. read() recovers the word with the cap deleted, from the ${loops} loop${s(loops)}. The mark is kept for consistency across the set, not because this plate needs it.`
+              : `The cap is the only ink on this plate: ${walked} letter${s(walked)} landing on one cell draws no line and hangs no loop. Delete it and read() returns nothing at all, because capCentre is the only thing left carrying the node. Here the mark is load-bearing for the machine as well as the eye.`)
         : `This drawing has no start cap — ${walked === 0 ? "there are no letters, so there is no line to point" : `the ${figure.trace} trace draws none`} — so nothing on the plate says which end was spoken first. read() is unaffected, since it takes direction from the order of the points in the path data; a reader with only the picture is not.`,
     }),
     Object.freeze({

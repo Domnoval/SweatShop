@@ -192,7 +192,7 @@ composition, and rasterized PNG pixel hashes byte for byte.
 
 ## Verification gates
 
-`pnpm test` runs 200 tests, including spec §26's gates:
+`pnpm test` runs the full suite, including spec §26's gates:
 
 | Gate | Checks |
 | --- | --- |
