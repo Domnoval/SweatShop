@@ -49,33 +49,52 @@ const painterSrc = readFileSync(PAINTER, "utf8");
 
 const CLOSER: Record<string, string> = { "{": "}", "[": "]", "(": ")" };
 
+/** A run of painter source that carries no structure: a string literal, a line
+    comment or a block comment. `inner` is the string's contents (empty for a
+    comment) and `next` is the index just past the run; null when no such run
+    starts at `i`.
+
+    There is exactly one of these because there was once nearly two. `balancedFrom`
+    skipped comments and `topLevelKeys` did not, so `const GEO={ // the studio's
+    stamps` opened a "string" at the apostrophe, swallowed the block, and returned
+    no keys at all — the geometry brush lost every tradition, 25 words stopped
+    reaching a mark, and the script exited 0. Two scanners over one grammar means
+    the day they disagree only one of them is wrong and nothing says which. House
+    rule 1. */
+type OpaqueRun = Readonly<{ kind: "string" | "comment"; inner: string; next: number }>;
+
+function opaqueRunAt(src: string, i: number): OpaqueRun | null {
+  const ch = src[i];
+  if (ch === '"' || ch === "'" || ch === "`") {
+    const from = i + 1;
+    let j = from;
+    while (j < src.length) {
+      const c = src[j]!;
+      if (c === "\\") { j += 2; continue; }
+      if (c === ch) return { kind: "string", inner: src.slice(from, j), next: j + 1 };
+      j += 1;
+    }
+    return { kind: "string", inner: src.slice(from), next: src.length };
+  }
+  if (ch === "/" && src[i + 1] === "*") {
+    const end = src.indexOf("*/", i + 2);
+    return { kind: "comment", inner: "", next: end === -1 ? src.length : end + 2 };
+  }
+  if (ch === "/" && src[i + 1] === "/") {
+    const end = src.indexOf("\n", i);
+    return { kind: "comment", inner: "", next: end === -1 ? src.length : end + 1 };
+  }
+  return null;
+}
+
 /** Return the literal starting at `open` in `src`, brace/bracket balanced. */
 function balancedFrom(src: string, start: number): string {
   const stack: string[] = [];
   let i = start;
   while (i < src.length) {
+    const run = opaqueRunAt(src, i);
+    if (run) { i = run.next; continue; }
     const ch = src[i]!;
-    if (ch === '"' || ch === "'" || ch === "`") {
-      const quote = ch;
-      i += 1;
-      while (i < src.length) {
-        const c = src[i]!;
-        if (c === "\\") { i += 2; continue; }
-        if (c === quote) { i += 1; break; }
-        i += 1;
-      }
-      continue;
-    }
-    if (ch === "/" && src[i + 1] === "*") {
-      const end = src.indexOf("*/", i + 2);
-      i = end === -1 ? src.length : end + 2;
-      continue;
-    }
-    if (ch === "/" && src[i + 1] === "/") {
-      const end = src.indexOf("\n", i);
-      i = end === -1 ? src.length : end + 1;
-      continue;
-    }
     if (ch === "{" || ch === "[" || ch === "(") { stack.push(CLOSER[ch]!); i += 1; continue; }
     if (ch === "}" || ch === "]" || ch === ")") {
       const want = stack.pop();
@@ -103,29 +122,28 @@ function literalValue<T>(name: string, open: "{" | "["): T {
 
 /** Top-level keys of an object literal, in source order, without evaluating it.
     GEO's values are drawing functions that call browser-only helpers, so the
-    block can be measured but not run. */
+    block can be measured but not run.
+
+    Comments are stepped over by `opaqueRunAt` and, unlike every other construct
+    here, do NOT clear `atKeyPosition`: a comment between a `,` and the key it
+    annotates is a comment about that key, not a thing standing where the key
+    should be. */
 function topLevelKeys(text: string): string[] {
   const keys: string[] = [];
   const stack: string[] = [];
   let i = 0;
   let atKeyPosition = false;
   while (i < text.length) {
-    const ch = text[i]!;
-    if (ch === '"' || ch === "'" || ch === "`") {
-      const quote = ch;
-      const from = i + 1;
-      i += 1;
-      while (i < text.length) {
-        const c = text[i]!;
-        if (c === "\\") { i += 2; continue; }
-        if (c === quote) break;
-        i += 1;
+    const run = opaqueRunAt(text, i);
+    if (run) {
+      if (run.kind === "string") {
+        if (atKeyPosition && stack.length === 1) keys.push(run.inner);
+        atKeyPosition = false;
       }
-      if (atKeyPosition && stack.length === 1) keys.push(text.slice(from, i));
-      atKeyPosition = false;
-      i += 1;
+      i = run.next;
       continue;
     }
+    const ch = text[i]!;
     if (ch === "{" || ch === "[" || ch === "(") {
       stack.push(CLOSER[ch]!);
       if (stack.length === 1) atKeyPosition = true;
@@ -165,6 +183,15 @@ const CATKEYS = literalValue<readonly string[]>("CATKEYS", "[");
 const BRUSHMETA = literalValue<readonly (readonly [string, string])[]>("BRUSHMETA", "[");
 const GEO_KEYS = topLevelKeys(literalText("GEO", "{"));
 
+/** How many top-level stamps the painter's GEO block authors. Asserted, not
+    trusted: the scan above is the only thing between a construct it does not
+    understand and a table that looks complete. When it lost stamps every
+    downstream count fell by a plausible-looking amount — 33 reachable marks to
+    7, 159 words reaching a mark to 134 — with nothing anywhere saying so.
+    Deliberately removing a stamp from the painter is a deliberate act; moving
+    this number with it is part of that act. */
+const GEO_STAMP_FLOOR = 16;
+
 /* ── the codex ────────────────────────────────────────────────────────────── */
 
 /* `U(n,t,e,g,f,m)` and `G(id,n,t,e,m)` in assets/codexdata.ts: `e` is the era
@@ -196,11 +223,58 @@ const uniqSorted = (xs: readonly string[]): string[] => [...new Set(xs)].sort(by
 const q = (s: string): string => JSON.stringify(s);
 const union = (xs: readonly string[]): string => (xs.length ? xs.map(q).join(" | ") : "never");
 
-/** Fold an authored display name onto the alphabet a mark stem is written in.
-    Diacritics are stripped (`Vegvísir` → `vegvisir`) and every non-alphanumeric
-    dropped, because mark stems carry neither. */
-const norm = (s: string): string =>
-  s.normalize("NFKD").replace(/[̀-ͯ]/gu, "").toLowerCase().replace(/[^a-z0-9]/gu, "");
+/** Letters Unicode will not take apart for us. NFKD decomposes `á` into `a` plus a
+    combining acute, so stripping combining marks folds it. It does not decompose
+    `Æ`, `Ø`, `Þ`, `ß`, `Ł`, `Œ` or `Ð` — each is a single letter in its own right,
+    not a decorated `a` or `o`. Left to the non-alphanumeric strip they are not
+    folded, they are *deleted*. */
+const FOLD: readonly (readonly [string, string])[] = Object.freeze([
+  ["Æ", "ae"], ["æ", "ae"], ["Œ", "oe"], ["œ", "oe"],
+  ["Ø", "o"], ["ø", "o"], ["Å", "a"], ["å", "a"],
+  ["Þ", "th"], ["þ", "th"], ["Ð", "d"], ["ð", "d"], ["Đ", "d"], ["đ", "d"],
+  ["ß", "ss"], ["Ł", "l"], ["ł", "l"],
+] as const);
+
+/** Fold an authored display name onto the alphabet a mark stem is written in:
+    ASCII lowercase letters and digits, which is all a stem carries. Three things
+    happen to a name, and the difference between the third and the other two is
+    the whole point.
+
+      1. Letters NFKD decomposes lose their marks: `Vegvísir` → `vegvisir`.
+      2. Letters it does not decompose are folded by `FOLD` above:
+         `Ægishjálmur` → `aegishjalmur`.
+      3. Everything outside the Latin script is dropped — the glyph characters the
+         codex carries inside display names (`Berkano · ᛒ`, `Eye of Ra · 𓁹`), the
+         `·` separator, spaces and punctuation. None of those is a letter of the
+         stem's alphabet, so dropping one cannot change which word this is.
+
+    A Latin letter that reaches the end unfolded is REFUSED, not dropped. Deleting
+    one silently changes the word: `Ægishjálmur` normalised to `gishjalmur`, which
+    matched no mark, and the extractor then emitted a paragraph asserting
+    "assets/codexdata.ts has no row … the glyph was drawn and never given a codex
+    row" — false, the row is at assets/codexdata.ts:178. A miss is a bug; a miss
+    that ships prose explaining why the data does not exist is what a later reader
+    trusts instead of re-checking. Refusing costs one build; the other cost a note.
+
+    This is a build-time assertion over authored data. It gates no letter in the
+    pipeline and refuses no input to it — house rule 3 is about resolution, and
+    nothing here resolves anything. */
+const norm = (s: string): string => {
+  let folded = s;
+  for (const [from, to] of FOLD) folded = folded.split(from).join(to);
+  folded = folded.normalize("NFKD").replace(/[̀-ͯ]/gu, "").toLowerCase();
+  for (const ch of folded) {
+    if (/[a-z0-9]/u.test(ch)) continue;
+    if (!/\p{Script=Latin}/u.test(ch)) continue;
+    const cp = `U+${ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, "0")}`;
+    throw new Error(
+      `norm(${JSON.stringify(s)}): Latin letter ${JSON.stringify(ch)} (${cp}) has no fold. Dropping it would ` +
+      "change the word and hand the join a key that reads like the name and matches nothing — this is exactly " +
+      `how ${JSON.stringify("Ægishjálmur")} became ${JSON.stringify("gishjalmur")}. Add it to FOLD.`,
+    );
+  }
+  return folded.replace(/[^a-z0-9]/gu, "");
+};
 
 const rowsById = new Map<string, CodexRow[]>();
 const rowsByName = new Map<string, CodexRow[]>();
@@ -291,6 +365,13 @@ for (const brush of [...CATKEYS].sort(byCode)) {
     const evidence: string[] = [];
     const trads = new Set<string>();
     const gaps: { key: string; near: string[] }[] = [];
+    if (GEO_KEYS.length < GEO_STAMP_FLOOR) {
+      problems.push(
+        `brush geometry: the GEO block scanned to ${GEO_KEYS.length} top-level stamps, under the ` +
+        `${GEO_STAMP_FLOOR} the painter authors — the scan lost stamps to something inside that block, ` +
+        "it did not discover a smaller pool",
+      );
+    }
     for (const key of [...GEO_KEYS].sort(byCode)) {
       const idRows = rowsById.get(key);
       if (idRows && idRows.length > 0) {
@@ -311,9 +392,32 @@ for (const brush of [...CATKEYS].sort(byCode)) {
         while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
         return i;
       };
-      const near = uniqSorted([...rowsById.keys()].filter((id) => id.includes(key) || key.includes(id)))
+      // Anchored, not free containment. Unanchored, the two-letter codex id `sa`
+      // "matched" GEO.unicursal on the `sa` inside "unicur*sa*l", and the recorded
+      // reason then predicted a binder weighing "unicursalhex" against "sa" — a
+      // choice nobody would ever face. A reason has to be a prediction about
+      // something that could actually happen (house rule 6), so a near match must
+      // share a word edge: one id starts or ends with the other. That keeps the
+      // real cases — GEO.spiral against "goldenspiral", GEO.eye against
+      // "eyehorus" and "eyeprov", where the ambiguity is genuine.
+      const anchored = (a: string, b: string): boolean => a.startsWith(b) || a.endsWith(b);
+      const near = uniqSorted([...rowsById.keys()].filter((id) => id !== key && (anchored(id, key) || anchored(key, id))))
         .sort((a, b) => shared(b, key) - shared(a, key) || b.length - a.length || byCode(a, b));
       gaps.push({ key, near });
+    }
+    // Same floor the GLYPHS branch gets, and for the same reason: an empty or
+    // minority join is a join reading the wrong field, not a discovery that the
+    // studio's stamp pool has no counterpart in the codex.
+    if (evidence.length === 0) {
+      problems.push(
+        `brush geometry: none of its ${GEO_KEYS.length} stamp keys matched a codex \`id\` or a normalised ` +
+        "codex `n` — the join is reading the wrong field, not discovering an empty tradition",
+      );
+    } else if (evidence.length * 2 < GEO_KEYS.length) {
+      problems.push(
+        `brush geometry: only ${evidence.length} of ${GEO_KEYS.length} stamp keys joined — under half the ` +
+        "pool the join is the exception rather than the rule, which is what a mis-scan looks like",
+      );
     }
     // Written only once the brush's tradition set is final, so each reason can say
     // whether forcing that one token would actually move a candidate.
@@ -327,23 +431,23 @@ for (const brush of [...CATKEYS].sort(byCode)) {
         token: key,
         reason:
           `no codex row has id === ${q(key)} and none has norm(n) === ${q(key)}` +
-          (near.length ? `; the nearest ids by substring are ${near.map(q).join(", ")}` : "") +
+          (near.length ? `; the nearest ids by shared prefix or suffix are ${near.map(q).join(", ")}` : "") +
           `. PREDICTION IF FLIPPED: ` +
           (target === undefined
             ? `bind GEO.${key} to a row chosen by what the name suggests and the geometry brush would gain a ` +
               `tradition from a reading of English — the one kind of edge this table refuses.`
             : wouldBe !== undefined && trads.has(wouldBe)
-              ? `bind GEO.${key} to ${q(target)} because one id contains the other and nothing measurable moves — ` +
+              ? `bind GEO.${key} to ${q(target)} because one id starts or ends with the other and nothing measurable moves — ` +
                 `the brush already reaches ${q(wouldBe)} through ${carriers.length} exactly-matched stamp` +
                 `${carriers.length === 1 ? "" : "s"} (${carriers.join(", ")}), so no concept gains or loses a ` +
-                `candidate.${near.length > 1 ? ` Note that ${near.length} ids contain or are contained by ${q(key)} ` +
+                `candidate.${near.length > 1 ? ` Note that ${near.length} ids start or end with ${q(key)}, or are started or ended by it, ` +
                   `(${near.map(q).join(", ")}), so the choice among them would be the binder's, not the data's.` : ""}` +
                 ` What changes is that the table ` +
-                `would then hold one edge asserted by a substring instead of an equality, and the next such case — ` +
+                `would then hold one edge asserted by a shared prefix instead of an equality, and the next such case — ` +
                 `where the tradition is new — would have a precedent.`
-              : `bind GEO.${key} to ${q(target)} on that substring and the geometry brush gains tradition ` +
+              : `bind GEO.${key} to ${q(target)} on that shared edge and the geometry brush gains tradition ` +
                 `${q(wouldBe ?? "")}, which ${(marksByTradition.get(wouldBe ?? "") ?? []).length} marks would ride ` +
-                `into the candidate set of every geometry-carrying concept on the strength of one id containing another.`),
+                `into the candidate set of every geometry-carrying concept on the strength of one id ending with another.`),
       };
     });
     brushBindings.push({
@@ -809,6 +913,20 @@ export function correspondenceForConcept(concept: string): ConceptCorrespondence
 `);
 
 const OUT = new URL("../packages/glyph-registry/src/correspondence.v1.ts", import.meta.url);
-writeFileSync(OUT, `${out.join("").replace(/\n{3,}/gu, "\n\n").trimStart()}\n`, "utf8");
-log(`\nwrote packages/glyph-registry/src/correspondence.v1.ts`);
-if (problems.length) process.exitCode = 1;
+
+/* The write used to happen here unconditionally and the exit code was set after
+   it. Every problem above describes a table that disagrees with itself — a
+   duplicate codex id drops a mark from MARK_BINDINGS while CORRESPONDENCE_COVERAGE
+   goes on reporting `marksLocked: 50` — and that file still reached disk, still
+   compiled, still read as canon. Nothing in the repo runs this script, so the exit
+   code is seen by whoever happens to be watching the terminal and by nobody else;
+   the file is seen by everybody. So the file is the thing that must not appear. */
+if (problems.length) {
+  log(`\nREFUSED to write packages/glyph-registry/src/correspondence.v1.ts: ${problems.length} problem` +
+      `${problems.length === 1 ? "" : "s"} above. The table this run produced disagrees with itself, so it is ` +
+      "not written; whatever is on disk is the last run that did not. Fix the input or the join and re-run.");
+  process.exitCode = 1;
+} else {
+  writeFileSync(OUT, `${out.join("").replace(/\n{3,}/gu, "\n\n").trimStart()}\n`, "utf8");
+  log(`\nwrote packages/glyph-registry/src/correspondence.v1.ts`);
+}

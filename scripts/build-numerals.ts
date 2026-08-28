@@ -277,6 +277,41 @@ function inkBoundsOf(paths: readonly EmittedPath[]): Bounds {
   return { minX, minY, maxX, maxY };
 }
 
+/** Shortest distance from a point to a segment. */
+function distToSegment(p: Pt, a: Pt, b: Pt): number {
+  const vx = b[0] - a[0], vy = b[1] - a[1];
+  const len2 = vx * vx + vy * vy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / len2));
+  return Math.hypot(p[0] - (a[0] + t * vx), p[1] - (a[1] + t * vy));
+}
+
+/**
+ * How far a glyph's ink misses being its own half-turn about `(cx, cy)`.
+ *
+ * Every sampled point is rotated 180° about the centre and measured against the
+ * flattened polyline — segments, not vertices, so the answer is not floored by
+ * the sample spacing. Zero means the glyph is exactly point-symmetric. This is
+ * the check that holds `S` to its construction: the letter is two congruent
+ * bowls in opposition, and the moment they stop being congruent it leans.
+ */
+function halfTurnResidual(paths: readonly EmittedPath[], cx: number, cy: number): number {
+  const poly: Pt[][] = paths.map((p) => pathPoints(p.d));
+  let worst = 0;
+  for (const chain of poly) {
+    for (const pt of chain) {
+      const image: Pt = [2 * cx - pt[0], 2 * cy - pt[1]];
+      let best = Infinity;
+      for (const other of poly) {
+        for (let i = 1; i < other.length; i += 1) {
+          best = Math.min(best, distToSegment(image, other[i - 1]!, other[i]!));
+        }
+      }
+      worst = Math.max(worst, best);
+    }
+  }
+  return worst;
+}
+
 /* ── the metric frame ──────────────────────────────────────────────────────
    One grid governs the whole set. Every number below is derived from it; there
    are no free-floating coordinates in the constructions that follow. */
@@ -693,24 +728,55 @@ const CAP_L: Glyph = {
 };
 
 /**
- * S — the eight, opened. The same two tangent circles, each with 120° of its
- * circumference lifted away, and the two remaining 240° arcs traced in
- * OPPOSITE senses: the upper counterclockwise from one o'clock, the lower
- * clockwise to seven. That opposition is the entire difference between an S
- * and a 3, which is two circles curving the same way. Because the circles are
- * the 8's, they are already tangent on the advance axis and the letter stands
- * upright with no offset to tune.
+ * S — the eight, opened, on EQUAL bowls.
+ *
+ * The letter is two circles with 120° of each lifted away, the two remaining
+ * 240° arcs traced in OPPOSITE senses: the upper counterclockwise from one
+ * o'clock, the lower clockwise to seven. That opposition is the entire
+ * difference between an S and a 3, which is two circles curving the same way.
+ *
+ * WHAT WAS WRONG. This borrowed the 8's own bowls, r16 over r20. Those radii
+ * are right for an 8 — a figure whose top bowl must read lighter than its
+ * bottom — but they put the tangency at y=46, four units above the glyph's
+ * centre, and hung a small bowl above a large one. In a string that reads as a
+ * lean: `LS` and `mm/S` on the contact sheet came out italic against upright
+ * digits. The previous note in this slot claimed the letter "stands upright
+ * with no offset to tune", which was the claim, not the measurement.
+ *
+ * THE FIX, and why it is this one. Equal bowls. Two circles of r18 stack to
+ * exactly the figure height (4r = 72), so they are tangent ON the glyph's own
+ * centre (32.5, 50) with nothing left over to offset. The pair is then exactly
+ * invariant under a half-turn about that centre — the same symmetry that
+ * derives the 9 from the 6 — which is asserted below against the emitted path
+ * data, not asserted in prose.
+ *
+ * Point symmetry alone does not make a letter upright: an italic S is
+ * point-symmetric too. What makes THIS one upright is that both bowl centres
+ * and the tangency between them sit on the advance axis x=32.5. Swinging the
+ * centres off that axis by an angle φ tilts the spine while preserving the
+ * symmetry exactly, and φ was tried at 6°, 8°, 10°, 13°, 16° and 18° and the
+ * results set into `LS`, `S8`, `SS` and `mm/S` and looked at. Every nonzero φ
+ * reads italic, progressively so; φ=0 matches the digits. Worth recording
+ * because a band-centroid slant fit — the obvious metric — measures 21° on the
+ * upright S and 0° on the one that visibly leans forward: an S's bowls open to
+ * opposite sides, so that fit reads the letter's own construction as slant and
+ * points the wrong way. The eye was the instrument here; the symmetry
+ * assertion is what keeps the result from drifting.
  */
-const S_T: Pt = [EIGHT_UP.x, EIGHT_UP.y + EIGHT_UP.r];   // where the two circles touch
+const S_R = FIG_H / 4;
+const S_UP = circ(MIDX, TOP + S_R, S_R);
+const S_LO = circ(MIDX, BASE - S_R, S_R);
+/** Where the two bowls touch — the glyph's centre, by construction. */
+const S_T: Pt = [S_UP.x, S_UP.y + S_UP.r];
 const CAP_S: Glyph = {
   id: "numeral-cap-s",
   character: "S",
-  note: "the 8's two tangent circles, each opened 120° and traced in opposite senses",
+  note: `two equal r${S_R} bowls tangent at the glyph centre, each opened 120° and traced in opposite senses`,
   draws: [
     S([
-      move(...ptOn(EIGHT_UP.x, EIGHT_UP.y, EIGHT_UP.r, 330)),
-      arcVia(EIGHT_UP, ptOn(EIGHT_UP.x, EIGHT_UP.y, EIGHT_UP.r, 330), S_T, false),
-      arcVia(EIGHT_LO, S_T, ptOn(EIGHT_LO.x, EIGHT_LO.y, EIGHT_LO.r, 150), true),
+      move(...ptOn(S_UP.x, S_UP.y, S_UP.r, 330)),
+      arcVia(S_UP, ptOn(S_UP.x, S_UP.y, S_UP.r, 330), S_T, false),
+      arcVia(S_LO, S_T, ptOn(S_LO.x, S_LO.y, S_LO.r, 150), true),
     ]),
   ],
 };
@@ -859,6 +925,34 @@ for (const r of records) {
 }
 console.log(`worst-case ink overflow past the 0..100 box:        ${r4(worst100)} units`);
 if (worst100 > 0) throw new Error("ink escapes the 0..100 box");
+
+/* A third check, for the one glyph whose uprightness is a symmetry rather than
+   a measurement. `S` is two congruent bowls in opposition, which makes it
+   exactly its own half-turn about the glyph centre. The 8 is deliberately NOT
+   in this list: its bowls are r16 over r20 because a figure eight wants a
+   lighter top bowl, and that asymmetry is correct there. It was borrowing those
+   same bowls that made the S lean.
+
+   The tolerance is one hundredth of a unit — a seven-hundredth of the stroke
+   width, far below anything a plate can resolve, and far above the four-decimal
+   rounding this file emits at. Measured against the same yardstick, the S that
+   carried the 8's bowls missed by 7.8837 units. */
+const HALF_TURN_TOLERANCE = 0.01;
+for (const id of ["numeral-cap-s"]) {
+  const r = records.find((rec) => rec.id === id);
+  if (r === undefined) throw new Error(`${id} is missing from the set`);
+  const [vx, vy, vw, vh] = r.viewBox;
+  const residual = halfTurnResidual(r.paths, vx + vw / 2, vy + vh / 2);
+  console.log(`half-turn residual, ${pad(id, 16)} ${r4(residual)} units`);
+  if (residual > HALF_TURN_TOLERANCE) {
+    throw new Error(
+      `${id} is not its own half-turn about (${vx + vw / 2}, ${vy + vh / 2}): ` +
+        `off by ${r4(residual)} units. Two bowls that are not congruent make the ` +
+        `glyph lean; refusing to write a set that ships an italic letter among ` +
+        `upright digits.`,
+    );
+  }
+}
 
 /* ── emit ──────────────────────────────────────────────────────────────── */
 

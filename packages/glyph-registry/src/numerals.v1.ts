@@ -303,12 +303,12 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
   {
     id: "numeral-cap-s",
     character: "S",
-    construction: "the 8's two tangent circles, each opened 120° and traced in opposite senses",
+    construction: "two equal r18 bowls tangent at the glyph centre, each opened 120° and traced in opposite senses",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M45.0167 22 A16 16 0 1 0 31.1602 46 A20 20 0 1 1 13.8397 76"),
+      stroke("M48.0885 23 A18 18 0 1 0 32.5 50 A18 18 0 1 1 16.9115 77"),
     ]),
-    inkBounds: Object.freeze([10.3397, 10.5, 54.6602, 89.5] as const),
+    inkBounds: Object.freeze([11, 10.5, 54, 89.5] as const),
   },
   {
     id: "numeral-sup-0",
