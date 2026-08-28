@@ -16,6 +16,7 @@
     "compile": "tsx apps/cli/src/index.ts compile",
     "geometry:hash": "tsx scripts/generate-geometry-integrity.ts",
     "golden:hash": "tsx scripts/generate-golden-hashes.ts",
+    "verify:ring": "tsx scripts/verify-ring-page.ts",
     "s137": "tsx apps/cli/src/index.ts"
   },
   "devDependencies": {
@@ -36,6 +37,7 @@
     "@studio137/walk-engine": "workspace:*",
     "@types/node": "^22.10.2",
     "fast-check": "^3.23.2",
+    "playwright": "1.56.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"

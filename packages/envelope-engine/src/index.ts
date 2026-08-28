@@ -75,10 +75,17 @@ const f = (n: number): string => n.toFixed(4);
  * that. That 137 is also the studio's number is why this prime and not another;
  * the primality is the load-bearing half.
  *
- * This said "closes as a single cycle" until a grader counted. It does not: the
- * permutation splits into `136 / ord(m)` cycles, so m=3 is one cycle and m=10 is
- * eighteen. The conclusion was right and the reason was wrong, which is the
- * failure this codebase keeps finding in itself.
+ * Node 0 maps to itself, so its chord has zero length and is dropped: the family
+ * is 136 chords over 136 nodes, not 137. Twelve o'clock is bare on every plate.
+ *
+ * This said "closes as a single cycle" until a grader counted, and the sentence
+ * written to correct it was wrong too — it quoted `136 / ord(m)` and then gave
+ * m=10 as eighteen, which is the count including node 0's fixed point, while
+ * giving m=3 as one, which is the count excluding it. Two conventions in one
+ * sentence. Counting the non-zero residues only: m=3 gives 1 cycle, m=10 gives
+ * 17. `envelopeCycleCounts` in the tests computes both columns, so this comment
+ * is now checked rather than asserted — the fourth generation of one failure in
+ * this file, and the first one a test can catch.
  */
 export const NODES = 137;
 

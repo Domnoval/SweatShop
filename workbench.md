@@ -255,7 +255,8 @@ exactly the same picture. Had the SVG moved, the union would have been wrong.
 epicycloid with `m − 1` cusps. **Superseded later in Phase 7 and left here as the log
 it is:** `N` was magic constant × order and `m` the raw cell sum, giving DESCENT 24 cusps.
 Venus's 1225 nodes made those cusps uncountable, so `N` is now fixed at 137 and `m` is the
-cell sum reduced theosophically — DESCENT 7, FALL 4, ACE 9. See PHASE 7 below.
+cell sum reduced theosophically, plus one — DESCENT 8, FALL 5, ACE 10, drawing 7, 4 and 9
+cusps respectively. See PHASE 7 below.
 **The cusp count is countable off the drawing**,
 so a reader who distrusts the caption can check the picture against it.
 
@@ -321,13 +322,13 @@ across matched concepts (overstated in the module header); `kamea: PlanetKey` is
 duplicate for a pointer nothing asserts; and correspondence had **zero test coverage**,
 so its determinism claim was unenforced.
 
-## Not yet delivered
+## Delivered since this section was written
 
-- **The page wrapper.** The done bar requires browser verification at desktop and 375px
-  with a clean console. There was no page to verify. In flight.
-- **The annotation layer** — the actual Press station. In flight.
-- Done-bar item 5 (dead copies *removed*) is only met in the executable stack; the three
-  HTML instruments remain in `assets/` as data sources and provenance.
+The page wrapper, the annotation layer and the four peer-gate repairs are all
+delivered and verified. This block said otherwise for several hours; a grader
+noted that reading the workbench would *understate* the build. Recorded rather
+than silently swapped, because a status document that lies in the flattering
+direction is still lying.
 
 ## Next move
 

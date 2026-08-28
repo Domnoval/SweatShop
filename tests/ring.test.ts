@@ -297,14 +297,35 @@ const RELATIONS: readonly Relation[] = Object.freeze([
     },
   },
   {
+    // "Node 0 — twelve o'clock — maps to itself … that one node is bare".
+    // Checked by counting the endpoints the emitted chords actually touch — which
+    // is exactly how the off-by-one in the sentence this replaced was found.
+    id: "node-zero-is-bare",
+    pattern: /Node (\d+) — twelve o'clock — maps to itself/u,
+    check: (m, f) => {
+      const touched = new Set<string>();
+      for (const band of f.art.envelope.bands) {
+        for (const seg of band.d.matchAll(/M([\d.]+) ([\d.]+) L([\d.]+) ([\d.]+)/gu)) {
+          touched.add(`${seg[1]},${seg[2]}`);
+          touched.add(`${seg[3]},${seg[4]}`);
+        }
+      }
+      return all(
+        eq(m[1], 0, "the node said to map to itself"),
+        eq(touched.size, f.art.envelope.nodes - 1, "the nodes a chord touches"),
+      );
+    },
+  },
+  {
     // "same 136 chords over all 137 nodes" — the corrected node claim. It said
     // "closes as a single cycle" until a grader counted: m=10 closes as eighteen.
     id: "chords-over-all-nodes",
-    pattern: /same (\d+) chords over all (\d+) nodes/u,
+    pattern: /same (\d+) chords over (\d+) of the (\d+) nodes/u,
     check: (m, f) =>
       all(
-        eq(m[2], f.art.envelope.nodes, "the node count"),
+        eq(m[3], f.art.envelope.nodes, "the node count"),
         eq(m[1], f.art.envelope.nodes - 1, "the chord count"),
+        eq(m[2], f.art.envelope.nodes - 1, "the nodes a chord actually touches"),
         eq(m[1], f.art.envelope.chordCount, "the chords actually emitted"),
       ),
   },

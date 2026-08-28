@@ -50,7 +50,32 @@ const VOCABULARY: readonly string[] = WORD_CORRESPONDENCE.map((w) => w.word);
 const esc = (s: string): string =>
   s.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;");
 
+// Anchor ids only, and deliberately not a second copy of the CLI's naming: that
+// one is `ringStem` in apps/cli/src/ring-paths.ts and is collision-free by
+// digest. This is the lossy expression that WAS the CLI's naming, kept here for
+// short readable fragment ids over a fixed word list — so it is bounded by an
+// assertion rather than by hope. Add "SUN DOG" and "SUN-DOG" to WORDS without
+// the check below and the page emits duplicate ids and a nav link that jumps to
+// the wrong plate, silently, at exit 0.
 const slug = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/gu, "-");
+
+{
+  // The assertion the comment above promises. Distinct words must not share an
+  // anchor id; if they do the page ships duplicate ids and a nav that misdirects.
+  const seen = new Map<string, string>();
+  for (const word of WORDS) {
+    const id = slug(word);
+    const prior = seen.get(id);
+    if (prior !== undefined) {
+      throw new Error(
+        `WORDS collide on the anchor id "${id}": ${JSON.stringify(prior)} and ` +
+          `${JSON.stringify(word)}. Anchor ids are a lossy slug; give the page a ` +
+          `collision-free id (the CLI uses ringStem's digest) before adding this word.`,
+      );
+    }
+    seen.set(id, word);
+  }
+}
 
 /* ── gathering ───────────────────────────────────────────────────────────── */
 

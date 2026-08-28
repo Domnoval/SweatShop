@@ -471,8 +471,9 @@ function formatLegend(
     // written, because this caption was corrected once while the census's copy
     // of the same rule was left behind.
     `  nodes are fixed at ${envelope.nodes} — prime, so every multiplier below it is coprime`,
-    `  with it: each node carries one chord out and one in, and every family draws the`,
-    `  same ${envelope.nodes - 1} chords over all ${envelope.nodes} nodes. No multiplier collapses onto a subset.`,
+    `  with it, so every family draws the same ${envelope.nodes - 1} chords over ${envelope.nodes - 1} of the ${envelope.nodes} nodes and`,
+    `  no multiplier collapses onto a subset. Node 0 — twelve o'clock — maps to itself,`,
+    `  so its chord has zero length and is dropped; that one node is bare on every plate.`,
     `  ${multiplierDerivation(figure, envelope)}.`,
     `  cusps = multiplier − 1 = ${envelope.cusps}. Count the cusps to check this sheet.`,
     "",
