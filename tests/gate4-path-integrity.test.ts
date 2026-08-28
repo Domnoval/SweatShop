@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 
 import { OUTPUT_PRESETS, PlateError } from "@studio137/plate-core";
-import { geometryRegistry, grammarRegistry, pathDigest } from "@studio137/glyph-registry";
+import { geometryRegistryV2, grammarRegistry, pathDigest } from "@studio137/glyph-registry";
 import {
   buildEnvelopes,
   compilePlate,
@@ -23,7 +23,10 @@ import {
 
 import { requestFor } from "./helpers.js";
 
-const geometry = geometryRegistry();
+// The digest must be taken against whatever `defaultRegistries()` loads, not
+// against v1 by name — otherwise this asserts which registry is current
+// rather than that the paths survived the pipeline, which is Gate 4's job.
+const geometry = geometryRegistryV2();
 
 function heavilyCorrupted(mode: "exact" | "stylized") {
   return compilePlate(

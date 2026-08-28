@@ -3,7 +3,7 @@
 Live state for the MK·137 spine commission. Always current.
 Build brief: "THE RING", drafted 2026-08-28. Branch `claude/sigil-painter-review-stx4s2`.
 
-**State: PHASE 1 COMPLETE — the trunk stands. Phases 3 and 6 building in parallel.**
+**State: PHASES 1-5 COMPLETE. Break 1 is flipped. Phase 6 (numerals) building; correspondence under adversarial review.**
 
 ---
 
@@ -197,10 +197,72 @@ The three HTML instruments stay in `assets/` for now for a concrete reason: **de
 `KEYS` and `CONCEPTS`**, which Phase 3 is reading right now. They go when their replacement
 page ships in Phase 7, not before.
 
+---
+
+## PHASE 4 — Break 1, flipped
+
+### The blocker the inventory found, and the brief did not
+
+v1 and v2 shared **zero ids**. v1 holds the seventeen structural records the grammar
+names — `root-signal`, `mod-negate`, `sep-relation` and the rest — plus the literal-escape
+frame. v2 held only `mark-*`. Pointing the contract at a disjoint v2 dangles every grammar
+reference at once: `UNKNOWN_GEOMETRY` on the first word of the first plate.
+
+**A version that shares nothing with the version it replaces is not a version.** So v2 now
+*supersedes* v1: 18 structural records + 50 authored marks = 68, every superseded record
+byte-identical to its v1 hash (asserted, not assumed).
+
+### What the flip does NOT do
+
+It does not make a word draw an authored mark. The grammar still resolves roots to the
+provisional structural records. What the union buys is that a plate may now pin, load and
+hash authored geometry under a contract that names it — **the door, not the room.** Words
+reach authored marks through the correspondence table, on the sheet, not through the root
+families. The brief treats Break 1 as the win; it is the unlock.
+
+### A real defect found on the way
+
+`exportPublic` loaded `geometry/v1` unconditionally, ignoring what the plate declared.
+Invisible while v1 was the only contract; the moment a plate could pin anything else, the
+export rendered one vocabulary onto a plate sealed with the name of another — the exact
+defect `assertRegistriesMatchContract` guards against on the compile side, reappearing on
+the export side where nothing was checking. It now resolves the registry from the plate's
+contract and fails closed on an unknown one.
+
+### The hash-reset log — the audit trail
+
+| field | |
+|---|---|
+| plateId | **moved** `76cc5f7e…` → `c6a0b279…` |
+| requestDigest | **moved** (the contract is hashed into it) |
+| astSha256 | **moved** (every node records its geometryVersion) |
+| presentationSha256 | unchanged |
+| canonicalSvgSha256 | **unchanged** `9e20a494…` |
+| printSvgSha256 | **unchanged** `7fb5e8f3…` |
+| canonicalPathDigest | unchanged |
+| productionPngSha256 | **unchanged** |
+| minimumStrokePt | unchanged |
+
+Only identity moved. **Every pixel is byte-identical.** That is the proof the superset is
+correct rather than merely green: the plate declares a different vocabulary and draws
+exactly the same picture. Had the SVG moved, the union would have been wrong.
+
+---
+
+## PHASE 5 — paint (complete)
+
+`packages/envelope-engine`. Chords from node `i` to `m·i mod N`; the envelope is an
+epicycloid with `m − 1` cusps. `m` is the walk's cell sum, `N` is magic constant × order.
+DESCENT → 24 cusps, FALL → 12, ACE → 8. **The cusp count is countable off the drawing**,
+so a reader who distrusts the caption can check the picture against it.
+
+Renderer gaps closed: palette was already a parameter; hue is a guide-level channel indexing
+a palette ramp (inert unless both are present — Gate 3 unmoved proves it); envelope enters as
+substrate guides; layers untouched.
+
 ## Next move
 
-Phases 3 (correspondence) and 6 (constructed numerals) are building in parallel.
-Phase 2 (Read + the ×170 runner) is next in this context.
+Phase 7 — `ring <WORD>` and the page. Phase 6 numerals still building.
 
 ## Census — this build's own choices so far
 

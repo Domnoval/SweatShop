@@ -14,7 +14,11 @@ import {
   type PlateId,
   type VersionContract,
 } from "@studio137/plate-core";
-import { geometryRegistry } from "@studio137/glyph-registry";
+import {
+  geometryRegistry,
+  geometryRegistryV2,
+  type GeometryRegistry,
+} from "@studio137/glyph-registry";
 import {
   renderScene,
   resolvePrintTemplate,
@@ -92,11 +96,39 @@ export function scanSecretsFor(plate: CompiledPlate): ScanSecrets {
  * PRIVACY_LEAK and no artifact is released — spec §24 makes scrubbing mandatory,
  * not advisory.
  */
+/**
+ * The registry a plate declared, not whichever one this module was written with.
+ *
+ * `exportPublic` loaded `geometry/v1` unconditionally. While v1 was the only
+ * contract that was invisible; the moment a plate could pin anything else, the
+ * export rendered one vocabulary onto a plate sealed with the name of another —
+ * the exact defect `assertRegistriesMatchContract` guards on the compile side,
+ * reappearing on the export side where nothing was checking.
+ *
+ * It fails closed rather than falling back, because a silent fallback is how the
+ * first version of this bug survived.
+ */
+function registryFor(versions: CompiledPlate["versions"]): GeometryRegistry {
+  switch (versions.geometryVersion) {
+    case "geometry/v1":
+      return geometryRegistry();
+    case "geometry/v2":
+      return geometryRegistryV2();
+    default:
+      throw new PlateError(
+        "UNSUPPORTED_VERSION",
+        `No geometry registry is loadable for "${versions.geometryVersion}". ` +
+          `An export must draw from the vocabulary its plate declares.`,
+        { geometryVersion: versions.geometryVersion },
+      );
+  }
+}
+
 export function exportPublic(
   plate: CompiledPlate,
   options: PublicExportOptions = {},
 ): PublicExport {
-  const geometry = geometryRegistry();
+  const geometry = registryFor(plate.versions);
   const secrets = scanSecretsFor(plate);
 
   const scene: RenderedScene = renderScene({

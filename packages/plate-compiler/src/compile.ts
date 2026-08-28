@@ -37,7 +37,7 @@ import {
 } from "@studio137/plate-core";
 import { CURRENT_VERSIONS } from "@studio137/plate-core";
 import {
-  geometryRegistry,
+  geometryRegistryV2,
   grammarRegistry,
   type ExtendedGrammarRegistry,
   type GeometryRegistry,
@@ -115,7 +115,7 @@ export type CompilerRegistries = Readonly<{
 export function defaultRegistries(): CompilerRegistries {
   return Object.freeze({
     grammar: grammarRegistry(),
-    geometry: geometryRegistry(),
+    geometry: geometryRegistryV2(),
     versions: CURRENT_VERSIONS,
   });
 }

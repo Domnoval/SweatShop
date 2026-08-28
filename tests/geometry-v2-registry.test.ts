@@ -45,21 +45,36 @@ describe("geometry/v2 loads as a locked registry", () => {
   });
 
   it("carries the fifty extracted marks", () => {
-    expect(v2.ids).toHaveLength(50);
     expect(GEOMETRY_V2_SOURCE).toHaveLength(50);
     expect(Object.keys(GEOMETRY_V2_INTEGRITY)).toHaveLength(50);
+    expect(v2.ids.filter((id) => id.startsWith("mark-"))).toHaveLength(50);
   });
 
   it("exposes ids in a sorted order that does not depend on insertion", () => {
     expect([...v2.ids]).toStrictEqual([...v2.ids].sort());
   });
 
-  it("does not collide with geometry/v1, which stays untouched", () => {
+  it("supersedes geometry/v1 rather than replacing it", () => {
+    // This test asserted the opposite until the contract moved, and the old
+    // assertion is what made the move impossible. The grammar names seventeen
+    // structural records — root-signal, mod-negate, sep-relation and the rest —
+    // that live only in v1. A disjoint v2 dangles every one of them, and the
+    // compiler throws UNKNOWN_GEOMETRY on the first word of the first plate.
     const v1 = geometryRegistry();
     expect(v1.version).toBe("geometry/v1");
     expect(v1.ids).toHaveLength(18);
-    // The two vocabularies are disjoint: a v2 id must never resolve in v1.
-    for (const id of v2.ids) expect(v1.has(id)).toBe(false);
+    for (const id of v1.ids) expect(v2.has(id)).toBe(true);
+    expect(v2.ids).toHaveLength(68);
+  });
+
+  it("keeps every superseded record byte-identical to the version it came from", () => {
+    // Superseding is not redrawing. A structural record carried into v2 must hash
+    // exactly as it did in v1, or a plate sealed under v1 and re-verified under
+    // v2 would fail integrity for a reason nobody changed.
+    const v1 = geometryRegistry();
+    for (const id of v1.ids) {
+      expect(v2.get(id).integritySha256).toBe(v1.get(id).integritySha256);
+    }
   });
 });
 

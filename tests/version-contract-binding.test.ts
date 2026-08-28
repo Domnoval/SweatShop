@@ -56,7 +56,7 @@ describe("the loaded registry must match the pinned contract", () => {
   });
 
   it("refuses a geometry registry that disagrees with the contract", () => {
-    const registries = { ...base, geometry: geometryClaiming("geometry/v2") };
+    const registries = { ...base, geometry: geometryClaiming("geometry/v1") };
     expect(() => compilePlate(requestFor(), registries)).toThrowError(PlateError);
     try {
       compilePlate(requestFor(), registries);
@@ -65,7 +65,7 @@ describe("the loaded registry must match the pinned contract", () => {
       const err = error as PlateError;
       expect(err.code).toBe("UNSUPPORTED_VERSION");
       expect(err.message).toContain("geometryVersion");
-      expect(err.message).toContain("geometry/v2");
+      expect(err.message).toContain("geometry/v1");
     }
   });
 
@@ -84,7 +84,7 @@ describe("the loaded registry must match the pinned contract", () => {
   it("reports every disagreeing field at once rather than the first", () => {
     const registries = {
       grammar: grammarClaiming("grammar/v2"),
-      geometry: geometryClaiming("geometry/v2"),
+      geometry: geometryClaiming("geometry/v1"),
       versions: base.versions,
     };
     try {
@@ -104,7 +104,7 @@ describe("the loaded registry must match the pinned contract", () => {
     // this build genuinely cannot load. `assertSupportedVersions` catches it
     // first, which is correct — but it must not be the only thing standing
     // between a mislabelled contract and a sealed artifact.
-    const registries = { ...base, versions: contractWith({ geometryVersion: "geometry/v2" }) };
+    const registries = { ...base, versions: contractWith({ geometryVersion: "geometry/v3" }) };
     expect(() => compilePlate(requestFor(), registries)).toThrowError(PlateError);
   });
 
@@ -116,7 +116,7 @@ describe("the loaded registry must match the pinned contract", () => {
     } catch (error) {
       const err = error as PlateError;
       // Diagnosing this requires knowing both halves, not just that they differ.
-      expect(err.message).toContain("contract=geometry/v1");
+      expect(err.message).toContain("contract=geometry/v2");
       expect(err.message).toContain("loaded=geometry/v99");
     }
   });

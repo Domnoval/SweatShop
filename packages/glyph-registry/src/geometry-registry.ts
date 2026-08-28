@@ -186,21 +186,29 @@ export function createGeometryRegistry(): GeometryRegistry {
 }
 
 /**
- * `geometry/v2` — the studio's own authored marks, extracted from the draw
- * registry into locked path data.
+ * `geometry/v2` — everything v1 carried, plus the studio's fifty authored marks.
  *
- * Deliberately not reachable from `defaultRegistries()` and not listed in
- * `SUPPORTED_VERSIONS`. No grammar resolves a word to a `mark-*` id yet, so a
- * plate pinning v2 today would load real geometry and then find nothing to say
- * with it. Making it loadable and verifiable is a separate step from making it
- * compilable, and conflating the two is how a half-wired vocabulary ships.
+ * v2 **supersedes** v1 rather than replacing it, and that is a correction. The
+ * two vocabularies were built disjoint: v1 holds the seventeen structural records
+ * the grammar names (`root-signal`, `mod-negate`, `sep-relation`, …) plus the
+ * literal-escape frame, and v2 held only `mark-*`. Pointing the version contract
+ * at a disjoint v2 would have made every grammar reference dangle at once — the
+ * compiler throws `UNKNOWN_GEOMETRY` on the first word of the first plate. A
+ * version that shares nothing with the version it replaces is not a version.
+ *
+ * So the flip is a union, and one thing it is *not* is worth stating plainly:
+ * this does not make a word draw an authored mark. The grammar still resolves
+ * roots to the provisional structural records. What the union buys is that a
+ * plate may now pin, load and hash authored geometry under a contract that names
+ * it — the door, not the room. Words reach authored marks through the
+ * correspondence table, on the sheet, not through the root families.
  */
 export function createGeometryRegistryV2(): GeometryRegistry {
   return new LockedGeometryRegistry(
     GEOMETRY_V2_VERSION,
     GEOMETRY_V2_IS_PROVISIONAL,
-    GEOMETRY_V2_SOURCE,
-    GEOMETRY_V2_INTEGRITY,
+    Object.freeze([...GEOMETRY_V1_SOURCE, ...GEOMETRY_V2_SOURCE]),
+    Object.freeze({ ...GEOMETRY_V1_INTEGRITY, ...GEOMETRY_V2_INTEGRITY }),
   );
 }
 
