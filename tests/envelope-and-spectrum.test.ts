@@ -48,7 +48,8 @@ describe("the envelope is derived, not styled", () => {
   it("folds the degenerate multipliers onto the smallest real figure", () => {
     // m of 0 or 1 collapses every chord to a point or to the identity, drawing
     // an empty layer that reads as a bug rather than as a plate.
-    const zero = envelopeFromWalk(jupiter("DESCENT"), { multiplier: undefined, nodes: 25 });
+    // Cell sum 25 against 25 nodes gives m = 0 — every chord would collapse.
+    const zero = envelopeFromWalk(jupiter("DESCENT"), { nodes: 25 });
     expect(zero.multiplier).toBeGreaterThanOrEqual(2);
     expect(zero.chordCount).toBeGreaterThan(0);
   });
