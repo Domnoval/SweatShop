@@ -17,7 +17,12 @@ time, spirit, war, love, mind, shadow) and roughly 170 synonyms that resolve
 into them. Unmatched input falls through to an honest
 `uncharted · hashed correspondence`.
 
-Not in this repository. Lives in `Domnoval/137-studio`.
+In this repository, at `assets/symbolpaintermk137.html`. It was not, when this
+entry was written; the line said so for longer than it was true. Its `KEYS`
+table at line 899 is the 170 words — 151 synonyms plus the 19 concept names as
+identity entries, which is why the count is quoted as 170 lookup keys and not
+as 170 alternates. `CONCEPTS` at line 878 carries each concept's planet, brushes
+and composition recipe.
 
 ### Phrase-to-Plate
 
