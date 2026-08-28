@@ -34,6 +34,16 @@ export type SubstrateGuide = Readonly<{
   strokeWidth: number;
   /** 0–1 painting weight the renderer maps onto opacity. */
   weight: number;
+  /**
+   * Position in the palette's spectrum, 0–1. Optional, and meaningless on its
+   * own: a guide only takes a colour from it when the palette supplies a ramp.
+   *
+   * House rule 5 — hue is a readout, never a filter. A guide may only set this
+   * from a real quantity it already carries (chord index around a family, step
+   * along a walk, arc length). A ramp with no quantity behind it is decoration
+   * and grades as Arbitrary.
+   */
+  hue?: number;
 }>;
 
 export type DeterministicMask = Readonly<{

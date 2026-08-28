@@ -40,7 +40,7 @@ import {
   translate,
   type Matrix,
 } from "./matrix.js";
-import { DEFAULT_PALETTE, normalizePalette, type PlatePalette } from "./palette.js";
+import { DEFAULT_PALETTE, normalizePalette, spectrumColor, type PlatePalette } from "./palette.js";
 import { printBoundaryLayer, type PrintTemplate } from "./print.js";
 import { element, group, normalizePathData, selfClosing, type Attribute } from "./xml.js";
 
@@ -353,7 +353,13 @@ export function renderScene(input: SceneInput): RenderedScene {
     selfClosing("path", [
       ["d", normalizePathData(guide.d)],
       ["fill", "none"],
-      ["stroke", guide.role === "registration" ? palette.registration : palette.substrate],
+      [
+        "stroke",
+        // A hue only wins when the palette actually declares a ramp; otherwise
+        // the guide falls back to its role colour and the output is unchanged.
+        spectrumColor(palette, guide.hue) ??
+          (guide.role === "registration" ? palette.registration : palette.substrate),
+      ],
       ["stroke-width", fixed(guide.strokeWidth)],
       ["opacity", opacityText(guide.weight)],
     ]),
