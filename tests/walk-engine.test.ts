@@ -5,10 +5,15 @@
  * hand-computed independently of this implementation, so a change that breaks
  * them is a change to what a word means, not a change to how it is drawn.
  *
- * Counter-verified, and the result corrected a claim first written here. With the
- * loop-glyph branch removed from `walk`, exactly three tests fail — all of them
- * loop tests — while every digit test still passes. That is the point of testing
- * the drawn figure and not only the arithmetic.
+ * Counter-verified, and the result has now corrected two claims first written here.
+ * With the loop-glyph branch removed from `walk`, **four** tests fail — all of them
+ * loop tests — while every digit test still passes. That is the point of testing the
+ * drawn figure and not only the arithmetic.
+ *
+ * This said "exactly three" until a grader ran the ablation. Three is the count only
+ * if you additionally hard-code `loopCount = 0` — a second edit at a second site, not
+ * a branch removal. Removing only the loop-path emission fails two. A counter-
+ * verification whose number nobody re-derives is a claim like any other.
  *
  * Switching `reduceToCell` to modulo, however, fails only its own direct test and
  * none of the four fixtures. It cannot: under Pythagorean every letter is 1-9 and

@@ -319,8 +319,8 @@ const RELATIONS: readonly Relation[] = Object.freeze([
   {
     // "same 136 chords over all 137 nodes" — the corrected node claim. It said
     // "closes as a single cycle" until a grader counted: m=10 closes as eighteen.
-    id: "chords-over-all-nodes",
-    pattern: /same (\d+) chords over (\d+) of the (\d+) nodes/u,
+    id: "chords-over-the-nodes",
+    pattern: /draws (\d+) chords over (\d+) of the (\d+) nodes/u,
     check: (m, f) =>
       all(
         eq(m[3], f.art.envelope.nodes, "the node count"),
