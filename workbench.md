@@ -3,9 +3,9 @@
 Live state for the MK·137 spine commission. Always current.
 Build brief: "THE RING", drafted 2026-08-28. Branch `claude/sigil-painter-review-stx4s2`.
 
-**State: ALL SEVEN STATIONS BUILT AND GRADED THREE TIMES. 462 tests · `tsc` exit 0 ·
+**State: ALL SEVEN STATIONS BUILT AND GRADED FOUR TIMES. 477 tests · `tsc` exit 0 ·
 `pnpm verify:ring` exit 0. Six of seven done-bar items met; item 7 — "the grade comes
-back empty" — has not been met, and every finding from grade three is now repaired.**
+back empty" — has not been met, and every finding from all four grades is repaired.**
 
 > This block has twice been flagged by graders as understating the build. It is now
 > rewritten on every commit that changes the answer, because a status document that
@@ -343,6 +343,7 @@ direction is still lying.
 | 1 — three lenses | 6 defects, 2 severe | all repaired |
 | 2 — two lenses | repairs held; **one repair made a census reason false** | repaired |
 | 3 — one lens | 3 defects, incl. **a false derivation in the sentence written to fix the previous false derivation** | repaired |
+| 4 — one lens | 4 defects: a **print-safety number the plate contradicted**, a "same 136 chords" claim about families that are pairwise disjoint, an undisclosed reading cap, and a counter-verification claim of mine that did not reproduce | repaired |
 
 **The recurring class, stated plainly so it stops being a surprise:** *a sentence
 printed on an artifact, or written in a comment or commit message, that states
@@ -382,9 +383,45 @@ where generation four survived. That is the known hole, recorded rather than pap
 | 6 | browser verification at desktop and 375px | met **and now reproducible**: `pnpm verify:ring`, committed, proven able to fail |
 | 7 | the grade comes back empty | **not met** |
 
+## The structural answer to the recurring class
+
+Looping did not empty the grade and probably cannot: every repair writes new prose,
+and prose about the system is what this system is worst at. Four rounds produced
+four generations of one defect, twice *inside the correction to the previous
+generation*. What actually improved is the machinery, and it is machinery rather
+than vigilance:
+
+- **The prose auditor** (`tests/ring.test.ts`) evaluates every numeric claim in the
+  census, legend and receipt against the engine, and **refuses any claim no relation
+  can evaluate** — so a new unverifiable sentence fails the build rather than
+  shipping. It has caught four of my own rewrites mid-edit.
+- **`assertGaugeIsMeasured`** (`packages/ring/src/annotate.ts`) re-measures the
+  finished plate and throws if the printed stroke gauge disagrees with the ink.
+  Reintroducing the old enumerated constant now fails at *plate-build* time:
+  *"the gauge says 0.165 mm and the finished plate paints 0.090 mm; a plate may not
+  carry a stroke it does not report."*
+- **Measurement replaced enumeration** in the one place a list had gone stale. The
+  list is deleted, not extended — extending it would have been the same defect
+  waiting on the next block that sets its own size.
+
+Known limit, recorded rather than papered: the auditor's scope stops at the emitted
+text. Source comments, this file, `README.md` and commit messages are outside the
+net, and that is exactly where generations three and four survived.
+
 ## Next move
 
-Item 7. Everything grade three found is repaired; the next pass grades that.
+Nothing outstanding on the build. What waits on a human:
+
+1. **Sign or strike the 17 rows** in `bible/PROPOSED-ROOT-MARKS.md`. Six have any
+   candidate at all; eleven would be signed on taste alone, which is allowed and
+   should be signed *as* taste with a reason.
+2. **Join coarseness**, output-driven: run a dozen words you care about through the
+   page and author finer correspondence rows only where the plates read wrong.
+3. **Break 3** (the cymatic chamber: quantise or cut) — deliberately deferred until
+   the read station existed. It does now, so the instrument that adjudicates it is
+   available.
+4. **The garment profile**, still stubbed. Every plate currently reports a stroke
+   gauge far below every garment floor, correctly marked ALARM.
 
 ## Census — this build's own choices so far
 
