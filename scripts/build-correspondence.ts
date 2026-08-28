@@ -54,10 +54,10 @@ const CLOSER: Record<string, string> = { "{": "}", "[": "]", "(": ")" };
     comment) and `next` is the index just past the run; null when no such run
     starts at `i`.
 
-    There is exactly one of these because there was once nearly two. `balancedFrom`
-    skipped comments and `topLevelKeys` did not, so `const GEO={ // the studio's
-    stamps` opened a "string" at the apostrophe, swallowed the block, and returned
-    no keys at all — the geometry brush lost every tradition, 25 words stopped
+    There is one of these because there were two. `balancedFrom` handled comments
+    and `topLevelKeys` did not, so `const GEO={ // the studio's stamps` opened a
+    "string" at the apostrophe, swallowed the rest of the block, and returned no
+    keys at all — the geometry brush lost every tradition, 25 words stopped
     reaching a mark, and the script exited 0. Two scanners over one grammar means
     the day they disagree only one of them is wrong and nothing says which. House
     rule 1. */
