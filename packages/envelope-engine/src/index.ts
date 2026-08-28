@@ -20,7 +20,7 @@
  */
 
 import { PlateError } from "@studio137/plate-core";
-import type { Walk } from "@studio137/walk-engine";
+import { reduceToCell, type Walk } from "@studio137/walk-engine";
 
 export type Point = readonly [number, number];
 
@@ -59,36 +59,52 @@ export type EnvelopeOptions = Readonly<{
 const f = (n: number): string => n.toFixed(4);
 
 /**
- * Node count for a square of order `n`: its magic constant times its order.
+ * Nodes on the circle. Fixed at 137.
  *
- * Both factors are properties of the square rather than of the renderer, so the
- * density of the figure is a fact about which kamea was walked. Jupiter gives
- * 136 chords, Luna 3321 — the larger squares genuinely draw denser plates.
+ * This was magic-constant × order, which is a prettier derivation and produced an
+ * unreadable plate. Venus gave 1225 nodes, and at that density the chords fill the
+ * disc uniformly: the caustic vanishes into texture and the cusps cannot be
+ * counted. The sheet printed "count the cusps to check this against its caption"
+ * above a figure where counting is impossible — a false claim on the artifact,
+ * which is worse than a plain one.
+ *
+ * 137 is prime, so every multiplier below it is coprime with it and the family
+ * closes as a single cycle visiting all nodes — no multiplier can degenerate into
+ * a sparse sub-figure. That it is also the studio's number is why this value and
+ * not another prime; the primality is the load-bearing half.
  */
-export function nodesForOrder(order: number, magicConstant: number): number {
-  return magicConstant * order;
-}
+export const NODES = 137;
 
 /**
- * The multiplier, derived from the walk: the sum of the cells it touched.
+ * The multiplier, from the walk's cell sum reduced theosophically.
  *
- * A word's numeric weight becomes the cusp count. DESCENT sums to 25 and draws
- * 24 cusps; ACE sums to 9 and draws 8. Two words with the same weight draw the
- * same envelope, which is a collision of exactly the kind the audit already
- * reports — visible here rather than hidden.
+ * The reduction is not a convenience — it is the same operation that places a
+ * letter on a cell, applied once more. A word's weight collapses to a single
+ * digit and that digit is the cusp count, so the figure reports the word in the
+ * one unit the system already counts in.
+ *
+ * Taking the sum raw put the multiplier in the forties, and forty crowded cusps
+ * on any node count are not countable. Reduced, DESCENT draws 7, LONGING 6,
+ * FALL 4, ACE 9 — a glance is enough.
+ *
+ * Two words that reduce alike draw the same envelope. That is a collision of
+ * exactly the kind the audit reports, visible on the plate rather than hidden.
  */
-export function multiplierForWalk(walk: Walk, nodes: number): number {
+export function multiplierForWalk(walk: Walk, _nodes: number = NODES): number {
   const sum = walk.steps.reduce((total, step) => total + step.cell, 0);
-  const m = sum % nodes;
-  // 0 and 1 degenerate: every chord collapses to a point or to the identity, and
-  // the family draws nothing at all. Fold them onto the smallest figure that has
-  // an envelope rather than emitting an empty layer that looks like a bug.
-  return m < 2 ? 2 : m;
+  if (sum === 0) return 2;
+  // 1..9, then offset so the multiplier is never the degenerate identity and the
+  // cusp count reads back as exactly the reduction.
+  return reduceToCell(sum, 9) + 1;
+}
+
+/** Cusps a walk's envelope will draw: the theosophic reduction of its cell sum. */
+export function cuspsForWalk(walk: Walk): number {
+  return multiplierForWalk(walk) - 1;
 }
 
 export function envelopeFromWalk(walk: Walk, options: EnvelopeOptions = {}): EnvelopeFamily {
-  const magic = (walk.order * (walk.order * walk.order + 1)) / 2;
-  const nodes = options.nodes ?? nodesForOrder(walk.order, magic);
+  const nodes = options.nodes ?? NODES;
   if (!Number.isInteger(nodes) || nodes < 3) {
     throw new PlateError("INVALID_REQUEST", `An envelope needs at least 3 nodes, got ${nodes}.`, {
       nodes,
@@ -97,7 +113,9 @@ export function envelopeFromWalk(walk: Walk, options: EnvelopeOptions = {}): Env
   const multiplier = options.multiplier ?? multiplierForWalk(walk, nodes);
   const [, , boxW, boxH] = walk.viewBox;
   const centre = options.centre ?? ([boxW / 2, boxH / 2] as Point);
-  const radius = options.radius ?? Math.min(boxW, boxH) / 2 - 8;
+  // Leaves an outer band clear: the correspondence marks live there, and inside
+  // the family they were unreadable against its texture.
+  const radius = options.radius ?? Math.min(boxW, boxH) / 2 - 32;
   const bandCount = Math.max(1, Math.min(options.bands ?? 36, nodes));
 
   // Start at twelve o'clock so a figure's orientation is a fact rather than an

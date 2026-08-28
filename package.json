@@ -31,6 +31,7 @@
     "@studio137/private-manifest": "workspace:*",
     "@studio137/render-raster": "workspace:*",
     "@studio137/render-svg": "workspace:*",
+    "@studio137/ring": "workspace:*",
     "@studio137/substrate-engine": "workspace:*",
     "@studio137/walk-engine": "workspace:*",
     "@types/node": "^22.10.2",

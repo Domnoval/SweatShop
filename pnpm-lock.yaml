@@ -44,6 +44,9 @@ importers:
       '@studio137/render-svg':
         specifier: workspace:*
         version: link:packages/render-svg
+      '@studio137/ring':
+        specifier: workspace:*
+        version: link:packages/ring
       '@studio137/substrate-engine':
         specifier: workspace:*
         version: link:packages/substrate-engine
@@ -71,6 +74,12 @@ importers:
       '@studio137/artifact-security':
         specifier: workspace:*
         version: link:../../packages/artifact-security
+      '@studio137/envelope-engine':
+        specifier: workspace:*
+        version: link:../../packages/envelope-engine
+      '@studio137/glyph-registry':
+        specifier: workspace:*
+        version: link:../../packages/glyph-registry
       '@studio137/plate-compiler':
         specifier: workspace:*
         version: link:../../packages/plate-compiler
@@ -83,6 +92,12 @@ importers:
       '@studio137/render-raster':
         specifier: workspace:*
         version: link:../../packages/render-raster
+      '@studio137/ring':
+        specifier: workspace:*
+        version: link:../../packages/ring
+      '@studio137/walk-engine':
+        specifier: workspace:*
+        version: link:../../packages/walk-engine
 
   packages/artifact-security:
     dependencies:
@@ -224,6 +239,21 @@ importers:
       '@studio137/substrate-engine':
         specifier: workspace:*
         version: link:../substrate-engine
+
+  packages/ring:
+    dependencies:
+      '@studio137/envelope-engine':
+        specifier: workspace:*
+        version: link:../envelope-engine
+      '@studio137/glyph-registry':
+        specifier: workspace:*
+        version: link:../glyph-registry
+      '@studio137/plate-core':
+        specifier: workspace:*
+        version: link:../plate-core
+      '@studio137/walk-engine':
+        specifier: workspace:*
+        version: link:../walk-engine
 
   packages/substrate-engine:
     dependencies:

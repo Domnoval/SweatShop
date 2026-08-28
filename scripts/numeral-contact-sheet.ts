@@ -101,10 +101,25 @@ const GAP = 14;
 const LABEL_SIZE = 34;
 const LABEL_GAP = 8;
 const CELL_PITCH_Y = CELL + LABEL_SIZE * (NUMERAL_METRICS.baseline / 100) + LABEL_GAP + 26;
-const W = MARGIN * 2 + COLS * CELL + (COLS - 1) * GAP;
 
 const TEXT_GLYPHS = NUMERALS_V1_SOURCE.filter((r) => !r.id.startsWith("numeral-sup-"));
 const SUP_GLYPHS = NUMERALS_V1_SOURCE.filter((r) => r.id.startsWith("numeral-sup-"));
+
+/* The three strings this set was commissioned to typeset: a toleranced
+   dimension, a value in scientific notation with a negative exponent, and a
+   line that exercises the brackets, the solidus and the degree ring. */
+const SPECIMENS = ["15.00 ±0.05 mm", "8.47 × 10⁻¹¹ LS", "(0.5 × 137°) mm/S"] as const;
+const SPEC_SIZE = 108;
+
+/* Width is derived, never guessed: the sheet is as wide as its widest content,
+   so no specimen can ever run off the edge as the set is retuned. */
+const W = Math.ceil(
+  MARGIN * 2 +
+    Math.max(
+      COLS * CELL + (COLS - 1) * GAP,
+      ...SPECIMENS.map((t) => widthOf(t, SPEC_SIZE)),
+    ),
+);
 
 const parts: string[] = [];
 let y = MARGIN;
@@ -166,10 +181,6 @@ divider();
 grid(SUP_GLYPHS, TEXT_GLYPHS.length);
 divider();
 
-/* The three strings this set was commissioned to typeset. */
-const SPECIMENS = ["15.00 ±0.05 mm", "8.47 × 10⁻¹¹ LS", "(−3.25 ±0.01) mm/°S"] as const;
-const SPEC_SIZE = 92;
-
 for (const text of SPECIMENS) {
   parts.push(
     `<path d="M${MARGIN} ${f(y + (SPEC_SIZE * NUMERAL_METRICS.baseline) / 100)} ` +
@@ -184,10 +195,10 @@ divider();
 
 /* What a monospaced advance is for: a column of dimensions that plumbs. The
    rule is dropped through the decimal column, not fitted to the glyphs. */
-const COLUMN = ["   15.00", " 1084.75", "    0.05", "-2103.60", "    9.28"] as const;
-const COL_SIZE = 62;
+const COLUMN = ["    15.00", "  1084.75", "     0.05", "−2103.60", "     9.28"] as const;
+const COL_SIZE = 76;
 const COL_X = MARGIN;
-const DECIMAL_X = COL_X + widthOf("   15.", COL_SIZE) - (COL_SIZE * NUMERAL_METRICS.advance) / 200;
+const DECIMAL_X = COL_X + widthOf("    15.", COL_SIZE) - (COL_SIZE * NUMERAL_METRICS.advance) / 200;
 const columnTop = y;
 
 for (const row of COLUMN) {

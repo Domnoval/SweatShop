@@ -281,8 +281,15 @@ function inkBoundsOf(paths: readonly EmittedPath[]): Bounds {
    One grid governs the whole set. Every number below is derived from it; there
    are no free-floating coordinates in the constructions that follow. */
 
-/** Advance width of the text-size class. Monospaced: every glyph gets exactly this. */
-const ADVANCE = 100;
+/**
+ * Advance width of the text-size class. Monospaced: every glyph gets exactly
+ * this, and the advance IS the viewBox width, so a consumer sets a string by
+ * summing `viewBox[2]` and never consults a side-table that could drift.
+ * 65 against a figure height of 72 is the ratio a typewriter face holds — wide
+ * enough that a digit does not touch its neighbour, tight enough that a
+ * dimension reads as one number rather than as spaced-out characters.
+ */
+const ADVANCE = 65;
 /** Advance centre — the axis every text-size glyph is composed about. */
 const MIDX = ADVANCE / 2;
 /** Figure top. Flat-topped glyphs put a stroke centreline here. */
@@ -311,9 +318,16 @@ const XH_TOP = 36;
 const SW = 7;
 
 /** Superscript class: the text-size construction, uniformly scaled. */
-const SUP_SCALE = 0.62;
-/** Superscript advance. Monospaced within its own class, as 100 is within text size. */
-const SUP_ADVANCE = ADVANCE * SUP_SCALE;
+const SUP_SCALE = 0.6;
+/**
+ * Superscript advance. Monospaced within its own class, exactly as ADVANCE is
+ * within text size. It is NOT simply `ADVANCE * SUP_SCALE`: the construction
+ * scales but the stroke does not, so a scaled glyph carries `SW * (1 - scale)`
+ * more ink than a proportional shrink would. Adding that back keeps the
+ * superscript side bearing proportional to the text-size one, which is why an
+ * exponent reads as the same face set smaller rather than as a crowded one.
+ */
+const SUP_ADVANCE = ADVANCE * SUP_SCALE + SW * (1 - SUP_SCALE);
 /** Superscript figure top, just below the text-size figure top. */
 const SUP_TOP = 15;
 
@@ -678,31 +692,58 @@ const CAP_L: Glyph = {
   draws: [S([move(MIDX - 18, TOP), line(MIDX - 18, BASE), line(MIDX + 18, BASE)])],
 };
 
-/* S — the three, reflected in the advance axis: the same two crossing circles,
-   entered from the upper right and left counterclockwise. */
-const S_J = crossing(THREE_UP, THREE_LO, -1);
+/**
+ * S — the eight, opened. The same two tangent circles, each with 120° of its
+ * circumference lifted away, and the two remaining 240° arcs traced in
+ * OPPOSITE senses: the upper counterclockwise from one o'clock, the lower
+ * clockwise to seven. That opposition is the entire difference between an S
+ * and a 3, which is two circles curving the same way. Because the circles are
+ * the 8's, they are already tangent on the advance axis and the letter stands
+ * upright with no offset to tune.
+ */
+const S_T: Pt = [EIGHT_UP.x, EIGHT_UP.y + EIGHT_UP.r];   // where the two circles touch
 const CAP_S: Glyph = {
   id: "numeral-cap-s",
   character: "S",
-  note: "the 3, reflected in the advance axis",
+  note: "the 8's two tangent circles, each opened 120° and traced in opposite senses",
   draws: [
     S([
-      move(...ptOn(THREE_UP.x, THREE_UP.y, THREE_UP.r, 340)),
-      arcVia(THREE_UP, ptOn(THREE_UP.x, THREE_UP.y, THREE_UP.r, 340), S_J, false),
-      arcVia(THREE_LO, S_J, ptOn(THREE_LO.x, THREE_LO.y, THREE_LO.r, 20), false),
+      move(...ptOn(EIGHT_UP.x, EIGHT_UP.y, EIGHT_UP.r, 330)),
+      arcVia(EIGHT_UP, ptOn(EIGHT_UP.x, EIGHT_UP.y, EIGHT_UP.r, 330), S_T, false),
+      arcVia(EIGHT_LO, S_T, ptOn(EIGHT_LO.x, EIGHT_LO.y, EIGHT_LO.r, 150), true),
     ]),
   ],
 };
 
-const DIGITS: readonly Glyph[] = [
+const UNCENTRED_TEXT_SIZE: readonly Glyph[] = [
   ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX_GLYPH, SEVEN, EIGHT, NINE,
-];
-
-const TEXT_SIZE: readonly Glyph[] = [
-  ...DIGITS,
   PLUS, MINUS, PLUSMINUS, MULTIPLY, PERIOD, SOLIDUS,
   PAREN_L, PAREN_R, DEGREE, LOWER_M, CAP_L, CAP_S,
 ];
+
+/* ── optical centring ──────────────────────────────────────────────────────
+   Monospaced means more than equal advances: it means each glyph sits on the
+   middle of its own advance, or a column of figures will visibly wander even
+   though every cell is the same width. Rather than nudge asymmetric
+   constructions (`S`, `5`, `2`) by eye, every glyph is slid by its own MEASURED
+   ink centre. The shift is derived from the same sampled bounds used for the
+   overflow proof, so it is a measurement, not a taste. */
+
+function centreOnAdvance(g: Glyph, advance: number): Glyph {
+  const measured = g.draws.map((dr) => ({
+    d: toPathData(dr.ops),
+    role: dr.role,
+    strokeWidth: dr.role === "stroke" ? SW : 0,
+  }));
+  const b = inkBoundsOf(measured);
+  const dx = advance / 2 - (b.minX + b.maxX) / 2;
+  if (Math.abs(dx) < 1e-9) return g;
+  return { ...g, draws: g.draws.map((dr) => ({ ops: transform(dr.ops, 1, dx, 0), role: dr.role })) };
+}
+
+const TEXT_SIZE: readonly Glyph[] = UNCENTRED_TEXT_SIZE.map((g) => centreOnAdvance(g, ADVANCE));
+const DIGITS: readonly Glyph[] = TEXT_SIZE.slice(0, 10);
+const CENTRED_MINUS: Glyph = TEXT_SIZE[11]!;
 
 /* ── superscripts ──────────────────────────────────────────────────────────
    Not redrawn. Each superscript is its text-size construction under one
@@ -711,7 +752,8 @@ const TEXT_SIZE: readonly Glyph[] = [
    NOT scaled — the set has one weight, and an exponent cut lighter than the
    mantissa would read as a different tool. */
 
-const SUP_TX = 0;                                   // MIDX·s lands on SUP_ADVANCE/2 exactly
+/** Half of the unscaled stroke the shrink left behind — recentres on SUP_ADVANCE/2. */
+const SUP_TX = (SW * (1 - SUP_SCALE)) / 2;
 const SUP_TY = SUP_TOP - TOP * SUP_SCALE;
 
 const SUP_CHARS: Readonly<Record<string, string>> = Object.freeze({
@@ -720,7 +762,7 @@ const SUP_CHARS: Readonly<Record<string, string>> = Object.freeze({
   "−": "⁻",
 });
 
-const SUPERSCRIPTS: readonly Glyph[] = [...DIGITS, MINUS].map((g) => ({
+const SUPERSCRIPTS: readonly Glyph[] = [...DIGITS, CENTRED_MINUS].map((g) => ({
   id: g.id.replace(/^numeral-/, "numeral-sup-"),
   character: SUP_CHARS[g.character] ?? g.character,
   note: `${g.note} — scaled ${SUP_SCALE} onto the superscript grid`,

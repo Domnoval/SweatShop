@@ -19,20 +19,20 @@
  * construction was stated in.
  *
  * METRICS. Figure height 72 units, from a top of 14 to a baseline of 86,
- * built about the advance axis at x=50. Every stroked path in the set is
+ * built about the advance axis at x=32.5. Every stroked path in the set is
  * 7 units wide — one weight, one scriber, exponents included. The only filled
  * path in the set is the period's disc, which is filled so that a decimal point
  * cannot disappear under a renderer's butt caps.
  *
- * MONOSPACED. Every text-size glyph advances 100 units and every superscript
- * advances 62, so digits stack in a column and a superscript run stays on
+ * MONOSPACED. Every text-size glyph advances 65 units and every superscript
+ * advances 41.8, so digits stack in a column and a superscript run stays on
  * its own even rhythm. The advance IS the viewBox width — a consumer lays the
  * set out by summing `viewBox[2]`, with no side-table of widths to drift.
  *
  * INK. `inkBounds` is measured by flattening the emitted path strings and
  * sampling them — arc bellies included, stroke width included — never from
  * endpoints or control points. Worst-case overflow past the declared viewBox
- * across the whole set is -6.5 units.
+ * across the whole set is -2.4 units.
  */
 
 import type { GlyphGeometryId } from "@studio137/plate-core";
@@ -46,9 +46,9 @@ export const NUMERAL_STROKE_WIDTH = 7;
 
 /** The metric frame every glyph was constructed on. */
 export const NUMERAL_METRICS = Object.freeze({
-  advance: 100,
-  superscriptAdvance: 62,
-  superscriptScale: 0.62,
+  advance: 65,
+  superscriptAdvance: 41.8,
+  superscriptScale: 0.6,
   figureTop: 14,
   baseline: 86,
   figureHeight: 72,
@@ -75,8 +75,8 @@ const stroke = (d: string): LockedPath =>
 const fill = (d: string): LockedPath =>
   Object.freeze({ d, role: "fill" as const, strokeWidth: 0 });
 
-const TEXT_VIEWBOX = Object.freeze([0, 0, 100, 100] as const);
-const SUPERSCRIPT_VIEWBOX = Object.freeze([0, 0, 62, 100] as const);
+const TEXT_VIEWBOX = Object.freeze([0, 0, 65, 100] as const);
+const SUPERSCRIPT_VIEWBOX = Object.freeze([0, 0, 41.8, 100] as const);
 
 export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
   {
@@ -85,10 +85,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "four-centre oval, 50 x 72, with an interior slash",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M37.6323 19.1772 A17.3611 17.3611 0 0 1 62.3677 19.1772 A43.92 43.92 0 0 1 62.3677 80.8228 A17.3611 17.3611 0 0 1 37.6323 80.8228 A43.92 43.92 0 0 1 37.6323 19.1772 Z"),
-      stroke("M41.5 62 L58.5 38"),
+      stroke("M20.1323 19.1772 A17.3611 17.3611 0 0 1 44.8677 19.1772 A43.92 43.92 0 0 1 44.8677 80.8228 A17.3611 17.3611 0 0 1 20.1323 80.8228 A43.92 43.92 0 0 1 20.1323 19.1772 Z"),
+      stroke("M24 62 L41 38"),
     ]),
-    inkBounds: Object.freeze([21.5, 10.5, 78.5, 89.5] as const),
+    inkBounds: Object.freeze([4, 10.5, 61, 89.5] as const),
   },
   {
     id: "numeral-1",
@@ -96,10 +96,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "stem, flag, foot serif",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M33 27 L50 14 L50 86"),
-      stroke("M34 86 L66 86"),
+      stroke("M16 27 L33 14 L33 86"),
+      stroke("M17 86 L49 86"),
     ]),
-    inkBounds: Object.freeze([29.5, 10.5, 69.5, 89.5] as const),
+    inkBounds: Object.freeze([12.5, 10.5, 52.5, 89.5] as const),
   },
   {
     id: "numeral-2",
@@ -107,9 +107,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "220° bowl, straight diagonal, base bar",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M30.6815 28.8236 A20 20 0 1 1 61.4715 50.383 L29 86 L73 86"),
+      stroke("M12.1815 28.8236 A20 20 0 1 1 42.9715 50.383 L10.5 86 L54.5 86"),
     ]),
-    inkBounds: Object.freeze([25.5, 10.5011, 76.5, 89.5] as const),
+    inkBounds: Object.freeze([7, 10.5011, 58, 89.5] as const),
   },
   {
     id: "numeral-3",
@@ -117,9 +117,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "two crossing circles, r18 over r21",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M33.0855 25.8436 A18 18 0 1 1 60.3493 46.7273 A21 21 0 1 1 30.2665 72.1824"),
+      stroke("M14.9532 25.8436 A18 18 0 1 1 42.2169 46.7273 A21 21 0 1 1 12.1341 72.1824"),
     ]),
-    inkBounds: Object.freeze([26.7665, 10.5011, 74.4982, 89.4962] as const),
+    inkBounds: Object.freeze([8.6341, 10.501, 56.3658, 89.4962] as const),
   },
   {
     id: "numeral-4",
@@ -127,9 +127,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "stem, diagonal, crossbar — one straightedge stroke",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M61 86 L61 14 L25 63 L75 63"),
+      stroke("M43.5 86 L43.5 14 L7.5 63 L57.5 63"),
     ]),
-    inkBounds: Object.freeze([21.5, 10.5, 78.5, 89.5] as const),
+    inkBounds: Object.freeze([4, 10.5, 61, 89.5] as const),
   },
   {
     id: "numeral-5",
@@ -137,9 +137,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "top bar, stem, 285° bowl",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M69 14 L28.2486 14 L28.2486 51.8572 A24 24 0 1 1 34.5731 80.3851"),
+      stroke("M50.3764 14 L9.625 14 L9.625 51.8572 A24 24 0 1 1 15.9495 80.3851"),
     ]),
-    inkBounds: Object.freeze([24.7486, 10.5, 77.4986, 89.4928] as const),
+    inkBounds: Object.freeze([6.125, 10.5, 58.875, 89.4928] as const),
   },
   {
     id: "numeral-6",
@@ -147,10 +147,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "closed r23 bowl, spine arc struck tangent at nine o'clock",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M69 14 A49.5833 49.5833 0 0 0 27 63"),
-      stroke("M27 63 A23 23 0 0 1 73 63 A23 23 0 0 1 27 63 Z"),
+      stroke("M51.5 14 A49.5833 49.5833 0 0 0 9.5 63"),
+      stroke("M9.5 63 A23 23 0 0 1 55.5 63 A23 23 0 0 1 9.5 63 Z"),
     ]),
-    inkBounds: Object.freeze([23.5, 10.5, 76.5, 89.5] as const),
+    inkBounds: Object.freeze([6, 10.5, 59, 89.5] as const),
   },
   {
     id: "numeral-7",
@@ -158,10 +158,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "top bar, diagonal, barred at mid-height",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M26 14 L74 14 L40 86"),
-      stroke("M45.0556 52 L67.0556 52"),
+      stroke("M8.5 14 L56.5 14 L22.5 86"),
+      stroke("M27.5556 52 L49.5556 52"),
     ]),
-    inkBounds: Object.freeze([22.5, 10.5, 77.5, 89.5] as const),
+    inkBounds: Object.freeze([5, 10.5, 60, 89.5] as const),
   },
   {
     id: "numeral-8",
@@ -169,10 +169,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "two tangent circles, r16 over r20",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M34 30 A16 16 0 0 1 66 30 A16 16 0 0 1 34 30 Z"),
-      stroke("M30 66 A20 20 0 0 1 70 66 A20 20 0 0 1 30 66 Z"),
+      stroke("M16.5 30 A16 16 0 0 1 48.5 30 A16 16 0 0 1 16.5 30 Z"),
+      stroke("M12.5 66 A20 20 0 0 1 52.5 66 A20 20 0 0 1 12.5 66 Z"),
     ]),
-    inkBounds: Object.freeze([26.5, 10.5, 73.5, 89.5] as const),
+    inkBounds: Object.freeze([9, 10.5, 56, 89.5] as const),
   },
   {
     id: "numeral-9",
@@ -180,10 +180,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "the 6, rotated a half-turn about (50, 50)",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M31 86 A49.5833 49.5833 0 0 0 73 37"),
-      stroke("M27 37 A23 23 0 0 1 73 37 A23 23 0 0 1 27 37 Z"),
+      stroke("M13.5 86 A49.5833 49.5833 0 0 0 55.5 37"),
+      stroke("M9.5 37 A23 23 0 0 1 55.5 37 A23 23 0 0 1 9.5 37 Z"),
     ]),
-    inkBounds: Object.freeze([23.5, 10.5, 76.5, 89.5] as const),
+    inkBounds: Object.freeze([6, 10.5, 59, 89.5] as const),
   },
   {
     id: "numeral-plus",
@@ -191,10 +191,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "two 40-unit rules crossing on the axis",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M30 50 L70 50"),
-      stroke("M50 30 L50 70"),
+      stroke("M12.5 50 L52.5 50"),
+      stroke("M32.5 30 L32.5 70"),
     ]),
-    inkBounds: Object.freeze([26.5, 26.5, 73.5, 73.5] as const),
+    inkBounds: Object.freeze([9, 26.5, 56, 73.5] as const),
   },
   {
     id: "numeral-minus",
@@ -202,9 +202,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "the plus's horizontal rule, alone",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M30 50 L70 50"),
+      stroke("M12.5 50 L52.5 50"),
     ]),
-    inkBounds: Object.freeze([26.5, 46.5, 73.5, 53.5] as const),
+    inkBounds: Object.freeze([9, 46.5, 56, 53.5] as const),
   },
   {
     id: "numeral-plusminus",
@@ -212,11 +212,11 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "plus on a raised axis over a base bar",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M33 43 L67 43"),
-      stroke("M50 26 L50 60"),
-      stroke("M33 74 L67 74"),
+      stroke("M15.5 43 L49.5 43"),
+      stroke("M32.5 26 L32.5 60"),
+      stroke("M15.5 74 L49.5 74"),
     ]),
-    inkBounds: Object.freeze([29.5, 22.5, 70.5, 77.5] as const),
+    inkBounds: Object.freeze([12, 22.5, 53, 77.5] as const),
   },
   {
     id: "numeral-multiply",
@@ -224,10 +224,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "the plus at 45°, arms shortened for equal optical mass",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M36 36 L64 64"),
-      stroke("M64 36 L36 64"),
+      stroke("M18.5 36 L46.5 64"),
+      stroke("M46.5 36 L18.5 64"),
     ]),
-    inkBounds: Object.freeze([32.5, 32.5, 67.5, 67.5] as const),
+    inkBounds: Object.freeze([15, 32.5, 50, 67.5] as const),
   },
   {
     id: "numeral-period",
@@ -235,9 +235,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "filled disc, r4, seated on the baseline ink line",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      fill("M46 85.5 A4 4 0 0 1 54 85.5 A4 4 0 0 1 46 85.5 Z"),
+      fill("M28.5 85.5 A4 4 0 0 1 36.5 85.5 A4 4 0 0 1 28.5 85.5 Z"),
     ]),
-    inkBounds: Object.freeze([46, 81.5, 54, 89.5] as const),
+    inkBounds: Object.freeze([28.5, 81.5, 36.5, 89.5] as const),
   },
   {
     id: "numeral-solidus",
@@ -245,9 +245,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "single rule, overshooting the figure box",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M32 88 L68 12"),
+      stroke("M14.5 88 L50.5 12"),
     ]),
-    inkBounds: Object.freeze([28.5, 8.5, 71.5, 91.5] as const),
+    inkBounds: Object.freeze([11, 8.5, 54, 91.5] as const),
   },
   {
     id: "numeral-paren-left",
@@ -255,9 +255,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "arc on an 80-unit chord with a 16-unit sagitta",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M63 10 A43.7692 43.7692 0 0 0 63 90"),
+      stroke("M45.5 10 A43.7692 43.7692 0 0 0 45.5 90"),
     ]),
-    inkBounds: Object.freeze([33.5, 6.5, 66.5, 93.5] as const),
+    inkBounds: Object.freeze([16, 6.5, 49, 93.5] as const),
   },
   {
     id: "numeral-paren-right",
@@ -265,9 +265,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "the left parenthesis, reflected in the advance axis",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M37 10 A43.7692 43.7692 0 0 1 37 90"),
+      stroke("M19.5 10 A43.7692 43.7692 0 0 1 19.5 90"),
     ]),
-    inkBounds: Object.freeze([33.5, 6.5, 66.5, 93.5] as const),
+    inkBounds: Object.freeze([16, 6.5, 49, 93.5] as const),
   },
   {
     id: "numeral-degree",
@@ -275,9 +275,9 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "r7.5 ring at the figure top, 8-unit counter",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M42.5 25 A7.5 7.5 0 0 1 57.5 25 A7.5 7.5 0 0 1 42.5 25 Z"),
+      stroke("M25 25 A7.5 7.5 0 0 1 40 25 A7.5 7.5 0 0 1 25 25 Z"),
     ]),
-    inkBounds: Object.freeze([39, 14, 61, 36] as const),
+    inkBounds: Object.freeze([21.5, 14, 43.5, 36] as const),
   },
   {
     id: "numeral-lower-m",
@@ -285,10 +285,10 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "three stems on a 23 pitch, two half-circle arches",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M27 86 L27 47.5 A11.5 11.5 0 0 1 50 47.5 L50 86"),
-      stroke("M50 47.5 A11.5 11.5 0 0 1 73 47.5 L73 86"),
+      stroke("M9.5 86 L9.5 47.5 A11.5 11.5 0 0 1 32.5 47.5 L32.5 86"),
+      stroke("M32.5 47.5 A11.5 11.5 0 0 1 55.5 47.5 L55.5 86"),
     ]),
-    inkBounds: Object.freeze([23.5, 32.5, 76.5, 89.5] as const),
+    inkBounds: Object.freeze([6, 32.5, 59, 89.5] as const),
   },
   {
     id: "numeral-cap-l",
@@ -296,135 +296,135 @@ export const NUMERALS_V1_SOURCE: readonly NumeralSource[] = Object.freeze([
     construction: "stem and foot, centred on the advance",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M32 14 L32 86 L68 86"),
+      stroke("M14.5 14 L14.5 86 L50.5 86"),
     ]),
-    inkBounds: Object.freeze([28.5, 10.5, 71.5, 89.5] as const),
+    inkBounds: Object.freeze([11, 10.5, 54, 89.5] as const),
   },
   {
     id: "numeral-cap-s",
     character: "S",
-    construction: "the 3, reflected in the advance axis",
+    construction: "the 8's two tangent circles, each opened 120° and traced in opposite senses",
     viewBox: TEXT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M66.9145 25.8436 A18 18 0 1 0 39.6507 46.7273 A21 21 0 1 0 69.7335 72.1824"),
+      stroke("M45.0167 22 A16 16 0 1 0 31.1602 46 A20 20 0 1 1 13.8397 76"),
     ]),
-    inkBounds: Object.freeze([25.5018, 10.5011, 73.2335, 89.4962] as const),
+    inkBounds: Object.freeze([10.3397, 10.5, 54.6602, 89.5] as const),
   },
   {
     id: "numeral-sup-0",
     character: "⁰",
-    construction: "four-centre oval, 50 x 72, with an interior slash — scaled 0.62 onto the superscript grid",
+    construction: "four-centre oval, 50 x 72, with an interior slash — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M23.332 18.2098 A10.7639 10.7639 0 0 1 38.668 18.2098 A27.2304 27.2304 0 0 1 38.668 56.4302 A10.7639 10.7639 0 0 1 23.332 56.4302 A27.2304 27.2304 0 0 1 23.332 18.2098 Z"),
-      stroke("M25.73 44.76 L36.27 29.88"),
+      stroke("M13.4794 18.1063 A10.4167 10.4167 0 0 1 28.3206 18.1063 A26.352 26.352 0 0 1 28.3206 55.0937 A10.4167 10.4167 0 0 1 13.4794 55.0937 A26.352 26.352 0 0 1 13.4794 18.1063 Z"),
+      stroke("M15.8 43.8 L26 29.4"),
     ]),
-    inkBounds: Object.freeze([11.9999, 11.4999, 50.0001, 63.1401] as const),
+    inkBounds: Object.freeze([2.4, 11.5, 39.4, 61.7] as const),
   },
   {
     id: "numeral-sup-1",
     character: "¹",
-    construction: "stem, flag, foot serif — scaled 0.62 onto the superscript grid",
+    construction: "stem, flag, foot serif — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M20.46 23.06 L31 15 L31 59.64"),
-      stroke("M21.08 59.64 L40.92 59.64"),
+      stroke("M11 22.8 L21.2 15 L21.2 58.2"),
+      stroke("M11.6 58.2 L30.8 58.2"),
     ]),
-    inkBounds: Object.freeze([16.96, 11.5, 44.42, 63.14] as const),
+    inkBounds: Object.freeze([7.5, 11.5, 34.3, 61.7] as const),
   },
   {
     id: "numeral-sup-2",
     character: "²",
-    construction: "220° bowl, straight diagonal, base bar — scaled 0.62 onto the superscript grid",
+    construction: "220° bowl, straight diagonal, base bar — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M19.0225 24.1906 A12.4 12.4 0 1 1 38.1123 37.5575 L17.98 59.64 L45.26 59.64"),
+      stroke("M8.7089 23.8942 A12 12 0 1 1 27.1829 36.8298 L7.7 58.2 L34.1 58.2"),
     ]),
-    inkBounds: Object.freeze([14.48, 11.5007, 48.76, 63.14] as const),
+    inkBounds: Object.freeze([4.2, 11.5007, 37.6, 61.7] as const),
   },
   {
     id: "numeral-sup-3",
     character: "³",
-    construction: "two crossing circles, r18 over r21 — scaled 0.62 onto the superscript grid",
+    construction: "two crossing circles, r18 over r21 — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M20.513 22.3431 A11.16 11.16 0 1 1 37.4165 35.2909 A13.02 13.02 0 1 1 18.7652 51.0731"),
+      stroke("M10.3719 22.1062 A10.8 10.8 0 1 1 26.7301 34.6364 A12.6 12.6 0 1 1 8.6805 49.9095"),
     ]),
-    inkBounds: Object.freeze([15.2652, 11.5006, 47.5189, 63.1376] as const),
+    inkBounds: Object.freeze([5.1805, 11.5006, 36.6195, 61.6978] as const),
   },
   {
     id: "numeral-sup-4",
     character: "⁴",
-    construction: "stem, diagonal, crossbar — one straightedge stroke — scaled 0.62 onto the superscript grid",
+    construction: "stem, diagonal, crossbar — one straightedge stroke — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M37.82 59.64 L37.82 15 L15.5 45.38 L46.5 45.38"),
+      stroke("M27.5 58.2 L27.5 15 L5.9 44.4 L35.9 44.4"),
     ]),
-    inkBounds: Object.freeze([12, 11.5, 50, 63.14] as const),
+    inkBounds: Object.freeze([2.4, 11.5, 39.4, 61.7] as const),
   },
   {
     id: "numeral-sup-5",
     character: "⁵",
-    construction: "top bar, stem, 285° bowl — scaled 0.62 onto the superscript grid",
+    construction: "top bar, stem, 285° bowl — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M42.78 15 L17.5141 15 L17.5141 38.4714 A14.88 14.88 0 1 1 21.4353 56.1587"),
+      stroke("M31.6259 15 L7.175 15 L7.175 37.7143 A14.4 14.4 0 1 1 10.9697 54.831"),
     ]),
-    inkBounds: Object.freeze([14.0141, 11.5, 49.3791, 63.1355] as const),
+    inkBounds: Object.freeze([3.675, 11.5, 38.125, 61.6956] as const),
   },
   {
     id: "numeral-sup-6",
     character: "⁶",
-    construction: "closed r23 bowl, spine arc struck tangent at nine o'clock — scaled 0.62 onto the superscript grid",
+    construction: "closed r23 bowl, spine arc struck tangent at nine o'clock — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M42.78 15 A30.7417 30.7417 0 0 0 16.74 45.38"),
-      stroke("M16.74 45.38 A14.26 14.26 0 0 1 45.26 45.38 A14.26 14.26 0 0 1 16.74 45.38 Z"),
+      stroke("M32.3 15 A29.75 29.75 0 0 0 7.1 44.4"),
+      stroke("M7.1 44.4 A13.8 13.8 0 0 1 34.7 44.4 A13.8 13.8 0 0 1 7.1 44.4 Z"),
     ]),
-    inkBounds: Object.freeze([13.24, 11.5, 48.76, 63.14] as const),
+    inkBounds: Object.freeze([3.6, 11.5, 38.2, 61.7] as const),
   },
   {
     id: "numeral-sup-7",
     character: "⁷",
-    construction: "top bar, diagonal, barred at mid-height — scaled 0.62 onto the superscript grid",
+    construction: "top bar, diagonal, barred at mid-height — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M16.12 15 L45.88 15 L24.8 59.64"),
-      stroke("M27.9344 38.56 L41.5744 38.56"),
+      stroke("M6.5 15 L35.3 15 L14.9 58.2"),
+      stroke("M17.9333 37.8 L31.1333 37.8"),
     ]),
-    inkBounds: Object.freeze([12.62, 11.5, 49.38, 63.14] as const),
+    inkBounds: Object.freeze([3, 11.5, 38.8, 61.7] as const),
   },
   {
     id: "numeral-sup-8",
     character: "⁸",
-    construction: "two tangent circles, r16 over r20 — scaled 0.62 onto the superscript grid",
+    construction: "two tangent circles, r16 over r20 — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M21.08 24.92 A9.92 9.92 0 0 1 40.92 24.92 A9.92 9.92 0 0 1 21.08 24.92 Z"),
-      stroke("M18.6 47.24 A12.4 12.4 0 0 1 43.4 47.24 A12.4 12.4 0 0 1 18.6 47.24 Z"),
+      stroke("M11.3 24.6 A9.6 9.6 0 0 1 30.5 24.6 A9.6 9.6 0 0 1 11.3 24.6 Z"),
+      stroke("M8.9 46.2 A12 12 0 0 1 32.9 46.2 A12 12 0 0 1 8.9 46.2 Z"),
     ]),
-    inkBounds: Object.freeze([15.1, 11.5, 46.9, 63.14] as const),
+    inkBounds: Object.freeze([5.4, 11.5, 36.4, 61.7] as const),
   },
   {
     id: "numeral-sup-9",
     character: "⁹",
-    construction: "the 6, rotated a half-turn about (50, 50) — scaled 0.62 onto the superscript grid",
+    construction: "the 6, rotated a half-turn about (50, 50) — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M19.22 59.64 A30.7417 30.7417 0 0 0 45.26 29.26"),
-      stroke("M16.74 29.26 A14.26 14.26 0 0 1 45.26 29.26 A14.26 14.26 0 0 1 16.74 29.26 Z"),
+      stroke("M9.5 58.2 A29.75 29.75 0 0 0 34.7 28.8"),
+      stroke("M7.1 28.8 A13.8 13.8 0 0 1 34.7 28.8 A13.8 13.8 0 0 1 7.1 28.8 Z"),
     ]),
-    inkBounds: Object.freeze([13.24, 11.5, 48.76, 63.14] as const),
+    inkBounds: Object.freeze([3.6, 11.5, 38.2, 61.7] as const),
   },
   {
     id: "numeral-sup-minus",
     character: "⁻",
-    construction: "the plus's horizontal rule, alone — scaled 0.62 onto the superscript grid",
+    construction: "the plus's horizontal rule, alone — scaled 0.6 onto the superscript grid",
     viewBox: SUPERSCRIPT_VIEWBOX,
     paths: Object.freeze([
-      stroke("M18.6 37.32 L43.4 37.32"),
+      stroke("M8.9 36.6 L32.9 36.6"),
     ]),
-    inkBounds: Object.freeze([15.1, 33.82, 46.9, 40.82] as const),
+    inkBounds: Object.freeze([5.4, 33.1, 36.4, 40.1] as const),
   },
 ]);
 

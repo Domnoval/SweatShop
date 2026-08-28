@@ -24,6 +24,8 @@ import {
   type OutputPresetId,
   type PlateRequest,
 } from "@studio137/plate-core";
+import { ring } from "@studio137/ring";
+import { WORD_CORRESPONDENCE } from "@studio137/glyph-registry";
 import {
   artifactFilenames,
   buildTranslationCard,
@@ -56,13 +58,21 @@ const BOOLEAN_FLAGS: ReadonlySet<string> = new Set(["no-png", "help"]);
  * A genuinely missing value is an explicit error rather than a silent default,
  * and `--name=value` is always available when a value is ambiguous.
  */
-function parseArgs(argv: readonly string[]): Readonly<{ command: string; options: Options }> {
+function parseArgs(
+  argv: readonly string[],
+): Readonly<{ command: string; options: Options; positionals: readonly string[] }> {
   const [command = "help", ...rest] = argv;
   const options: Record<string, string | boolean> = {};
+  const positionals: string[] = [];
+  // Tokens consumed as the value of a preceding `--flag` are not positionals.
+  const consumed = new Set<number>();
 
   for (let index = 0; index < rest.length; index += 1) {
     const token = rest[index]!;
-    if (!token.startsWith("--")) continue;
+    if (!token.startsWith("--")) {
+      if (!consumed.has(index)) positionals.push(token);
+      continue;
+    }
 
     const body = token.slice(2);
     const equals = body.indexOf("=");
@@ -77,6 +87,7 @@ function parseArgs(argv: readonly string[]): Readonly<{ command: string; options
     }
 
     const next = rest[index + 1];
+    consumed.add(index + 1);
     if (next === undefined) {
       throw new PlateError("INVALID_REQUEST", `--${body} requires a value`);
     }
@@ -92,7 +103,7 @@ function parseArgs(argv: readonly string[]): Readonly<{ command: string; options
     index += 1;
   }
 
-  return { command, options };
+  return { command, options, positionals };
 }
 
 function stringOption(options: Options, name: string): string | undefined {
@@ -242,7 +253,7 @@ function runCompile(request: PlateRequest, options: Options, basename?: string):
 }
 
 function main(): void {
-  const { command, options } = parseArgs(process.argv.slice(2));
+  const { command, options, positionals } = parseArgs(process.argv.slice(2));
 
   switch (command) {
     case "keygen": {
@@ -292,6 +303,34 @@ function main(): void {
       return;
     }
 
+    case "ring": {
+      const word = positionals[0] ?? stringOption(options, "word");
+      if (word === undefined) {
+        throw new PlateError("INVALID_REQUEST", "ring needs a word: s137 ring <WORD>");
+      }
+      const outDir = stringOption(options, "out") ?? "artifacts/ring";
+      mkdirSync(outDir, { recursive: true });
+
+      const artifacts = ring(word, {
+        vocabulary: WORD_CORRESPONDENCE.map((w) => w.word),
+        ...(stringOption(options, "square") === undefined
+          ? {}
+          : { square: stringOption(options, "square") as never }),
+      });
+
+      const stem = `${outDir}/${word.toLowerCase().replace(/[^a-z0-9]+/gu, "-")}`;
+      writeFileSync(`${stem}.sheet.svg`, artifacts.sheetSvg, "utf8");
+      writeFileSync(`${stem}.legend.txt`, artifacts.legend, "utf8");
+      writeFileSync(`${stem}.census.txt`, artifacts.census, "utf8");
+      writeFileSync(`${stem}.receipt.txt`, artifacts.receipt, "utf8");
+
+      process.stdout.write(artifacts.legend);
+      process.stdout.write(artifacts.census);
+      process.stdout.write(artifacts.receipt);
+      process.stdout.write(`\nWrote 4 artifacts to ${stem}.*\n`);
+      return;
+    }
+
     case "decode": {
       const manifestPath = stringOption(options, "manifest");
       const keyPath = stringOption(options, "key");
@@ -326,6 +365,11 @@ function main(): void {
           "               [--corruption 0-100] [--layout <id>] [--substrate <id>]",
           "               [--preset <id>] [--mode exact|stylized] [--out <dir>]",
           "               [--key <path>] [--background solid|transparent] [--no-png]",
+          "",
+          "  s137 ring    <WORD> [--square <planet>] [--out <dir>]",
+          "      One word in, four artifacts out: the sheet, the legend, the",
+          "      census, and the receipt that reads the mark back to the word.",
+          "      Any word resolves - the concept table rides, it never gates.",
           "",
           "  s137 decode  --manifest <file.s137> --key <path>",
           "      Recover the exact source phrase from a private manifest.",

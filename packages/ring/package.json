@@ -1,0 +1,14 @@
+{
+  "name": "@studio137/ring",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The spine: one word in, four artifacts out",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/glyph-registry": "workspace:*",
+    "@studio137/walk-engine": "workspace:*",
+    "@studio137/envelope-engine": "workspace:*"
+  }
+}

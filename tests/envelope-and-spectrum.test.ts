@@ -9,32 +9,41 @@
 
 import { describe, expect, it } from "vitest";
 
-import { envelopeFromWalk, multiplierForWalk, nodesForOrder } from "@studio137/envelope-engine";
+import { NODES, cuspsForWalk, envelopeFromWalk, multiplierForWalk } from "@studio137/envelope-engine";
 import { normalizePalette, spectrumColor, DEFAULT_PALETTE } from "@studio137/render-svg";
 import { walk } from "@studio137/walk-engine";
 
 const jupiter = (word: string) => walk(word, { square: "jupiter", trace: "AGRIPPA" });
 
 describe("the envelope is derived, not styled", () => {
-  it("takes its node count from the square rather than from taste", () => {
-    // Magic constant times order — both properties of the kamea, so the density
-    // of the figure is a fact about which square was walked.
-    expect(nodesForOrder(4, 34)).toBe(136);
-    expect(envelopeFromWalk(jupiter("DESCENT")).nodes).toBe(136);
-    expect(envelopeFromWalk(walk("DESCENT", { square: "saturn" })).nodes).toBe(45);
+  it("uses a prime node count so no multiplier degenerates", () => {
+    // 137 is prime, so every multiplier below it is coprime and the family closes
+    // as one cycle over all nodes. A composite count would let some multipliers
+    // collapse into a sparse sub-figure.
+    expect(NODES).toBe(137);
+    for (let d = 2; d * d <= NODES; d += 1) expect(NODES % d).not.toBe(0);
+    expect(envelopeFromWalk(jupiter("DESCENT")).nodes).toBe(137);
   });
 
-  it("takes its multiplier from the walk's cell sum", () => {
-    // DESCENT is 4+5+1+3+5+5+2 = 25; ACE is 1+3+5 = 9; FALL is 6+1+3+3 = 13.
-    expect(multiplierForWalk(jupiter("DESCENT"), 136)).toBe(25);
-    expect(multiplierForWalk(jupiter("ACE"), 136)).toBe(9);
-    expect(multiplierForWalk(jupiter("FALL"), 136)).toBe(13);
+  it("reduces the cell sum theosophically — the same operation that places a letter", () => {
+    // DESCENT sums to 25 -> 7; ACE to 9 -> 9; FALL to 13 -> 4. Taking the sum raw
+    // put the multiplier in the forties, and forty crowded cusps are not
+    // countable at any node density.
+    expect(multiplierForWalk(jupiter("DESCENT"))).toBe(8);
+    expect(multiplierForWalk(jupiter("ACE"))).toBe(10);
+    expect(multiplierForWalk(jupiter("FALL"))).toBe(5);
   });
 
-  it("draws a cusp count a reader can verify by counting", () => {
-    expect(envelopeFromWalk(jupiter("DESCENT")).cusps).toBe(24);
-    expect(envelopeFromWalk(jupiter("ACE")).cusps).toBe(8);
-    expect(envelopeFromWalk(jupiter("FALL")).cusps).toBe(12);
+  it("draws a cusp count a reader can actually count", () => {
+    expect(cuspsForWalk(jupiter("DESCENT"))).toBe(7);
+    expect(cuspsForWalk(jupiter("ACE"))).toBe(9);
+    expect(cuspsForWalk(jupiter("FALL"))).toBe(4);
+    // The claim printed on every sheet is that cusps are countable by eye. That
+    // is only true while the count stays small; assert the bound the claim needs.
+    for (const w of ["DESCENT", "ACE", "FALL", "LONGING", "SWEATSHOP", "BETWEEN"]) {
+      expect(cuspsForWalk(jupiter(w))).toBeLessThanOrEqual(9);
+      expect(cuspsForWalk(jupiter(w))).toBeGreaterThanOrEqual(1);
+    }
   });
 
   it("gives two words of equal weight the same envelope — a visible collision", () => {
