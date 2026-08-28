@@ -10,9 +10,26 @@
  * census says which choices were forced and which were taste, and the receipt
  * proves the figure still carries the word — read blind, from geometry and public
  * rules alone. Any one of them alone would be a caption.
+ *
+ * The sheet is a PLATE, not a picture: A4 at its stated print size, with the
+ * figure in a drawing field and an annotation layer around it carrying the
+ * drawing number, the square, the counts, a true scale bar and the census. See
+ * `annotate.ts`. Every number on that layer is a field this module computed, and
+ * the layer is set entirely in the constructed numeral set — no `<text>` reaches
+ * a plate here, which is asserted on the finished sheet rather than assumed.
  */
 
 import { sha256Hex } from "@studio137/plate-core";
+
+import {
+  annotationLayer,
+  assertNoText,
+  drawingNumber,
+  FIGURE_PLACEMENT,
+  SHEET_H,
+  SHEET_W,
+  PRINT_DPI,
+} from "./annotate.js";
 import {
   correspondenceForWord,
   type ConceptCorrespondence,
@@ -100,14 +117,34 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   const envelope = envelopeFromWalk(figure);
 
   const marks = placeMarks(correspondence, options.maxMarks ?? 8);
-  const sheetSvg = composeSheet(figure, envelope, marks);
-  const sheetId = sha256Hex(sheetSvg).slice(0, 16);
+  const choices = gradeChoices(figure, envelope, correspondence);
+
+  // The drawing is composed and hashed BEFORE it is annotated, and the hash is
+  // the drawing number the annotation prints. A sheet cannot carry the checksum
+  // of its own finished bytes — writing the number changes them — so the number
+  // identifies the DRAWING: the markup inside `<g id="figure">`, in figure units,
+  // before placement. That string is delimited verbatim in the emitted file, so
+  // a stranger can cut it out and rehash it without trusting this code.
+  const ink = composeFigure(figure, envelope, marks);
+  const sheetId = sha256Hex(ink.markup).slice(0, 16);
+
+  const sheetSvg = composeSheet(
+    ink,
+    annotationLayer({
+      walk: figure,
+      envelope,
+      marks,
+      choices,
+      sheetId,
+      figureStrokesMm: ink.strokesMm,
+    }),
+  );
+  // House rule 4, on the finished artifact rather than on any one layer.
+  assertNoText(sheetSvg);
 
   const reading = read(figure.paths, {
     ...(options.vocabulary === undefined ? {} : { vocabulary: options.vocabulary }),
   });
-
-  const choices = gradeChoices(figure, envelope, correspondence);
 
   return Object.freeze({
     word,
@@ -151,17 +188,35 @@ function placeMarks(
   );
 }
 
-/* ── the sheet ───────────────────────────────────────────────────────────── */
+/* ── the drawing ─────────────────────────────────────────────────────────── */
 
-function composeSheet(
+/**
+ * The figure, and every stroke width it paints.
+ *
+ * The widths are collected here, as the markup is emitted, and handed to the
+ * annotation layer — which prints the thinnest of them. Recomputing that number
+ * from a table of constants somewhere else would let the table and the drawing
+ * drift apart, and the drawing would go on being right while the plate said
+ * something else. Widths are converted to millimetres at the placement scale,
+ * because that is the size the ink is actually laid down at.
+ */
+type FigureInk = Readonly<{ markup: string; strokesMm: readonly number[] }>;
+
+/** A stroke width in figure units, at the placement scale, in millimetres. */
+const strokeMm = (units: number): number => units * FIGURE_PLACEMENT.scale;
+
+function composeFigure(
   figure: Walk,
   envelope: EnvelopeFamily,
   marks: readonly PlacedMark[],
-): string {
+): FigureInk {
   const layers: string[] = [];
+  const strokesMm: number[] = [];
 
+  const ENVELOPE_STROKE = 0.22;
+  strokesMm.push(strokeMm(ENVELOPE_STROKE));
   layers.push(
-    `<g id="envelope" fill="none" stroke-width="0.22" stroke-linecap="round">` +
+    `<g id="envelope" fill="none" stroke-width="${ENVELOPE_STROKE}" stroke-linecap="round">` +
       envelope.bands
         .map((band) => {
           const colour = SPECTRUM[Math.min(SPECTRUM.length - 1, Math.floor(band.hue * SPECTRUM.length))]!;
@@ -179,11 +234,14 @@ function composeSheet(
             const source = GEOMETRY_V2_SOURCE.find((r) => r.id === m.id);
             if (source === undefined) return "";
             const body = source.paths
-              .map((p) =>
-                p.role === "fill"
-                  ? `<path d="${p.d}" fill="#9aa7b4" stroke="none"/>`
-                  : `<path d="${p.d}" stroke-width="${p.strokeWidth}"/>`,
-              )
+              .map((p) => {
+                if (p.role === "fill") return `<path d="${p.d}" fill="#9aa7b4" stroke="none"/>`;
+                // The mark is drawn inside its own scale(m.scale), so the width
+                // that reaches the plate is the authored width through BOTH
+                // scales — the mark's and the sheet placement's.
+                strokesMm.push(strokeMm(p.strokeWidth * m.scale));
+                return `<path d="${p.d}" stroke-width="${p.strokeWidth}"/>`;
+              })
               .join("");
             return (
               `<g transform="translate(${f(m.x - 50 * m.scale)} ${f(m.y - 50 * m.scale)}) ` +
@@ -201,19 +259,48 @@ function composeSheet(
       .map((p) => `<path d="${p.d}"/>`)
       .join("");
 
+  const WALK_STROKE = 1.4;
+  const LOOP_STROKE = 1.6;
+  strokesMm.push(strokeMm(WALK_STROKE), strokeMm(LOOP_STROKE));
   layers.push(
-    `<g id="walk-line" fill="none" stroke="#ffffff" stroke-width="1.4" ` +
+    `<g id="walk-line" fill="none" stroke="#ffffff" stroke-width="${WALK_STROKE}" ` +
       `stroke-linejoin="round" stroke-linecap="round">${byRole("line")}</g>`,
-    `<g id="walk-loops" fill="none" stroke="#f4b942" stroke-width="1.6">${byRole("loop")}</g>`,
-    `<g id="walk-caps" fill="none" stroke="#ffffff" stroke-width="1.4" ` +
+    `<g id="walk-loops" fill="none" stroke="#f4b942" stroke-width="${LOOP_STROKE}">${byRole("loop")}</g>`,
+    `<g id="walk-caps" fill="none" stroke="#ffffff" stroke-width="${WALK_STROKE}" ` +
       `stroke-linecap="round">${byRole("start-cap")}${byRole("end-cap")}</g>`,
   );
 
+  return Object.freeze({
+    markup: layers.join(""),
+    strokesMm: Object.freeze(strokesMm),
+  });
+}
+
+/* ── the sheet ───────────────────────────────────────────────────────────── */
+
+/**
+ * The plate: A4 portrait at its stated print size, figure in the drawing field,
+ * annotation around it.
+ *
+ * `width="210mm" height="297mm"` over a `0 0 210 297` viewBox makes one user
+ * unit one millimetre EXACTLY. That identity is what lets the scale bar and the
+ * dimension be true by construction rather than by assertion — there is no
+ * conversion between drawn and printed length to get wrong. At 300 DPI the sheet
+ * rasterises to 2480 x 3508.
+ *
+ * The figure group is delimited by a literal `</g><!--/figure-->` so the exact
+ * bytes the drawing number hashes can be cut out of the emitted file by a plain
+ * string operation, with no need to match nested groups — or to trust us.
+ */
+function composeSheet(ink: FigureInk, annotation: string): string {
+  const place = FIGURE_PLACEMENT;
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BOX} ${BOX}" ` +
-    `width="${BOX * 4}" height="${BOX * 4}">` +
-    `<rect width="${BOX}" height="${BOX}" fill="#07090c"/>` +
-    layers.join("") +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SHEET_W} ${SHEET_H}" ` +
+    `width="${SHEET_W}mm" height="${SHEET_H}mm">` +
+    `<rect width="${SHEET_W}" height="${SHEET_H}" fill="#07090c"/>` +
+    `<g id="figure" transform="translate(${f(place.x)} ${f(place.y)}) ` +
+    `scale(${f(place.scale)})">${ink.markup}</g><!--/figure-->` +
+    `<g id="annotation">${annotation}</g>` +
     `</svg>`
   );
 }
@@ -228,9 +315,48 @@ function formatLegend(
   marks: readonly PlacedMark[],
   sheetId: string,
 ): string {
+  // The quantity the multiplier is reduced from. Printed so the reduction above
+  // is checkable: add the cells, reduce, add one.
+  const cellSum = figure.steps.reduce((total, step) => total + step.cell, 0);
   const lines: string[] = [
     `LEGEND — ${word.toUpperCase()}`,
     `sheet ${sheetId} · ${figure.square} ${figure.order}×${figure.order} · cipher ${figure.cipher} · trace ${figure.trace}`,
+    "",
+    "THE PLATE",
+    `  ISO A4 portrait, ${SHEET_W} × ${SHEET_H} mm, declared on the sheet itself. The viewBox is`,
+    `  in millimetres, so one user unit is one millimetre and the scale bar is true`,
+    `  by construction — measure it. At ${PRINT_DPI} DPI the sheet is ${Math.round((SHEET_W / 25.4) * PRINT_DPI)} × ${Math.round((SHEET_H / 25.4) * PRINT_DPI)} px.`,
+    `  The figure is placed at ${FIGURE_PLACEMENT.scale}, so its ${figure.viewBox[2]}-unit frame prints at ${FIGURE_PLACEMENT.widthMm.toFixed(2)} mm`,
+    `  and one figure unit is exactly ${FIGURE_PLACEMENT.scale} mm.`,
+    "",
+    "  The annotation layer has no alphabet — the constructed numeral set holds",
+    "  digits and a few symbols, and nothing on a plate may be set in <text>. So",
+    "  each count is labelled by a miniature of what it counts, and the two index",
+    "  axes of the census are named here rather than on the sheet:",
+    "",
+    "    counts, top to bottom   nodes · cusps · segments · loops · activated cells · marks",
+    "    census columns 1-4      load-bearing · answerable · free · arbitrary",
+    "    census rows 1-4         generative · walk-derived · partial · control",
+    "    the last row and column are totals; the corner is every choice graded.",
+    "",
+    "  DRAWING NUMBER, as set on the sheet:",
+    `    ${drawingNumber(sheetId).replace(/(\d{5})(?=\d)/gu, "$1 ")}`,
+    "  That digest is SHA-256 of the figure markup — the bytes between the literal",
+    "  `<g id=\"figure\" ...>` tag and the literal `</g><!--/figure-->` that closes",
+    "  it — first 16 hex characters, read as a big-endian 64-bit integer. The",
+    "  drawing is hashed before it is annotated, because a sheet cannot carry the",
+    "  checksum of bytes that include the checksum. Cut, hash, convert, compare:",
+    "  nothing here has to be taken on trust.",
+    "",
+    "  The dimension below the figure is the envelope's diameter at the stated",
+    "  print size, and its extension lines are tangent to the envelope at the",
+    "  widest point, which is where the measurement was taken.",
+    "",
+    "  The gauge in the title block is the thinnest stroke the plate actually",
+    "  paints, measured from the widths the figure emitted, against the garment",
+    "  floors in scripts/build-print-kit.ts — DTF 0.5 mm, DTG on light 0.6 mm,",
+    "  DTG on dark 1.0 mm. This is a paper sheet; those floors are a verdict on a",
+    "  second profile, not a pass mark for this one.",
     "",
     "THE WALK",
     `  ${figure.steps.map((s) => `${s.letter}=${s.value}`).join("  ")}`,
@@ -241,8 +367,17 @@ function formatLegend(
     "",
     "THE ENVELOPE",
     `  ${envelope.nodes} nodes, multiplier ${envelope.multiplier}, ${envelope.cusps} cusps`,
-    `  nodes = magic constant × order; multiplier = sum of the walked cells.`,
-    `  Count the cusps to check this sheet against its own caption.`,
+    // The old caption here read "nodes = magic constant × order; multiplier =
+    // sum of the walked cells". Both halves stopped being true when the node
+    // count was fixed at 137 and the multiplier was reduced: Venus gave 1225
+    // nodes, at which density the cusps cannot be counted. A stale derivation
+    // printed beside a live number is the exact failure this sheet is against,
+    // so it is restated from what `envelope-engine` actually does — including
+    // the cell sum, so the reduction can be checked rather than believed.
+    `  nodes are fixed at ${envelope.nodes} — prime, so every multiplier below it closes as a`,
+    `  single cycle over all nodes and no family degenerates into a sparse figure.`,
+    `  walked cell sum ${cellSum}; reduced theosophically to ${envelope.cusps}; multiplier is that + 1.`,
+    `  cusps = multiplier − 1 = ${envelope.cusps}. Count the cusps to check this sheet.`,
     "",
   ];
 
