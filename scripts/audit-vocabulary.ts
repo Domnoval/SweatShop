@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 import { auditVocabulary, formatReceipt, isCipherId, isSquareId } from "@studio137/walk-engine";
 
-import { WORD_CORRESPONDENCE } from "../packages/glyph-registry/src/correspondence.v1.js";
+import { WORD_CORRESPONDENCE } from "@studio137/glyph-registry";
 
 const arg = (name: string): string | undefined => {
   const i = process.argv.indexOf(`--${name}`);

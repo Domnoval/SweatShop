@@ -1,0 +1,12 @@
+{
+  "name": "@studio137/envelope-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Chord families whose envelope draws the curve, derived from a walk",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/walk-engine": "workspace:*"
+  }
+}

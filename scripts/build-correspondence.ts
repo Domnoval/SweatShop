@@ -627,12 +627,6 @@ export type ArchKey = ${union(archKeys)};
 export type PaletteKey = ${union(paletteKeys)};
 
 /** A magic square, row-major, exactly as the painter stores it. */
-export type Kamea = Readonly<{
-  planet: PlanetKey;
-  order: number;
-  rows: readonly (readonly number[])[];
-}>;
-
 export type BrushBinding = Readonly<{
   brush: BrushKey;
   label: string;
@@ -658,6 +652,14 @@ export type MarkBinding = Readonly<{
 export type ConceptCorrespondence = Readonly<{
   concept: string;
   planet: PlanetKey;
+  /**
+   * Which square this concept is walked on — a name, never the square itself.
+   * \`@studio137/walk-engine\` owns the seven kamea and verifies them magic at
+   * load. This module carried a second copy until it was removed: the grids were
+   * identical, but two copies of a magic square is two answers to where a letter
+   * lands, and the day they drift the walk and the legend disagree with no error
+   * anywhere. House rule 1.
+   */
   kamea: PlanetKey;
   brushes: readonly BrushKey[];
   traditions: readonly TraditionKey[];
@@ -684,22 +686,6 @@ out.push(`
 /** The 13 codex traditions: key → [label, css custom-property]. */
 export const TRADITION_LABELS: Readonly<Record<TraditionKey, readonly [string, string]>> = Object.freeze({
 ${traditionKeys.map((t) => `  ${t}: Object.freeze([${q(TRADITIONS[t]![0])}, ${q(TRADITIONS[t]![1])}] as const),`).join("\n")}
-});
-`);
-
-out.push(`
-/** The 7 planetary kamea, copied from the painter's \`KAM\`. */
-export const KAMEA: Readonly<Record<PlanetKey, Kamea>> = Object.freeze({
-${planetKeys.map((p) => {
-  const rows = KAM[p]!;
-  return `  ${p}: Object.freeze({
-    planet: ${q(p)},
-    order: ${rows.length},
-    rows: Object.freeze([
-${rows.map((r) => `      Object.freeze([${r.join(", ")}]),`).join("\n")}
-    ]),
-  }),`;
-}).join("\n")}
 });
 `);
 

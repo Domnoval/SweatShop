@@ -40,12 +40,6 @@ export type ArchKey = "emblem" | "hero" | "mandala" | "none";
 export type PaletteKey = "blueprint" | "bone" | "haring" | "phosphor" | "spectrum" | "voidp";
 
 /** A magic square, row-major, exactly as the painter stores it. */
-export type Kamea = Readonly<{
-  planet: PlanetKey;
-  order: number;
-  rows: readonly (readonly number[])[];
-}>;
-
 export type BrushBinding = Readonly<{
   brush: BrushKey;
   label: string;
@@ -71,6 +65,14 @@ export type MarkBinding = Readonly<{
 export type ConceptCorrespondence = Readonly<{
   concept: string;
   planet: PlanetKey;
+  /**
+   * Which square this concept is walked on — a name, never the square itself.
+   * `@studio137/walk-engine` owns the seven kamea and verifies them magic at
+   * load. This module carried a second copy until it was removed: the grids were
+   * identical, but two copies of a magic square is two answers to where a letter
+   * lands, and the day they drift the walk and the legend disagree with no error
+   * anywhere. House rule 1.
+   */
   kamea: PlanetKey;
   brushes: readonly BrushKey[];
   traditions: readonly TraditionKey[];
@@ -107,94 +109,6 @@ export const TRADITION_LABELS: Readonly<Record<TraditionKey, readonly [string, s
   kab: Object.freeze(["Kabbalah & Hebrew", "--kab"] as const),
   rune: Object.freeze(["Runic & Norse", "--rune"] as const),
   vod: Object.freeze(["Vodou Veve", "--vod"] as const),
-});
-
-/** The 7 planetary kamea, copied from the painter's `KAM`. */
-export const KAMEA: Readonly<Record<PlanetKey, Kamea>> = Object.freeze({
-  jupiter: Object.freeze({
-    planet: "jupiter",
-    order: 4,
-    rows: Object.freeze([
-      Object.freeze([16, 3, 2, 13]),
-      Object.freeze([5, 10, 11, 8]),
-      Object.freeze([9, 6, 7, 12]),
-      Object.freeze([4, 15, 14, 1]),
-    ]),
-  }),
-  luna: Object.freeze({
-    planet: "luna",
-    order: 9,
-    rows: Object.freeze([
-      Object.freeze([37, 78, 29, 70, 21, 62, 13, 54, 5]),
-      Object.freeze([6, 38, 79, 30, 71, 22, 63, 14, 46]),
-      Object.freeze([47, 7, 39, 80, 31, 72, 23, 55, 15]),
-      Object.freeze([16, 48, 8, 40, 81, 32, 64, 24, 56]),
-      Object.freeze([57, 17, 49, 9, 41, 73, 33, 65, 25]),
-      Object.freeze([26, 58, 18, 50, 1, 42, 74, 34, 66]),
-      Object.freeze([67, 27, 59, 10, 51, 2, 43, 75, 35]),
-      Object.freeze([36, 68, 19, 60, 11, 52, 3, 44, 76]),
-      Object.freeze([77, 28, 69, 20, 61, 12, 53, 4, 45]),
-    ]),
-  }),
-  mars: Object.freeze({
-    planet: "mars",
-    order: 5,
-    rows: Object.freeze([
-      Object.freeze([11, 24, 7, 20, 3]),
-      Object.freeze([4, 12, 25, 8, 16]),
-      Object.freeze([17, 5, 13, 21, 9]),
-      Object.freeze([10, 18, 1, 14, 22]),
-      Object.freeze([23, 6, 19, 2, 15]),
-    ]),
-  }),
-  mercury: Object.freeze({
-    planet: "mercury",
-    order: 8,
-    rows: Object.freeze([
-      Object.freeze([8, 58, 59, 5, 4, 62, 63, 1]),
-      Object.freeze([49, 15, 14, 52, 53, 11, 10, 56]),
-      Object.freeze([41, 23, 22, 44, 45, 19, 18, 48]),
-      Object.freeze([32, 34, 35, 29, 28, 38, 39, 25]),
-      Object.freeze([40, 26, 27, 37, 36, 30, 31, 33]),
-      Object.freeze([17, 47, 46, 20, 21, 43, 42, 24]),
-      Object.freeze([9, 55, 54, 12, 13, 51, 50, 16]),
-      Object.freeze([64, 2, 3, 61, 60, 6, 7, 57]),
-    ]),
-  }),
-  saturn: Object.freeze({
-    planet: "saturn",
-    order: 3,
-    rows: Object.freeze([
-      Object.freeze([4, 9, 2]),
-      Object.freeze([3, 5, 7]),
-      Object.freeze([8, 1, 6]),
-    ]),
-  }),
-  sol: Object.freeze({
-    planet: "sol",
-    order: 6,
-    rows: Object.freeze([
-      Object.freeze([6, 32, 3, 34, 35, 1]),
-      Object.freeze([7, 11, 27, 28, 8, 30]),
-      Object.freeze([19, 14, 16, 15, 23, 24]),
-      Object.freeze([18, 20, 22, 21, 17, 13]),
-      Object.freeze([25, 29, 10, 9, 26, 12]),
-      Object.freeze([36, 5, 33, 4, 2, 31]),
-    ]),
-  }),
-  venus: Object.freeze({
-    planet: "venus",
-    order: 7,
-    rows: Object.freeze([
-      Object.freeze([22, 47, 16, 41, 10, 35, 4]),
-      Object.freeze([5, 23, 48, 17, 42, 11, 29]),
-      Object.freeze([30, 6, 24, 49, 18, 36, 12]),
-      Object.freeze([13, 31, 7, 25, 43, 19, 37]),
-      Object.freeze([38, 14, 32, 1, 26, 44, 20]),
-      Object.freeze([21, 39, 8, 33, 2, 27, 45]),
-      Object.freeze([46, 15, 40, 9, 34, 3, 28]),
-    ]),
-  }),
 });
 
 /**

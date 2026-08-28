@@ -17,6 +17,9 @@ importers:
       '@studio137/corruption-engine':
         specifier: workspace:*
         version: link:packages/corruption-engine
+      '@studio137/envelope-engine':
+        specifier: workspace:*
+        version: link:packages/envelope-engine
       '@studio137/glyph-engine':
         specifier: workspace:*
         version: link:packages/glyph-engine
@@ -98,6 +101,15 @@ importers:
       '@studio137/plate-core':
         specifier: workspace:*
         version: link:../plate-core
+
+  packages/envelope-engine:
+    dependencies:
+      '@studio137/plate-core':
+        specifier: workspace:*
+        version: link:../plate-core
+      '@studio137/walk-engine':
+        specifier: workspace:*
+        version: link:../walk-engine
 
   packages/glyph-engine:
     dependencies:

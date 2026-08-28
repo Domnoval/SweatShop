@@ -22,6 +22,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@studio137/artifact-security": "workspace:*",
     "@studio137/corruption-engine": "workspace:*",
+    "@studio137/envelope-engine": "workspace:*",
     "@studio137/glyph-engine": "workspace:*",
     "@studio137/glyph-registry": "workspace:*",
     "@studio137/layout-engine": "workspace:*",
