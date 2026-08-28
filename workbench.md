@@ -3,7 +3,7 @@
 Live state for the MK·137 spine commission. Always current.
 Build brief: "THE RING", drafted 2026-08-28. Branch `claude/sigil-painter-review-stx4s2`.
 
-**State: PHASE 0 COMPLETE — plan awaiting sign-off. No trunk surgery has begun.**
+**State: PHASE 1 COMPLETE — the trunk stands. Phases 3 and 6 building in parallel.**
 
 ---
 
@@ -139,10 +139,78 @@ So `word → KEYS → concept → codex entries → marks` is buildable from dat
   *Load-bearing — it is the measuring stick. Nothing downstream can be graded until it exists, and
   the brief itself makes it the instrument that adjudicates Break 3.*
 
+## Rulings received 2026-08-28
+
+1. **Dürer constants struck.** Not hand-verified — transcribed from a prior session, belonging
+   to the site's `<Square />` component (Televisor lineage), and describing one specific
+   derivation from an unknown seed rather than constants of the system. If ever wanted back the
+   path is: find the seed in the site repo, reproduce the walk, verify the counts, enter them in
+   the Record with that provenance. Until then they are a memory of a claim.
+   *Note: `walk()` now computes `activatedCells` and `segmentCount` per word, with provenance.
+   The quantities the struck constants tried to assert are now derived, not declared.*
+2. **×170 confirmed.** Recorded fact, per the ruling: **the vocabulary and the ride-table are
+   currently coextensive** — the 170 audit words *are* the KEYS table. This is fine but temporary.
+   The moment the vocabulary grows past the table, a word will resolve (letters always resolve)
+   and ride nothing. Name the divergence now so it is not a surprise later.
+3. **The ten = MODEKEYS**, the painter's composition modes. Layout families stay 7 canon /
+   2 implemented / 5 pending, as `tests/bible-sync.test.ts:77` enforces. Never conflate them.
+4. **House rule 8 adopted: the read is blind.** The receipt derives from the mark's geometry
+   plus public rules alone, never from the manifest or the envelope. Enforced by ablation —
+   the grader reruns the ×170 audit with the manifest out of reach and the receipt must come
+   back byte-identical.
+
+---
+
+## PHASE 1 — the trunk (complete)
+
+`packages/walk-engine` — the single surviving resolve and walk.
+
+- `squares.ts` — all 7 kamea, **verified magic at load** rather than trusted. A transcription
+  slip in a 9×9 grid is invisible to the eye and would silently relocate every mark walked on it.
+- `cipher.ts` — 3 ciphers, theosophic reduction (never modulo).
+- `resolve.ts` — station 1. Cannot refuse; drops non-letters and records what it dropped.
+- `walk.ts` — station 2. Five traces, caps, and the **loop glyph** added per the brief's convention.
+
+**26 new tests, 248 total passing, typecheck clean.**
+
+### What the tests caught
+
+**The viewBox defect class fired again.** `ZZZZZZZZZ` walks nine letters onto one Jupiter cell;
+the nested loops grew unbounded and reached **246 in a 220 box**. Fixed by clamping loop radius
+to half the distance to the nearest frame edge, so the figure fits by construction rather than by
+luck. This is the fourth time this class has appeared in this repo.
+
+### A claim in the test header that counter-verification falsified
+
+The header asserted that switching `reduceToCell` to modulo would fail the DESCENT and FALL
+fixtures. **It does not** — under Pythagorean every letter is 1–9 and Jupiter's ceiling is 16, so
+no reduction ever runs on those words. Only the direct `reduceToCell(19, 16)` assertion fails.
+The header has been corrected to say what is true. Removing the loop-glyph branch *does* fail
+exactly three tests, all loop tests, while every digit test still passes — that half held.
+
+## Open item deferred to Phase 7
+
+House rule 1 says two of the three walks die here. The two dead walks are dead in the
+**executable stack** — nothing in `packages/`, `apps/` or `scripts/` implements a second walk.
+The three HTML instruments stay in `assets/` for now for a concrete reason: **delete
+`symbolpaintermk137.html` today and the correspondence generator loses its only source for
+`KEYS` and `CONCEPTS`**, which Phase 3 is reading right now. They go when their replacement
+page ships in Phase 7, not before.
+
 ## Next move
 
-Await sign-off on the four questions, then Phase 1 (trunk: one resolve, one walk).
+Phases 3 (correspondence) and 6 (constructed numerals) are building in parallel.
+Phase 2 (Read + the ×170 runner) is next in this context.
 
 ## Census — this build's own choices so far
 
-LOAD-BEARING 2 · ANSWERABLE 1 · FREE 0 · ARBITRARY 0
+LOAD-BEARING 5 · ANSWERABLE 1 · FREE 1 · ARBITRARY 0
+
+- *Load-bearing* — hue at render time, not on `LockedPath` (would reset all 50 integrity hashes)
+- *Load-bearing* — margin 26, not the painter's 24 (24 shifts every coordinate off the existing corpus)
+- *Load-bearing* — squares verified magic at load (a silent transcription slip relocates every mark)
+- *Load-bearing* — loop radius clamped (unclamped, ZZZZZZZZZ leaves its own frame at 246/220)
+- *Load-bearing* — Read station built third, not fifth (it is the measuring stick)
+- *Answerable* — Chromium via Playwright for browser checks (the Chrome extension is absent here)
+- *Free, signed* — the loop glyph itself: a circle tangent at the node, Agrippa lineage. The
+  alternative, the source engines' silent zero-length segment, loses information the walk contains.

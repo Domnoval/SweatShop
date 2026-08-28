@@ -1,0 +1,13 @@
+{
+  "name": "@studio137/walk-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Stations 1-2 of the spine: letters resolve to digits, digits walk a kamea",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*"
+  }
+}
