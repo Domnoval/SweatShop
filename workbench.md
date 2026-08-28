@@ -3,7 +3,7 @@
 Live state for the MK·137 spine commission. Always current.
 Build brief: "THE RING", drafted 2026-08-28. Branch `claude/sigil-painter-review-stx4s2`.
 
-**State: PHASES 1-5 COMPLETE. Break 1 is flipped. Phase 6 (numerals) building; correspondence under adversarial review.**
+**State: PHASES 1-7 BUILT. Peer gate returned four defects, under repair. Annotation layer, page wrapper and correspondence tests in flight. Adversarial grade queued behind them.**
 
 ---
 
@@ -260,9 +260,75 @@ Renderer gaps closed: palette was already a parameter; hue is a guide-level chan
 a palette ramp (inert unless both are present — Gate 3 unmoved proves it); envelope enters as
 substrate guides; layers untouched.
 
+---
+
+## PHASE 7 — `ring <WORD>` (built)
+
+One word in, four artifacts out: sheet, legend, census, receipt. They ship together
+because a sheet alone is a picture, and a picture cannot be checked.
+
+- `LONGING` — in the vocabulary, rides concept `love`, therefore walked on **Venus**.
+- `SWEATSHOP` — in no vocabulary at all. Resolves, walks, draws, and reads its cells
+  back **identically**; only the cells→word step returns nothing, because that is the
+  only step a vocabulary is needed for. Letters resolve; concepts ride.
+
+### What looking at the render changed
+
+The first sheet was wrong, and only rendering it showed why. Magic-constant × order gave
+Venus **1225 nodes**: at that density the chords fill the disc uniformly, the caustic
+vanishes into texture, and the cusps cannot be counted. The sheet printed *"count the
+cusps to check this against its caption"* above a figure where counting is impossible —
+**a false claim on the artifact**, which is worse than a plain one.
+
+- Nodes fixed at **137**: prime, so every multiplier below it is coprime and no family
+  degenerates into a sparse sub-figure. That it is the studio's number is why this prime.
+- Multiplier is now the cell sum **reduced theosophically** — the same operation that
+  places a letter on a cell, applied once more, so the cusp count reports the word in the
+  unit the system already counts in. DESCENT 7, LONGING 6, FALL 4, ACE 9.
+- A test asserts the bound the printed claim depends on (cusps ≤ 9).
+
+## PHASE 6 — the numeral set (built; one blemish)
+
+33 glyphs, 50 locked paths, compass and rule, monospaced, worst-case ink **2.4 units
+inside** its declared viewBox. It typesets `8.47 × 10⁻¹¹ LS` — the corrected exponent,
+not the one on the reference sheet. **The S leans**; its tangency offset reads as italic
+against the upright digits. Assigned.
+
+---
+
+## PEER GATE — correspondence
+
+The adversarial reviewer could not break the joins. **Zero invented associations**, every
+coverage number independently recounted with **zero disagreements**, the brush→tradition
+join reads the right positional fields (`U(n,t,e,g,f,m)` — `e` is era, `g` is glyph), and
+`sigil` left unmapped was verified honest rather than a dodge.
+
+What it did break was the **extraction layer's robustness**. Two scanners fail open.
+
+| # | severity | defect |
+|---|---|---|
+| 1 | **SEVERE** | `topLevelKeys` checks quotes, never comments — while `balancedFrom` in the same file handles them. `// Odin's knot` above `valknut` costs 5 stamps and the whole `egy` tradition; the apostrophe opens a "string" that swallows the block. Exit 0, no warning. The geometry branch has no empty-join floor check, unlike GLYPHS. |
+| 2 | **SEVERE** | `norm()` — NFKD does not decompose `Æ Ø Þ ß Ł`; they survive and are then deleted. `norm("Ægishjálmur")` = `"gishjalmur"`. The mark unbinds **and the generator emits a note claiming the codex has no such row** — the row is at `codexdata.ts:178`. A miss that ships a paragraph explaining why the data does not exist is worse than a miss. |
+| 3 | MODERATE | The file is written *before* `problems` sets a non-zero exit. A self-inconsistent artifact reaches disk. |
+| 4 | MINOR | Unanchored containment makes the two-letter id `sa` match `unicur**sa**l`, producing a reason about a choice no binder faces. Violates house rule 6. |
+
+Disclosed limitations worth carrying: `composition` is per-word and the painter unions
+across matched concepts (overstated in the module header); `kamea: PlanetKey` is an
+**unverified pointer** at walk-engine's `SquareId` — the house-rule-1 fix traded a
+duplicate for a pointer nothing asserts; and correspondence had **zero test coverage**,
+so its determinism claim was unenforced.
+
+## Not yet delivered
+
+- **The page wrapper.** The done bar requires browser verification at desktop and 375px
+  with a clean console. There was no page to verify. In flight.
+- **The annotation layer** — the actual Press station. In flight.
+- Done-bar item 5 (dead copies *removed*) is only met in the executable stack; the three
+  HTML instruments remain in `assets/` as data sources and provenance.
+
 ## Next move
 
-Phase 7 — `ring <WORD>` and the page. Phase 6 numerals still building.
+Integrate the four in-flight streams, then act on the three-lens adversarial grade.
 
 ## Census — this build's own choices so far
 
