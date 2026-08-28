@@ -108,7 +108,18 @@ for (const id of DROP) {
       verdict = "any method";
     }
 
-    rows.push({ mark: name, placement: place.id, inches: place.inches, thinnestMm, verdict, reason });
+    // An "any method" row has no reason, and the absent key is the honest
+    // record of that: spreading it in conditionally keeps `reason` genuinely
+    // optional instead of widening `Row.reason` to `string | undefined`, which
+    // would let a row claim a reason whose value is the absence of one.
+    rows.push({
+      mark: name,
+      placement: place.id,
+      inches: place.inches,
+      thinnestMm,
+      verdict,
+      ...(reason === undefined ? {} : { reason }),
+    });
     if (verdict === "REFUSED") continue;
 
     const px = Math.round(place.inches * DPI);

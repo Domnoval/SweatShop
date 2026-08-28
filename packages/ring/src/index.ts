@@ -38,7 +38,9 @@ import { GEOMETRY_V2_SOURCE } from "@studio137/glyph-registry";
 import { envelopeFromWalk, type EnvelopeFamily } from "@studio137/envelope-engine";
 import {
   digitString,
+  kamea,
   read,
+  resolve,
   walk,
   type SquareId,
   type TraceId,
@@ -106,18 +108,66 @@ export const SPECTRUM: readonly string[] = Object.freeze([
   "#c46fd0", "#d2603a", "#e08a3c", "#f4b942", "#d8d06a", "#9fe0a0",
 ]);
 
-export function ring(word: string, options: RingOptions = {}): RingArtifacts {
-  const correspondence = correspondenceForWord(word);
-  // The concept rides: it chooses the square, and never gates resolution. A word
-  // with no concept still walks — on the house square — and still reads back.
-  const square = options.square ?? correspondence?.kamea ?? "jupiter";
-  const trace = options.trace ?? "AGRIPPA";
+/** Where the square came from, so the census can say which without guessing. */
+type SquareSource = "requested" | "concept" | "house";
 
+/** The square a word with no concept walks. */
+const HOUSE_SQUARE: SquareId = "jupiter";
+
+/**
+ * The letters this sheet is a sheet OF — exactly the ones station 1 keeps.
+ *
+ * House rule 1: this does not re-implement "what counts as a letter". It asks
+ * `resolve()`, the station that owns that question, and reads back only the
+ * letter sequence. The order argument scales the cell reduction and nothing
+ * else — the letters are the same against every square — and the cells this call
+ * computes are thrown away. The walk resolves again, against its own square.
+ */
+function spokenLetters(input: string): string {
+  return resolve(input, kamea(HOUSE_SQUARE).n).letters.map((l) => l.letter).join("");
+}
+
+/** What to call a sheet whose input held no letters at all. */
+const sheetName = (letters: string): string => (letters === "" ? "(no letters)" : letters);
+
+export function ring(word: string, options: RingOptions = {}): RingArtifacts {
+  // WHAT THE WORD IS, decided once, for both stations.
+  //
+  // Station 1 tolerates anything and records what it dropped, so "DESCENT" and
+  // "DESCENT " resolve to the same seven letters and walk the same line. The ride
+  // has to key off that same notion of the word, or the two stations disagree
+  // about what was spoken. Keyed off the raw string — `correspondenceForWord`
+  // lowercases but does not trim — a single trailing space from a CRLF word list
+  // or a paste missed the concept table and moved DESCENT off saturn (3×3) onto
+  // the house square (4×4): different order, different coordinates, different
+  // drawing, different drawing number, decided by input hygiene rather than by
+  // the word. 156 of the 170 table words changed square when padded with one
+  // space each side. House rule 3 says concepts ride; it does not say they ride
+  // on whitespace.
+  const letters = spokenLetters(word);
+  const correspondence = correspondenceForWord(letters);
+  // The concept rides: it chooses the square, and never gates resolution. A word
+  // with no concept still walks — on the house square — and still reads back. An
+  // input with no letters at all still resolves, still draws, and still prints a
+  // sheet; nothing here can refuse.
+  const square = options.square ?? correspondence?.kamea ?? HOUSE_SQUARE;
+  const trace = options.trace ?? "AGRIPPA";
+  const squareSource: SquareSource =
+    options.square !== undefined
+      ? "requested"
+      : correspondence === undefined
+        ? "house"
+        : "concept";
+
+  // The walk is handed the caller's string, not the trimmed letters, so station 1
+  // still records every dropped character in `walk.resolution.dropped`. The
+  // letters it keeps are the same either way, so the drawing is too — which is
+  // what makes the two calls byte-identical rather than merely similar.
   const figure = walk(word, { square, trace, cipher: "PYTH" });
   const envelope = envelopeFromWalk(figure);
 
   const marks = placeMarks(correspondence, options.maxMarks ?? 8);
-  const choices = gradeChoices(figure, envelope, correspondence);
+  const choices = gradeChoices(figure, envelope, correspondence, squareSource, letters);
 
   // The drawing is composed and hashed BEFORE it is annotated, and the hash is
   // the drawing number the annotation prints. A sheet cannot carry the checksum
@@ -147,6 +197,11 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   });
 
   return Object.freeze({
+    // The caller's string, unmodified — the record of what was spoken, kept for
+    // the same reason `resolve()` keeps it. The four ARTIFACTS below are of the
+    // letters, so `ring("DESCENT ")` and `ring("DESCENT")` emit identical bytes;
+    // what was typed around those letters survives here and in
+    // `walk.resolution.dropped` rather than on the plate.
     word,
     sheetId,
     walk: figure,
@@ -155,9 +210,9 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
     marks,
     choices,
     sheetSvg,
-    legend: formatLegend(word, figure, envelope, correspondence, marks, sheetId),
+    legend: formatLegend(letters, figure, envelope, correspondence, marks, sheetId, squareSource),
     census: formatCensus(choices),
-    receipt: formatReceipt(word, figure, reading, options.vocabulary),
+    receipt: formatReceipt(letters, figure, reading, options.vocabulary),
   });
 }
 
@@ -307,19 +362,58 @@ function composeSheet(ink: FigureInk, annotation: string): string {
 
 /* ── the three texts ─────────────────────────────────────────────────────── */
 
+/** The quantity the multiplier is reduced from. One implementation, two readers. */
+const cellSumOf = (figure: Walk): number =>
+  figure.steps.reduce((total, step) => total + step.cell, 0);
+
+/**
+ * How THIS sheet's multiplier was actually arrived at, in one sentence.
+ *
+ * The legend and the census both state this derivation, and they must not be
+ * able to disagree: a reader applying the plate's own instruction — if a count
+ * disagrees with its number, the sheet is void — would otherwise void a correct
+ * sheet. So it is written once, here, and both stations print the same string.
+ *
+ * That is exactly what went wrong. The multiplier was the raw cell sum until the
+ * node count was fixed at 137 and Venus's 1225 nodes made the cusps uncountable;
+ * the reduction was added, the legend was corrected, and the census was not. One
+ * sheet then shipped two statements of one rule, and the census's — "the walked
+ * cell sum minus one" — was false for every possible word: ACE summed 9 and drew
+ * 9 cusps, not 8; DESCENT summed 25 and drew 7, not 24.
+ *
+ * The letterless case is the engine's, not this module's: `multiplierForWalk`
+ * short-circuits `if (sum === 0) return 2` BEFORE it reduces, so no reduction
+ * runs and there is none to report. The old sentence back-computed one anyway and
+ * printed "reduced theosophically to 1", which `reduceToCell(0, 9)` — returning
+ * 9 — flatly contradicts. This branches on the same `sum === 0` the engine
+ * branches on, and says plainly that the multiplier is a floor.
+ */
+function multiplierDerivation(figure: Walk, envelope: EnvelopeFamily): string {
+  const sum = cellSumOf(figure);
+  if (sum === 0) {
+    return (
+      "no letters, so no cells were walked and no reduction ran; the engine floors " +
+      `the multiplier at ${envelope.multiplier}, and the family draws ` +
+      `${envelope.cusps} cusp${envelope.cusps === 1 ? "" : "s"}`
+    );
+  }
+  return (
+    `walked cell sum ${sum}, reduced theosophically to ${envelope.cusps}; ` +
+    `the multiplier is that + 1 = ${envelope.multiplier}`
+  );
+}
+
 function formatLegend(
-  word: string,
+  letters: string,
   figure: Walk,
   envelope: EnvelopeFamily,
   correspondence: ConceptCorrespondence | undefined,
   marks: readonly PlacedMark[],
   sheetId: string,
+  squareSource: SquareSource,
 ): string {
-  // The quantity the multiplier is reduced from. Printed so the reduction above
-  // is checkable: add the cells, reduce, add one.
-  const cellSum = figure.steps.reduce((total, step) => total + step.cell, 0);
   const lines: string[] = [
-    `LEGEND — ${word.toUpperCase()}`,
+    `LEGEND — ${sheetName(letters)}`,
     `sheet ${sheetId} · ${figure.square} ${figure.order}×${figure.order} · cipher ${figure.cipher} · trace ${figure.trace}`,
     "",
     "THE PLATE",
@@ -359,11 +453,11 @@ function formatLegend(
     "  second profile, not a pass mark for this one.",
     "",
     "THE WALK",
-    `  ${figure.steps.map((s) => `${s.letter}=${s.value}`).join("  ")}`,
-    `  cells        ${digitString(figure.resolution)}`,
+    `  ${figure.steps.length === 0 ? "no letters — nothing was walked" : figure.steps.map((s) => `${s.letter}=${s.value}`).join("  ")}`,
+    `  cells        ${digitString(figure.resolution) || "none"}`,
     `  segments     ${figure.segmentCount}`,
     `  loops        ${figure.loopCount}   (a loop marks two consecutive letters on one cell)`,
-    `  activated    ${figure.activatedCells.join(", ")}`,
+    `  activated    ${figure.activatedCells.join(", ") || "none"}`,
     "",
     "THE ENVELOPE",
     `  ${envelope.nodes} nodes, multiplier ${envelope.multiplier}, ${envelope.cusps} cusps`,
@@ -372,19 +466,28 @@ function formatLegend(
     // count was fixed at 137 and the multiplier was reduced: Venus gave 1225
     // nodes, at which density the cusps cannot be counted. A stale derivation
     // printed beside a live number is the exact failure this sheet is against,
-    // so it is restated from what `envelope-engine` actually does — including
-    // the cell sum, so the reduction can be checked rather than believed.
+    // so it is restated from what `envelope-engine` actually does — and it is
+    // restated by `multiplierDerivation`, the one place that sentence is
+    // written, because this caption was corrected once while the census's copy
+    // of the same rule was left behind.
     `  nodes are fixed at ${envelope.nodes} — prime, so every multiplier below it closes as a`,
     `  single cycle over all nodes and no family degenerates into a sparse figure.`,
-    `  walked cell sum ${cellSum}; reduced theosophically to ${envelope.cusps}; multiplier is that + 1.`,
+    `  ${multiplierDerivation(figure, envelope)}.`,
     `  cusps = multiplier − 1 = ${envelope.cusps}. Count the cusps to check this sheet.`,
     "",
   ];
 
-  if (correspondence === undefined) {
+  if (letters === "") {
     lines.push(
       "CORRESPONDENCE",
-      `  none — "${word}" is in no concept table.`,
+      "  none — this input holds no letters, so there is no word to look one up by.",
+      "  It resolved and drew anyway. Nothing here may refuse an input.",
+      "",
+    );
+  } else if (correspondence === undefined) {
+    lines.push(
+      "CORRESPONDENCE",
+      `  none — "${letters}" is in no concept table.`,
       "  It resolved and walked anyway. Letters resolve; concepts ride.",
       "",
     );
@@ -392,17 +495,36 @@ function formatLegend(
     lines.push(
       "CORRESPONDENCE",
       `  concept      ${correspondence.concept}`,
-      `  planet       ${correspondence.planet}   (chooses the square)`,
+      // The planet chooses the square only when nothing else did. A caller who
+      // names `square` overrides the concept, and this line used to claim the
+      // planet chose a square the caller had already picked.
+      `  planet       ${correspondence.planet}   ${
+        squareSource === "concept"
+          ? `(chose the square, ${figure.order}×${figure.order})`
+          : `(names ${correspondence.kamea}; the caller asked for ${figure.square}, which is what was walked)`
+      }`,
       `  traditions   ${correspondence.traditions.join(", ") || "none"}`,
       `  brushes      ${correspondence.brushes.join(", ")}`,
       "",
     );
   }
 
-  if (marks.length === 0) {
+  if (marks.length === 0 && correspondence === undefined) {
+    // The old text blamed "the concept's brushes" here, on sheets that have no
+    // concept at all — SWEATSHOP's legend said a concept it does not have chose
+    // brushes it was never given. Absence of a correspondence and a gap in the
+    // mark corpus are different facts and now read differently.
     lines.push(
       "MARKS",
-      "  none reachable. This is a hole in the corpus, not an error: the concept's",
+      "  none. No concept rides these letters, so no brushes were named and no mark",
+      "  was reachable to place. That is the absence of a correspondence, not a gap",
+      "  in the mark corpus.",
+      "",
+    );
+  } else if (marks.length === 0) {
+    lines.push(
+      "MARKS",
+      "  none reachable. This is a hole in the corpus, not an error: this concept's",
       "  brushes resolve to traditions nobody has drawn a mark for.",
       "",
     );
@@ -413,60 +535,115 @@ function formatLegend(
   return `${lines.join("\n")}\n`;
 }
 
+/**
+ * Grade every choice, and predict what a reader would measure if it were flipped.
+ *
+ * House rule 6: a reason is a PREDICTION, never an adjective and never a false
+ * derivation. Two rules this file learned the hard way and now keeps:
+ *
+ *   - A reason is about THIS sheet. Where a convention draws nothing here — a
+ *     word with no doubled beat hangs no loops — the grade says so and drops with
+ *     it. "Load-bearing" printed above "removing it would not change one byte of
+ *     this sheet" is the same self-contradiction the census exists to catch.
+ *   - A reason may only claim what the code it describes actually does. Every
+ *     string below was re-read against its module before it was written.
+ */
 function gradeChoices(
   figure: Walk,
   envelope: EnvelopeFamily,
   correspondence: ConceptCorrespondence | undefined,
+  squareSource: SquareSource,
+  letters: string,
 ): readonly Choice[] {
+  const cells = digitString(figure.resolution);
+  const walked = figure.steps.length;
+  const loops = figure.loopCount;
+  // A repeat hangs a loop instead of extending the line, so this is exactly how
+  // many points the line keeps (`walk.ts` pushes one per non-repeating step).
+  const linePoints = walked - loops;
+  const capped = figure.paths.some((p) => p.role === "start-cap");
+  const s = (n: number): string => (n === 1 ? "" : "s");
+
+  const squareReason = ((): string => {
+    if (squareSource === "requested") {
+      return (
+        `The caller named ${figure.square} outright, so no concept chose it. Name another ` +
+        `square and these letters reduce against a different maximum and land on a ` +
+        `different grid: different order, different coordinates, different drawing number.`
+      );
+    }
+    if (correspondence !== undefined) {
+      return (
+        `The concept "${correspondence.concept}" rides planet ${correspondence.planet}, whose kamea is the ` +
+        `${figure.order}×${figure.order} square this line is walked on. A concept on another planet walks ` +
+        `another grid and draws another figure. The lookup keys on the letters ${letters}, not on the ` +
+        `string as typed, so padding or punctuation cannot move the word off its own square.`
+      );
+    }
+    return (
+      `No concept rides ${letters === "" ? "an input with no letters" : `"${letters}"`}, so the house ` +
+      `square ${figure.square} was used. Another square would draw a different figure with equal ` +
+      `warrant — nothing in these letters prefers this one.`
+    );
+  })();
+
   return Object.freeze([
     Object.freeze({
       element: "the walk",
       provenance: "walk-derived" as const,
-      necessity: "load-bearing" as const,
-      reason: `Change the cipher and ${figure.input.toUpperCase()} lands on different cells; the figure and the read-back both change.`,
+      necessity: walked === 0 ? ("free" as const) : ("load-bearing" as const),
+      reason:
+        walked === 0
+          ? "No letters, so no cells and no line: this plate carries the envelope alone, and the receipt returns nothing because there is nothing drawn to read. One letter would put one cell on the grid and give every choice below something to derive from."
+          : `The line is cells ${cells} in order — the ${walked} letter${s(walked)} of ${letters} under ${figure.cipher} on ${figure.square}. Everything else on the sheet is downstream of that sequence: the paths, the drawing number, the cusp count, the word the receipt hands back. Change the sequence and they move together, which is why no two of them can disagree about the word.`,
     }),
     Object.freeze({
       element: "the square",
-      provenance: correspondence === undefined ? ("control" as const) : ("walk-derived" as const),
-      necessity: correspondence === undefined ? ("free" as const) : ("answerable" as const),
-      reason:
-        correspondence === undefined
-          ? "No concept, so the house square was used. Another square would draw a different figure with equal warrant."
-          : `The concept "${correspondence.concept}" rides planet ${correspondence.planet}; a different planet is a different square and a different figure.`,
+      provenance: squareSource === "concept" ? ("walk-derived" as const) : ("control" as const),
+      necessity: squareSource === "house" ? ("free" as const) : ("answerable" as const),
+      reason: squareReason,
     }),
     Object.freeze({
       element: "the loop glyph",
       provenance: "walk-derived" as const,
-      necessity: "load-bearing" as const,
+      necessity: loops === 0 ? ("answerable" as const) : ("load-bearing" as const),
       reason:
-        "Remove it and consecutive letters on one cell vanish from the drawing; the receipt then reads back a shorter word than was spoken.",
+        loops === 0
+          ? "No two consecutive letters here land on one cell, so this sheet hangs no loops and dropping the convention would not change one byte of it. It is recorded because of what it does elsewhere: on DESCENT, where E and N both land on cell 5, the loop is the only mark of the doubled beat and without it the receipt reads back a word one letter short."
+          : `${loops} loop${s(loops)} hang${loops === 1 ? "s" : ""} on this line, one for each pair of consecutive letters on one cell. Drop the convention and ${loops === 1 ? "that beat leaves" : "those beats leave"} no mark at all — the line still has its ${linePoints} points, so the drawing looks finished — and the receipt reads back a word ${loops} letter${s(loops)} short.`,
     }),
     Object.freeze({
       element: "the start cap",
       provenance: "walk-derived" as const,
-      necessity: "load-bearing" as const,
-      reason:
-        "Remove it and the line is symmetric under reversal; every word competes with its own mirror in the read-back.",
+      necessity: capped ? ("load-bearing" as const) : ("answerable" as const),
+      reason: capped
+        ? // Checked, not assumed: `read()` parses the line and the loops and never
+          // looks at the cap, so removing it returns the same word. The cap is not
+          // for the machine — the machine gets direction free from the order of the
+          // points in the path data. It is for the paper (house rule 7).
+          "The cap says which end was spoken first. Without it the ink of this line and the ink of its reversal are the same segments in the same places, so a reader working from the plate alone could start at either end and read the word or its mirror. read() would not notice: it takes direction from the order of the points in the path data, and hands back the same word with the cap deleted. This mark is what puts that ordering in front of an eye."
+        : `This drawing has no start cap — ${walked === 0 ? "there are no letters, so there is no line to point" : `the ${figure.trace} trace draws none`} — so nothing on the plate says which end was spoken first. read() is unaffected, since it takes direction from the order of the points in the path data; a reader with only the picture is not.`,
     }),
     Object.freeze({
       element: "the envelope",
       provenance: "generative" as const,
       necessity: "load-bearing" as const,
-      reason: `Its ${envelope.cusps} cusps are the walked cell sum minus one; a different word draws a different cusp count, and the count is checkable by eye.`,
+      // The derivation is not restated here. It is printed from the one function
+      // that owns it, so this line and the legend's cannot drift apart again.
+      reason: `Cusps are a readout of the word, not an ornament: ${multiplierDerivation(figure, envelope)}. Count the points of the caustic and you have recovered the multiplier. A word whose cell sum reduces to something else draws a different count; two words that reduce alike draw the same envelope, so what the count reports is the reduction, not the spelling.`,
     }),
     Object.freeze({
       element: "the spectrum",
       provenance: "generative" as const,
       necessity: "answerable" as const,
-      reason:
-        "Hue advances with chord index, so colour reports position in the construction. Flatten it and the sheet loses a readout, not an ornament.",
+      reason: `Hue advances with chord index — ${envelope.bands.length} band${s(envelope.bands.length)} over ${envelope.chordCount} chords — so colour reports where in the family a chord sits. Flatten it to one colour and every chord stays exactly where it is: the sheet loses a readout, not an ornament, and no geometry moves.`,
     }),
     Object.freeze({
       element: "the ground colour",
       provenance: "control" as const,
       necessity: "free" as const,
       reason:
-        "Near-black because the studio's instruments are. A pale ground would read as a different studio; nothing measurable changes.",
+        "Near-black because the studio's instruments are. The ground is painted outside the figure group, and the drawing number hashes only that group's markup, so any ground colour whatsoever yields the same number — nothing measured on this sheet moves with it.",
     }),
   ]);
 }
@@ -502,13 +679,13 @@ function formatCensus(choices: readonly Choice[]): string {
 }
 
 function formatReceipt(
-  word: string,
+  letters: string,
   figure: Walk,
   reading: ReturnType<typeof read>,
   vocabulary: readonly string[] | undefined,
 ): string {
   const lines: string[] = [
-    `RECEIPT — ${word.toUpperCase()}`,
+    `RECEIPT — ${sheetName(letters)}`,
     "",
     "Read blind: path data and a vocabulary, nothing else. No manifest, no key,",
     "no record of the compile. The drawing is the only witness.",
@@ -528,7 +705,11 @@ function formatReceipt(
       "",
     );
   } else {
-    const recovered = reading.matches.includes(word.toUpperCase());
+    // Against the letters, not the raw string. `read()` returns words, and a
+    // word never carries the space that was pasted after it: matching on the raw
+    // input made `ring("DESCENT ")` print "spoken word recovered NO" over a
+    // receipt whose own line above it had just returned DESCENT.
+    const recovered = reading.matches.includes(letters);
     lines.push(
       `  returned                          ${reading.matches.join(", ") || "nothing"}`,
       `  spoken word recovered             ${recovered ? "yes" : "NO"}`,

@@ -16,11 +16,21 @@
     "forceConsistentCasingInFileNames": true,
 
     "verbatimModuleSyntax": true,
+    // The scripts import sibling sources by their real on-disk `.ts` specifier
+    // because they are run by tsx, which resolves exactly that. `noEmit` is on,
+    // so nothing is ever emitted that would carry an unresolvable extension.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "**/node_modules", "artifacts"]
+  "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
+  // `assets/` is ported vendor source carrying `// @ts-nocheck`. Naming it here
+  // pins one thing only: it can never become a program ROOT if an include glob
+  // above is later broadened. It does NOT keep those files out of the program --
+  // the scripts import them, so both enter as imports either way and stay silent
+  // on their own `@ts-nocheck`. Measured: deleting "assets" from this list today
+  // changes no diagnostic and tsc still exits 0.
+  "exclude": ["node_modules", "**/node_modules", "artifacts", "assets"]
 }

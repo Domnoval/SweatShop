@@ -202,10 +202,29 @@ type CodexRow = Readonly<{ n: string; t: string; e?: string; g?: string; m: stri
 
 const codex = (await import("../assets/codexdata.ts")) as {
   DATA: readonly CodexRow[];
-  TRADITIONS: Record<string, readonly [string, string]>;
+  TRADITIONS: Record<string, readonly string[]>;
 };
 const DATA = codex.DATA;
-const TRADITIONS = codex.TRADITIONS;
+
+/* `T` in assets/codexdata.ts is a bare `string[]` per tradition — the file is
+   `@ts-nocheck` vendor source and nothing in it holds an entry to a length of two.
+   Asserting the pair shape here instead of checking it is what would let a
+   one-element entry reach `TRADITIONS[t]![1]` at the emit site below, where it
+   reads `undefined` and writes the literal text "undefined" into the committed
+   correspondence table as a css custom-property name. Checking turns that silent
+   bad byte into a failed build. */
+const TRADITIONS: Record<string, readonly [string, string]> = {};
+for (const [key, meta] of Object.entries(codex.TRADITIONS)) {
+  const [label, cssVar] = meta;
+  if (meta.length !== 2 || label === undefined || cssVar === undefined) {
+    throw new Error(
+      `TRADITIONS.${key} in assets/codexdata.ts is ${JSON.stringify(meta)}; a tradition must be exactly ` +
+      "[label, css-custom-property]. Emitted as-is it writes a TRADITION_LABELS row whose second element is " +
+      `the text "undefined", and every downstream rule keyed on that property for ${key} then resolves to nothing.`,
+    );
+  }
+  TRADITIONS[key] = [label, cssVar];
+}
 
 /* ── the locked marks ─────────────────────────────────────────────────────── */
 

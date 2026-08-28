@@ -52,15 +52,109 @@ describe("the read is blind", () => {
     expect(read(walk("DESCENT", { square: "luna" }).paths).order).toBe(9);
   });
 
-  it("returns nothing at all when handed no line", () => {
+  it("returns nothing when the figure carries no node at all", () => {
+    // This test used to read "returns nothing at all when handed no line", and
+    // it was asserting a defect: a word whose letters all share a cell draws no
+    // line — one point is not a segment — so `no line` was taken to mean `no
+    // information` and A, AS, WE and every other one-cell word read back blank.
+    // The boundary is a node, not a line. No paths, no node, nothing to read.
     const empty = read([], { vocabulary: VOCAB });
     expect(empty.cells).toStrictEqual([]);
     expect(empty.matches).toStrictEqual([]);
     expect(empty.order).toBeUndefined();
+    expect(empty.orders).toStrictEqual([]);
+
+    // The counter-case, so the assertion above cannot quietly widen again: the
+    // same figure with no line but a cap reads back.
+    const capOnly = walk("A", { square: "jupiter", trace: "AGRIPPA" });
+    expect(capOnly.paths.map((p) => p.role)).toStrictEqual(["start-cap"]);
+    expect(read(capOnly.paths, { vocabulary: ["A"] }).cells).toStrictEqual([1]);
   });
 
   it("rejects an order that does not explain the points", () => {
     expect(inferOrder([[0, 0]])).toBeUndefined();
+  });
+
+  it("reads back a word whose letters all land on one cell", () => {
+    // The walk has no straight segment, so there is no line path — only a cap
+    // and one loop per repeat. Everything below reads back from those alone.
+    for (const [word, cells] of [
+      ["A", [1]],
+      ["AS", [1, 1]],
+      ["WE", [5, 5]],
+      ["AA", [1, 1]],
+      ["ZZ", [8, 8]],
+      ["QQQ", [8, 8, 8]],
+      ["ZZZZZZZZZ", [8, 8, 8, 8, 8, 8, 8, 8, 8]],
+    ] as const) {
+      const figure = walk(word, { square: "jupiter", trace: "AGRIPPA" });
+      expect(figure.paths.some((p) => p.role === "line")).toBe(false);
+      const reading = read(figure.paths, { vocabulary: [word] });
+      expect(`${word}: ${reading.cells.join("·")}`).toBe(`${word}: ${cells.join("·")}`);
+      expect(reading.matches).toContain(word);
+      expect(reading.order).toBe(4);
+    }
+  });
+
+  it("takes the repeat count off the nested loops, not off a guess", () => {
+    // ZZZZZZZZZ is nine letters on one Jupiter cell: one node, eight loops. The
+    // outer four are clamped to the same radius so they cannot fit the frame
+    // twice over, and the count survives that clamp because it is the number of
+    // loop paths, not their sizes.
+    const figure = walk("ZZZZZZZZZ", { square: "jupiter", trace: "AGRIPPA" });
+    expect(figure.paths.filter((p) => p.role === "loop")).toHaveLength(8);
+    expect(read(figure.paths).cells).toHaveLength(9);
+    // Ablation: drop the loops and the drawing says one letter, not nine. That
+    // is the census's own load-bearing claim for the loop glyph, measured.
+    expect(read(figure.paths.filter((p) => p.role !== "loop")).cells).toHaveLength(1);
+  });
+
+  it("reads a capless one-cell figure from its loop nodes", () => {
+    // LINEA draws no caps, so the loops are the only marks on the sheet. The
+    // node is the loop's own start point, which is the cell centre exactly.
+    const figure = walk("AS", { square: "jupiter", trace: "LINEA" });
+    expect(figure.paths.map((p) => p.role)).toStrictEqual(["loop"]);
+    expect(read(figure.paths, { vocabulary: ["AS"] }).matches).toStrictEqual(["AS"]);
+  });
+
+  it("reports every order one node admits rather than picking one", () => {
+    // A single point cannot pin a lattice down the way six can. E on Saturn is
+    // the centre cell, and every odd square puts a cell centre at 110 — so the
+    // drawing names four squares, not one. Reporting only the coarsest would
+    // print `order 3` with the confidence DESCENT's `order 4` is printed with.
+    const reading = read(walk("E", { square: "saturn" }).paths, { vocabulary: ["E"] });
+    expect(reading.orders).toStrictEqual([3, 5, 7, 9]);
+    expect(reading.squares).toStrictEqual(["saturn", "mars", "venus", "luna"]);
+    expect(reading.readings).toStrictEqual([[5], [13], [25], [41]]);
+    // Only Saturn's cell 5 is a value any letter carries, so the word survives
+    // the ambiguity — the reader narrows by the cipher, not by choosing early.
+    expect(reading.matches).toStrictEqual(["E"]);
+
+    // Six points on Jupiter admit exactly one order; the ambiguity is a property
+    // of the figure, not a new hedge on every read.
+    expect(read(walk("DESCENT").paths).orders).toStrictEqual([4]);
+  });
+
+  it("refuses to order two nodes with no line between them", () => {
+    // A cap says which node is first; nothing says what follows it. `walk()`
+    // never emits this figure, so refusing costs nothing on a real plate and
+    // keeps a hand-made one from reading back a word it does not carry.
+    const nodes = [
+      walk("A", { trace: "AGRIPPA" }).paths[0]!,
+      walk("B", { trace: "AGRIPPA" }).paths[0]!,
+    ];
+    const reading = read(nodes, { vocabulary: ["AB", "BA"] });
+    expect(reading.cells).toStrictEqual([]);
+    expect(reading.matches).toStrictEqual([]);
+  });
+
+  it("reads the same figure the same way twice, to the byte", () => {
+    for (const word of ["A", "AS", "ZZZZZZZZZ", "DESCENT", "BETWEEN"]) {
+      const paths = walk(word, { trace: "AGRIPPA" }).paths;
+      const once = JSON.stringify(read(paths, { vocabulary: [word, ...VOCAB] }));
+      const twice = JSON.stringify(read(paths, { vocabulary: [word, ...VOCAB] }));
+      expect(once).toBe(twice);
+    }
   });
 });
 
