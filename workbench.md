@@ -3,7 +3,13 @@
 Live state for the MK·137 spine commission. Always current.
 Build brief: "THE RING", drafted 2026-08-28. Branch `claude/sigil-painter-review-stx4s2`.
 
-**State: PHASES 1-7 BUILT. Peer gate returned four defects, under repair. Annotation layer, page wrapper and correspondence tests in flight. Adversarial grade queued behind them.**
+**State: ALL SEVEN STATIONS BUILT AND GRADED THREE TIMES. 462 tests · `tsc` exit 0 ·
+`pnpm verify:ring` exit 0. Six of seven done-bar items met; item 7 — "the grade comes
+back empty" — has not been met, and every finding from grade three is now repaired.**
+
+> This block has twice been flagged by graders as understating the build. It is now
+> rewritten on every commit that changes the answer, because a status document that
+> lags in the flattering direction is still lying.
 
 ---
 
@@ -330,9 +336,55 @@ noted that reading the workbench would *understate* the build. Recorded rather
 than silently swapped, because a status document that lies in the flattering
 direction is still lying.
 
+## Grading history — three rounds, and the one class that keeps returning
+
+| round | found | outcome |
+|---|---|---|
+| 1 — three lenses | 6 defects, 2 severe | all repaired |
+| 2 — two lenses | repairs held; **one repair made a census reason false** | repaired |
+| 3 — one lens | 3 defects, incl. **a false derivation in the sentence written to fix the previous false derivation** | repaired |
+
+**The recurring class, stated plainly so it stops being a surprise:** *a sentence
+printed on an artifact, or written in a comment or commit message, that states
+something untrue about the system that printed it.* Four generations:
+
+1. `census: "cusps are the walked cell sum minus one"` — false for every word; a fossil
+   of the pre-Phase-7 multiplier. Legend was corrected, census was not.
+2. `census: "read() hands back the same word with the cap deleted"` — true when written,
+   falsified by the read-station repair that taught the reader to use the cap.
+3. `"137 is prime, so every multiplier closes as a single cycle over all nodes"` —
+   primality gives a bijection, not a single cycle. m=10 closes as 17 (or 18 counting
+   node 0), not 1.
+4. The correction to (3) **mixed both conventions in one sentence** — quoted
+   `136/ord(m)` and then gave m=10 as eighteen while giving m=3 as one.
+
+Every one was right in conclusion and wrong in stated reason. None was caught by a
+test until a test was written for it; all four were caught by someone running the
+experiment the sentence named.
+
+### The countermeasure, and its limit
+
+`tests/ring.test.ts` audits every numeric claim in the census, legend and receipt
+against the engine, and refuses any claim no relation can evaluate. It has caught
+three of my own rewrites mid-edit. **Its scope stops at the emitted text** — source
+comments, README, this file and commit messages are outside the net, which is exactly
+where generation four survived. That is the known hole, recorded rather than papered.
+
+## Done bar — measured, not narrated
+
+| # | item | state |
+|---|---|---|
+| 1 | `ring <WORD>` → 4 artifacts for ANY word | met — 16 adversarial inputs, incl. emoji, RTL, CJK, 200 chars, `""` |
+| 2 | audit prints 170/170, unique count, collisions | met — 169 unique, `TIDE = TIME`, 0 unresolved |
+| 3 | fixtures exact, ACE/SUN collides | met — asserted; ACE is not in the 170, so the collision is shown on a probe set and on ACE's own receipt |
+| 4 | Break 1 through the golden-hash contract | met — only `plateId`/`requestDigest`/`astSha256` moved; every artwork hash unchanged |
+| 5 | one walk, one resolve, one press path | met in the executable stack; three HTML instruments stay in `assets/` as a live build input (deleting `symbolpaintermk137.html` fails the correspondence generator — verified by a grader running it) |
+| 6 | browser verification at desktop and 375px | met **and now reproducible**: `pnpm verify:ring`, committed, proven able to fail |
+| 7 | the grade comes back empty | **not met** |
+
 ## Next move
 
-Integrate the four in-flight streams, then act on the three-lens adversarial grade.
+Item 7. Everything grade three found is repaired; the next pass grades that.
 
 ## Census — this build's own choices so far
 
