@@ -110,12 +110,9 @@ function smooth(points: readonly Point[], closed: boolean): string {
  * Two half-arcs rather than one, because a single arc command cannot close a full
  * circle — start and end would coincide and the arc would be discarded.
  */
-function loopPath(at: Point, incoming: Point, radius: number): string {
-  const len = Math.hypot(incoming[0], incoming[1]) || 1;
-  const nx = -incoming[1] / len;
-  const ny = incoming[0] / len;
+function loopPath(at: Point, normal: Point, radius: number): string {
   const r = Math.min(radius, maxLoopRadius(at));
-  const far: Point = [at[0] + nx * r * 2, at[1] + ny * r * 2];
+  const far: Point = [at[0] + normal[0] * r * 2, at[1] + normal[1] * r * 2];
   return (
     `M${f(at[0])} ${f(at[1])}` +
     ` A${f(r)} ${f(r)} 0 1 1 ${f(far[0])} ${f(far[1])}` +
@@ -133,6 +130,29 @@ function loopPath(at: Point, incoming: Point, radius: number): string {
  * ink that a browser would have cropped into looking correct, and that layout
  * would have reserved space for regardless.
  */
+/**
+ * Unit normal of the segment arriving at `points[i]` — where a loop hangs.
+ *
+ * Exported because the reader needs the identical rule. A loop's placement is
+ * what tells the reader which *visit* it belongs to when a walk touches one cell
+ * more than once, so writer and reader must agree exactly. Two copies of this
+ * calculation that drift apart would put the doubled beat on the wrong syllable
+ * and the round trip would fail with no error anywhere.
+ */
+export function arrivalNormal(points: readonly Point[], i: number): Point {
+  const at = points[i]!;
+  const prev = i > 0 ? points[i - 1] : undefined;
+  const next = i + 1 < points.length ? points[i + 1] : undefined;
+  const inc: Point =
+    prev !== undefined && (prev[0] !== at[0] || prev[1] !== at[1])
+      ? [at[0] - prev[0], at[1] - prev[1]]
+      : next !== undefined && (next[0] !== at[0] || next[1] !== at[1])
+        ? [next[0] - at[0], next[1] - at[1]]
+        : [0, -1];
+  const len = Math.hypot(inc[0], inc[1]) || 1;
+  return [-inc[1] / len, inc[0] / len];
+}
+
 function maxLoopRadius(at: Point): number {
   const toEdge = Math.min(at[0], at[1], BOX - at[0], BOX - at[1]);
   return Math.max(0, toEdge / 2);
@@ -184,17 +204,20 @@ export function walk(input: string, options: WalkOptions = {}): Walk {
   // The line runs through distinct consecutive positions; a repeat contributes a
   // loop instead of a zero-length segment.
   const linePoints: Point[] = [];
-  const repeats: { at: Point; depth: number }[] = [];
-  let depth = 0;
+  const loopsPerLinePoint: number[] = [];
   steps.forEach((s, i) => {
     if (s.repeatsPrevious) {
-      depth += 1;
-      repeats.push({ at: [s.x, s.y], depth });
+      // Belongs to the visit already on the line, not to a coordinate lookup —
+      // a cell touched twice has two visits at identical coordinates, and
+      // searching by position attaches the beat to whichever came first.
+      const last = loopsPerLinePoint.length - 1;
+      if (last >= 0) loopsPerLinePoint[last] = loopsPerLinePoint[last]! + 1;
       return;
     }
-    depth = 0;
     linePoints.push(points[i]!);
+    loopsPerLinePoint.push(0);
   });
+  const loopCount = loopsPerLinePoint.reduce((a, b) => a + b, 0);
 
   const paths: WalkPath[] = [];
   const closed = trace === "ROSETTA";
@@ -209,24 +232,18 @@ export function walk(input: string, options: WalkOptions = {}): Walk {
   }
 
   const cellStep = SPAN / square.n;
-  repeats.forEach(({ at, depth: k }) => {
-    const idx = points.findIndex((p) => p[0] === at[0] && p[1] === at[1]);
-    const prev = idx > 0 ? points[idx - 1]! : undefined;
-    const next = idx >= 0 && idx + 1 < points.length ? points[idx + 1]! : undefined;
-    // Orient off the incoming direction where there is one, else the outgoing,
-    // else a fixed reference so a word of one repeated letter still draws.
-    const incoming: Point =
-      prev !== undefined && (prev[0] !== at[0] || prev[1] !== at[1])
-        ? [at[0] - prev[0], at[1] - prev[1]]
-        : next !== undefined && (next[0] !== at[0] || next[1] !== at[1])
-          ? [next[0] - at[0], next[1] - at[1]]
-          : [0, -1];
-    paths.push(
-      Object.freeze({
-        d: loopPath(at, incoming, cellStep * 0.18 * (1 + 0.55 * (k - 1))),
-        role: "loop" as const,
-      }),
-    );
+  loopsPerLinePoint.forEach((count, j) => {
+    if (count === 0) return;
+    const at = linePoints[j]!;
+    const normal = arrivalNormal(linePoints, j);
+    for (let k = 1; k <= count; k += 1) {
+      paths.push(
+        Object.freeze({
+          d: loopPath(at, normal, cellStep * 0.18 * (1 + 0.55 * (k - 1))),
+          role: "loop" as const,
+        }),
+      );
+    }
   });
 
   if (caps && linePoints.length > 0) {
@@ -269,7 +286,7 @@ export function walk(input: string, options: WalkOptions = {}): Walk {
     paths: Object.freeze(paths),
     activatedCells: Object.freeze([...new Set(steps.map((s) => s.cell))].sort((a, b) => a - b)),
     segmentCount: Math.max(0, linePoints.length - 1),
-    loopCount: repeats.length,
+    loopCount,
     resolution,
   });
 }

@@ -19,6 +19,7 @@ export {
   type SquareId,
 } from "./squares.js";
 export {
+  arrivalNormal,
   cellXY,
   TRACE_IDS,
   walk,
@@ -30,3 +31,18 @@ export {
   type WalkPathRole,
   type WalkStep,
 } from "./walk.js";
+export {
+  inferOrder,
+  inverseCipher,
+  read,
+  type Reading,
+  type ReadOptions,
+} from "./read.js";
+export {
+  auditVocabulary,
+  formatReceipt,
+  type AuditOptions,
+  type AuditReport,
+  type Collision,
+  type WordAudit,
+} from "./audit.js";
