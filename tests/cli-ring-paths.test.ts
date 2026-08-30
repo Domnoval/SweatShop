@@ -239,50 +239,82 @@ const OUT = "artifacts/ring";
  * produced then, and every one of these changing is every one of those artifacts
  * becoming unfindable. A test that only checked internal consistency would let a
  * whole new naming scheme through in silence; this table will not.
+ *
+ * EVERY ROW BELOW MOVED ONCE, at the v1 -> v2 digest bump, and this note is the
+ * log of it. `--cipher` landed because the instrument grew a CIPHER control that
+ * did nothing, and a flag that changes the drawing has to change the name or
+ * `ring SUN` and `ring SUN --cipher NAEQ` overwrite each other's four files. The
+ * cipher therefore joined the digest, and a digest input that gained a field
+ * gives different digests — all of them, not just the ones using the new flag.
+ * Appending the cipher only when it was non-default would have kept every one of
+ * these strings, and that is exactly why it was not done: see `ringDigest`.
+ *
+ * The rows were regenerated from `ringStem` at that bump, which makes this table
+ * circular for one commit and load-bearing again from the next. The cipher rows
+ * at the bottom are the ones that were never circular: they were written down
+ * before the flag could produce them, from the requirement that three ciphers
+ * mean three addresses.
  */
-const FROZEN: readonly (readonly [word: string, square: string | undefined, stem: string])[] =
-  Object.freeze([
+const FROZEN: readonly (readonly [
+  word: string,
+  square: string | undefined,
+  stem: string,
+  cipher?: string,
+])[] = Object.freeze([
     // The collision, resolved four ways.
-    ["SUN DOG", undefined, "sun-dog-fe7b55c6e126bdf3"],
-    ["SUN-DOG", undefined, "sun-dog-e67e12f2b3b140b7"],
-    ["SUN_DOG", undefined, "sun-dog-af37a390d2502862"],
-    ["SUN.DOG", undefined, "sun-dog-08a9f6df0b214573"],
-    ["sun dog", undefined, "sun-dog-c2bae3384d939c15"],
-    ["SUNDOG", undefined, "sundog-07a6f9d13c146308"],
+    ["SUN DOG", undefined, "sun-dog-b1b317bc6d09b356"],
+    ["SUN-DOG", undefined, "sun-dog-05e738dc00fe43ac"],
+    ["SUN_DOG", undefined, "sun-dog-ec6bb9fe39fe8412"],
+    ["SUN.DOG", undefined, "sun-dog-29f29ac06b1ad0e9"],
+    ["sun dog", undefined, "sun-dog-c6a53e596ff8f33e"],
+    ["SUNDOG", undefined, "sundog-22966c13f4ae09a4"],
 
-    ["well-being", undefined, "well-being-85711bed9cbb321b"],
-    ["well being", undefined, "well-being-71ae3530082c53b1"],
-    ["well_being", undefined, "well-being-ed0cda467d429e9f"],
+    ["well-being", undefined, "well-being-6d761e35dc72a5b5"],
+    ["well being", undefined, "well-being-88095383a57d72cf"],
+    ["well_being", undefined, "well-being-4d3166a996a4774e"],
 
-    ["CAFÉ", undefined, "cafe-f0713e5204e7eaa4"],
-    ["CAFÈ", undefined, "cafe-f6b144fce1191b0b"],
-    ["CAFE", undefined, "cafe-bd3fe43a65377efa"],
+    ["CAFÉ", undefined, "cafe-976a7d49fe36b7c7"],
+    ["CAFÈ", undefined, "cafe-924e40a73e63413c"],
+    ["CAFE", undefined, "cafe-7ce6b7da171e7358"],
 
     // Folded, not deleted.
-    ["ÆGISHJÁLMUR", undefined, "aegishjalmur-899e267f3feff375"],
-    ["AEGISHJALMUR", undefined, "aegishjalmur-baf8b457f11d6441"],
-    ["ÆØÞ", undefined, "aeoth-543ad96b02c2b36b"],
-    ["STRAßE", undefined, "strasse-adada2654dba7767"],
-    ["STRASSE", undefined, "strasse-80f5b33dd5548c48"],
-    ["ŁÓDŹ", undefined, "lodz-fa23a821c7506acf"],
-    ["LODZ", undefined, "lodz-7fd7e1e1edcbb5e4"],
+    ["ÆGISHJÁLMUR", undefined, "aegishjalmur-6aed2451d08f5d73"],
+    ["AEGISHJALMUR", undefined, "aegishjalmur-3b8310c29906de31"],
+    ["ÆØÞ", undefined, "aeoth-4ff34b5bddb4db8b"],
+    ["STRAßE", undefined, "strasse-3b0288be7d1cfa44"],
+    ["STRASSE", undefined, "strasse-fe86d9cb9d39b523"],
+    ["ŁÓDŹ", undefined, "lodz-d2ffb31bd06c6434"],
+    ["LODZ", undefined, "lodz-8f1c6590e4ddc8e4"],
 
     // Nothing to render: `word-`, never the empty string.
-    ["", undefined, "word-d3111ac6a6141019"],
-    ["   ", undefined, "word-1a32cfa7cec39e4a"],
-    ["🙂", undefined, "word-d83223a286cf90dd"],
-    ["ᛒ", undefined, "word-691036d0567c0777"],
+    ["", undefined, "word-4e5390c0bd7746c7"],
+    ["   ", undefined, "word-baea50f6ba762df0"],
+    ["🙂", undefined, "word-fd80ecda6ae76632"],
+    ["ᛒ", undefined, "word-15c670ac89621571"],
 
     // Hazards, defused.
-    ["../../../etc/passwd", undefined, "etc-passwd-57007bead2225421"],
-    [".sheet.svg", undefined, "sheet-svg-8097e4c799193a57"],
+    ["../../../etc/passwd", undefined, "etc-passwd-96c3098b9f51007e"],
+    [".sheet.svg", undefined, "sheet-svg-d8663e58bb1892f7"],
 
     // The square is part of the address, because it is part of the request.
-    ["SUN", undefined, "sun-91480aad13a13a1b"],
-    ["SUN", "mars", "sun-7c3e02960d3b5145"],
-    ["SUN", "venus", "sun-3e93dcbe24d2022a"],
-    ["", "sol", "word-c389c43f58b35f1b"],
-    ["", "", "word-35e2d4c5d75b811e"],
+    ["SUN", undefined, "sun-0f746798450b27a8"],
+    ["SUN", "mars", "sun-dbe7706d2ac38f8a"],
+    ["SUN", "venus", "sun-dd3a887e0870ffc8"],
+    ["", "sol", "word-cb1e360e12fc63f8"],
+    ["", "", "word-e2beb8fce6d86ddb"],
+
+    // The cipher is part of the address for the same reason the square is: it
+    // changes the drawing. Three ciphers, three stems — and none of them is
+    // `sun-0f746798450b27a8` three rows up, which is bare `ring SUN`. Passing
+    // `--cipher PYTH` explicitly is a DIFFERENT address from passing nothing,
+    // even though PYTH is the default and the two plates are byte-identical.
+    // That is what a digest over the REQUEST means, and the alternative —-
+    // normalising defaults away before hashing — is the conditional digest
+    // `ringDigest` refuses to be.
+    ["SUN", undefined, "sun-02867254c211f532", "PYTH"],
+    ["SUN", undefined, "sun-dc6b434909346f22", "NAEQ"],
+    ["SUN", undefined, "sun-08d13484ce702ae8", "HEB"],
+    ["SUN", "mars", "sun-d59035ca3c070832", "NAEQ"],
   ]);
 
 /* ── scratch directories ─────────────────────────────────────────────────── */
@@ -315,17 +347,21 @@ function artifactsFor(tag: string): Artifacts {
 
 describe("the stem is a published address", () => {
   it("produces exactly the stems the shipped CLI produces", () => {
-    for (const [word, square, expected] of FROZEN) {
-      expect(ringStem(OUT, word, square), `stem for ${JSON.stringify(word)}`).toBe(
-        `${OUT}/${expected}`,
-      );
+    for (const [word, square, expected, cipher] of FROZEN) {
+      expect(
+        ringStem(OUT, word, square, cipher),
+        `stem for ${JSON.stringify(word)} on ${String(square)} under ${String(cipher)}`,
+      ).toBe(`${OUT}/${expected}`);
     }
+    // Every row is a distinct address. A table of addresses with a duplicate in
+    // it is a table that has already lost the property it exists to hold.
+    expect(new Set(FROZEN.map((r) => r[2])).size).toBe(FROZEN.length);
   });
 
-  it("is a pure function of (outDir, word, square) — 200 calls, one answer", () => {
-    for (const [word, square, expected] of FROZEN) {
+  it("is a pure function of (outDir, word, square, cipher) — 200 calls, one answer", () => {
+    for (const [word, square, expected, cipher] of FROZEN) {
       const answers = new Set<string>();
-      for (let i = 0; i < 200; i += 1) answers.add(ringStem(OUT, word, square));
+      for (let i = 0; i < 200; i += 1) answers.add(ringStem(OUT, word, square, cipher));
       expect([...answers]).toEqual([`${OUT}/${expected}`]);
     }
   });
@@ -691,7 +727,7 @@ describe("the CLI has one implementation of this and imports it", () => {
   it("imports the helpers rather than carrying its own", () => {
     expect(source).toMatch(/import \{[^}]*\bringStem\b[^}]*\} from "\.\/ring-paths\.js"/u);
     expect(source).toMatch(/import \{[^}]*\bwriteRingArtifacts\b[^}]*\} from "\.\/ring-paths\.js"/u);
-    expect(source).toMatch(/\bringStem\(outDir, word, square\)/u);
+    expect(source).toMatch(/\bringStem\(outDir, word, square, cipher\)/u);
   });
 
   it("carries no second copy of the fold table or the strip regex", () => {

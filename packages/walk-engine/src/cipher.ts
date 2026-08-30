@@ -72,6 +72,22 @@ export function digitSum(value: number): number {
  * after it. Zero maps to `max` rather than falling off the board.
  */
 export function reduceToCell(value: number, max: number): number {
+  // `max` is the CELL COUNT — `order * order`, so 9 for Saturn's 3x3 and 81 for
+  // Luna's 9x9 — and not the order. Below 9 the loop cannot terminate: the digit
+  // sum of a one-digit number is itself, so `reduceToCell(5, 3)` spins forever
+  // on a value it can never get under. That is not hypothetical. Wiring the
+  // reader's inverse cipher to a lattice's `order` instead of its cell count
+  // hung the whole process on the word SUN, silently, with no stack to read —
+  // and a browser tab has no timeout to save it. A hang is the worst failure
+  // mode available here, so it is turned into a sentence.
+  if (!Number.isInteger(max) || max < 9) {
+    throw new PlateError(
+      "INVALID_REQUEST",
+      `reduceToCell needs a cell count of at least 9, got ${max}. ` +
+        "This argument is order squared, not the order — the smallest square in the set is 3x3, which is 9 cells.",
+      { max, value },
+    );
+  }
   let v = value;
   while (v > max) v = digitSum(v);
   return v === 0 ? max : v;

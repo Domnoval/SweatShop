@@ -1,15 +1,23 @@
 /**
- * THE RING — one word in, four artifacts out.
+ * THE RING — one word in, five artifacts out.
  *
  * The **sheet** is the painted plate; the **legend** numbers every mark back to
  * the codex entry and the rule that placed it; the **census** grades every choice
- * the sheet made; the **receipt** reads the mark back and returns the word.
+ * the sheet made; the **mode census** measures the composition field the concept
+ * asked for; the **receipt** reads the mark back and returns the word.
  *
- * The four exist together on purpose. A sheet on its own is a picture, and a
- * picture cannot be checked. The legend says where each element came from, the
- * census says which choices were forced and which were taste, and the receipt
- * proves the figure still carries the word — read blind, from geometry and public
- * rules alone. Any one of them alone would be a caption.
+ * They exist together on purpose. A sheet on its own is a picture, and a picture
+ * cannot be checked. The legend says where each element came from, the census
+ * says which choices were forced and which were taste, the mode census reports
+ * what the composition construction actually placed, and the receipt proves the
+ * figure still carries the word — read blind, from geometry and public rules
+ * alone. Any one of them alone would be a caption.
+ *
+ * The fifth is new. Until `@studio137/mode-engine` existed, every concept in the
+ * table carried a `composition.mode` — `lunar` asks for cymatic, `war` for
+ * haring — and this module read only `planet` and `brushes`, so every word drew
+ * the same construction. The mode is dispatched on now, on the same terms the
+ * square rides on, and the mode census is where its measurements go.
  *
  * The sheet is a PLATE, not a picture: A4 at its stated print size, with the
  * figure in a drawing field and an annotation layer around it carrying the
@@ -37,11 +45,23 @@ import {
 import { GEOMETRY_V2_SOURCE } from "@studio137/glyph-registry";
 import { envelopeFromWalk, type EnvelopeFamily } from "@studio137/envelope-engine";
 import {
+  baseStampRadius,
+  contextFromWalk,
+  fieldFromWalk,
+  isModeId,
+  MODE_IDS,
+  modeSpec,
+  requestedFor,
+  type ModeField,
+  type ModeId,
+} from "@studio137/mode-engine";
+import {
   digitString,
   kamea,
   read,
   resolve,
   walk,
+  type CipherId,
   type SquareId,
   type TraceId,
   type Walk,
@@ -74,21 +94,54 @@ export type RingArtifacts = Readonly<{
   walk: Walk;
   envelope: EnvelopeFamily;
   correspondence: ConceptCorrespondence | undefined;
+  /**
+   * The composition field the concept's `mode` asked for, or `undefined` where
+   * no concept rides these letters and the envelope is the whole figure.
+   */
+  mode: ModeField | undefined;
   marks: readonly PlacedMark[];
   choices: readonly Choice[];
   sheetSvg: string;
   legend: string;
   census: string;
+  /**
+   * The MODE CENSUS — the fifth text, and the one that carries numbers.
+   *
+   * The four above grade choices and state derivations; this one reports
+   * measurements of a single layer: how many stamps the construction was asked
+   * for, how many it placed, what it contracted by, where its ink actually
+   * landed, and what each of the other nine modes would have asked the same word
+   * for. Every quantity in it is checked by a relation in
+   * `tests/mode-engine.test.ts`, the same way `tests/ring.test.ts` checks every
+   * quantity in the census and the legend — one text, one auditing suite, so
+   * neither table has to know about the other's sentences.
+   */
+  modeCensus: string;
   receipt: string;
 }>;
 
 export type RingOptions = Readonly<{
   square?: SquareId;
   trace?: TraceId;
+  /**
+   * Which cipher turns a letter into a number. Defaults to `PYTH`.
+   *
+   * This option did not exist until the instrument grew a CIPHER control and the
+   * control did nothing: `ring()` passed the literal `"PYTH"` to `walk()` and
+   * three quarters of the picker was decoration. `walk()` has taken a cipher
+   * since it was written — the gap was only ever here.
+   */
+  cipher?: CipherId;
   /** Words the receipt may return. The reader carries no vocabulary of its own. */
   vocabulary?: readonly string[];
   /** Most marks to place around the figure. */
   maxMarks?: number;
+  /**
+   * Override the composition mode the concept names. `"none"` paints no field at
+   * all, which is what every plate in this system looked like before the mode
+   * engine existed — the control the contact sheet is read against.
+   */
+  mode?: ModeId | "none";
 }>;
 
 const BOX = 220;
@@ -108,6 +161,9 @@ export const SPECTRUM: readonly string[] = Object.freeze([
 
 /** Where the square came from, so the census can say which without guessing. */
 type SquareSource = "requested" | "concept" | "house";
+
+/** Where the composition mode came from. Same discipline as `SquareSource`. */
+type ModeSource = "requested" | "concept" | "none";
 
 /** The square a word with no concept walks. */
 const HOUSE_SQUARE: SquareId = "jupiter";
@@ -150,6 +206,9 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   // sheet; nothing here can refuse.
   const square = options.square ?? correspondence?.kamea ?? HOUSE_SQUARE;
   const trace = options.trace ?? "AGRIPPA";
+  // PYTH is the house cipher and stays the default: every plate this system has
+  // drawn was drawn on it, and a default that moved would silently rewrite them.
+  const cipher = options.cipher ?? "PYTH";
   const squareSource: SquareSource =
     options.square !== undefined
       ? "requested"
@@ -161,11 +220,51 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   // still records every dropped character in `walk.resolution.dropped`. The
   // letters it keeps are the same either way, so the drawing is too — which is
   // what makes the two calls byte-identical rather than merely similar.
-  const figure = walk(word, { square, trace, cipher: "PYTH" });
+  const figure = walk(word, { square, trace, cipher });
   const envelope = envelopeFromWalk(figure);
 
+  // THE MODE RIDES THE SAME WAY THE SQUARE DOES.
+  //
+  // Every concept in the table has always carried `composition.mode` — `lunar`
+  // asks for cymatic, `war` for haring — and nothing read it, so both drew the
+  // same figure. It is read here, and it rides on exactly the terms the square
+  // rides on: the caller may name one outright, the concept names one otherwise,
+  // and a word with NO concept paints no field at all and falls back to the
+  // envelope, which is what every plate in this system was.
+  //
+  // `isModeId` is not decoration. `ModeKey` in the correspondence table and
+  // `ModeId` in the mode engine are two separately authored unions over the same
+  // ten names — the table's is currently nine, because no concept asks for
+  // minimal — and the day one gains a name the other does not, this returns
+  // false and the sheet falls back to the envelope instead of throwing on a
+  // word. Nothing here may refuse an input.
+  const conceptMode = correspondence?.composition.mode;
+  const modeSource: ModeSource =
+    options.mode !== undefined
+      ? "requested"
+      : conceptMode !== undefined && isModeId(conceptMode)
+        ? "concept"
+        : "none";
+  const mode: ModeId | undefined =
+    options.mode === "none"
+      ? undefined
+      : options.mode !== undefined
+        ? options.mode
+        : modeSource === "concept"
+          ? (conceptMode as ModeId)
+          : undefined;
+  const field = mode === undefined ? undefined : fieldFromWalk(figure, mode);
+
   const marks = placeMarks(correspondence, options.maxMarks ?? 8);
-  const choices = gradeChoices(figure, envelope, correspondence, squareSource, letters);
+  const choices = gradeChoices(
+    figure,
+    envelope,
+    correspondence,
+    squareSource,
+    letters,
+    field,
+    modeSource,
+  );
 
   // The drawing is composed and hashed BEFORE it is annotated, and the hash is
   // the drawing number the annotation prints. A sheet cannot carry the checksum
@@ -173,7 +272,7 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   // identifies the DRAWING: the markup inside `<g id="figure">`, in figure units,
   // before placement. That string is delimited verbatim in the emitted file, so
   // a stranger can cut it out and rehash it without trusting this code.
-  const ink = composeFigure(figure, envelope, marks);
+  const ink = composeFigure(figure, envelope, marks, field);
   const sheetId = sha256Hex(ink).slice(0, 16);
 
   // Placed once, and the same string is both measured and emitted. The stroke
@@ -197,7 +296,23 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
   // House rule 4, on the finished artifact rather than on any one layer.
   assertNoText(sheetSvg);
 
+  // THE READER IS TOLD THE CIPHER, AND THAT IS NOT CHEATING.
+  //
+  // House rule 8 says the read is blind: `read()` gets the path data and a word
+  // list, never the walk it is trying to recover. The cipher is not part of the
+  // walk — it is the convention the plate DECLARES, printed on the first line of
+  // its own legend next to the square and the trace. A reader holding the sheet
+  // can see it. What the reader still has to do without is which letters were
+  // spoken, and it does.
+  //
+  // This line passed no cipher until `--cipher` existed, which cost nothing while
+  // `ring()` hardcoded PYTH and became a silent falsehood the moment it stopped:
+  // the receipt read every plate as if it were PYTH, so NAEQ recovered 0 of the
+  // 170 vocabulary words and HEB recovered 114. Not because those ciphers are
+  // unreadable — because the reader was being handed the wrong key and reporting
+  // the miss as a property of the drawing.
   const reading = read(figure.paths, {
+    cipher,
     ...(options.vocabulary === undefined ? {} : { vocabulary: options.vocabulary }),
   });
 
@@ -212,11 +327,23 @@ export function ring(word: string, options: RingOptions = {}): RingArtifacts {
     walk: figure,
     envelope,
     correspondence,
+    mode: field,
     marks,
     choices,
     sheetSvg,
-    legend: formatLegend(letters, figure, envelope, correspondence, marks, sheetId, squareSource),
+    legend: formatLegend(
+      letters,
+      figure,
+      envelope,
+      correspondence,
+      marks,
+      sheetId,
+      squareSource,
+      field,
+      modeSource,
+    ),
     census: formatCensus(choices),
+    modeCensus: formatModeCensus(letters, figure, field, modeSource, correspondence),
     receipt: formatReceipt(letters, figure, reading, options.vocabulary),
   });
 }
@@ -265,8 +392,69 @@ function composeFigure(
   figure: Walk,
   envelope: EnvelopeFamily,
   marks: readonly PlacedMark[],
+  field: ModeField | undefined,
 ): string {
   const layers: string[] = [];
+
+  // THE MODE FIELD, painted FIRST — under the envelope, under the marks, under
+  // the walk.
+  //
+  // MEASURED BEFORE IT WAS ARGUED, because the first version of this comment was
+  // wrong. It claimed that a dense field over the chords buries the caustic and
+  // makes the plate's own instruction — *count the cusps to check this sheet* —
+  // uncheckable. Rendering both orders says otherwise: over three words in all
+  // ten modes at 880 px, restacking the two groups changes between 0.19% and
+  // 2.94% of the figure's pixels (worst case WAR in lattice, 22,742 of 774,400),
+  // and the three cusps of LUNAR's deltoid are countable either way. The stamps
+  // are open outlines with thin strokes, so they simply do not occlude much.
+  //
+  // The order is kept anyway, and the reason is about what is true BY
+  // CONSTRUCTION rather than what is true of today's stamps. The envelope's node
+  // count was cut to 137 because at Venus's 1225 the caustic vanished into
+  // texture and the instruction became a false claim on the artifact. Underneath
+  // the chords, no mode can reintroduce that failure — a future stamp with a
+  // filled role would occlude the caustic outright from above, and from below it
+  // cannot. Every claim the plate made before this layer existed is still
+  // checkable with the layer in place, whatever the layer later draws.
+  //
+  // Every path arrives in figure units with its coordinates already absolute —
+  // no transform is opened here, so what the containment test reads off the `d`
+  // string is where the ink is.
+  //
+  // HUE, and exactly what a reader can do with it. It comes through the same
+  // `SPECTRUM` the envelope's bands use, and reports which of the walk's
+  // distinct cells the stamp stands for. The map from swatch to cell is
+  // injective on all 1700 word-by-mode pairs — no two cells ever share a colour,
+  // and the ramp has 12 swatches against a largest activated set well inside it.
+  // So counting the colours gives you the cells the field STAMPED, which is the
+  // whole activated set only when the construction places enough marks to show
+  // them: where a field puts at least one stamp per walked letter, all 1501 such
+  // pairs recover the activated set exactly, and 1510 of the 1700 recover it in
+  // all. The 190 that do not are two modes that structurally cannot — `minimal`
+  // draws 3 marks and fails on 161 of the 170 words, `metatron` draws 13 and
+  // fails on 29 — and on those the colours are a proper SUBSET of the activated
+  // set, never a wrong one.
+  //
+  // The sentence this replaced said "count the colours and you have the
+  // activated set" flatly, which was false for 190 pairs and false for almost
+  // every word in the mode the table gives to `stillness`. Its numbers are
+  // recomputed in `tests/mode-engine.test.ts`, which reads this comment out of
+  // the source and fails on any numeral it cannot produce.
+  if (field !== undefined && field.paths.length > 0) {
+    layers.push(
+      `<g id="mode-${field.mode}" fill="none" stroke-linejoin="round" stroke-linecap="round">` +
+        field.paths
+          .map((p) => {
+            const colour = SPECTRUM[Math.min(SPECTRUM.length - 1, Math.floor(p.hue * SPECTRUM.length))]!;
+            return (
+              `<path d="${p.d}" stroke="${colour}" stroke-width="${p.strokeWidth}" ` +
+              `opacity="${p.opacity.toFixed(3)}"/>`
+            );
+          })
+          .join("") +
+        `</g>`,
+    );
+  }
 
   const ENVELOPE_STROKE = 0.22;
   layers.push(
@@ -413,6 +601,64 @@ function multiplierDerivation(figure: Walk, envelope: EnvelopeFamily): string {
   );
 }
 
+/**
+ * The mode section of the legend, in prose that carries no numeral.
+ *
+ * Deliberately, and the reason is a rule this repository already enforces on
+ * itself: `tests/ring.test.ts` audits every sentence of the legend and the
+ * census, and a sentence that carries a number no relation there can evaluate is
+ * a failure — that rule is how the last false derivation was caught. The mode's
+ * measured quantities therefore go where a suite audits them, in `modeCensus`,
+ * and what the legend says here is what a reader needs in order to know what to
+ * look at: which construction painted the field, who chose it, and what the
+ * stamps are figures of.
+ */
+function legendModeSection(
+  field: ModeField | undefined,
+  modeSource: ModeSource,
+  correspondence: ConceptCorrespondence | undefined,
+): readonly string[] {
+  if (field === undefined) {
+    return [
+      "THE COMPOSITION MODE",
+      correspondence === undefined
+        ? "  none. No concept rides these letters, so no composition names a mode and this"
+        : "  none. The caller asked for no field, so the concept's mode was not painted and this",
+      "  plate carries the envelope and the walk alone — which is every plate this system",
+      "  drew before the mode engine read the composition table.",
+      "",
+    ];
+  }
+  return [
+    "THE COMPOSITION MODE",
+    `  mode         ${field.mode}`,
+    `  chosen by    ${
+      modeSource === "requested"
+        ? "the caller, outright"
+        : `the concept "${correspondence?.concept ?? "?"}", whose composition names it`
+    }`,
+    "",
+    "  The mode is a CONSTRUCTION, not a style: it decides where the next mark goes.",
+    "  Its field is drawn UNDER the envelope, under the correspondence marks and",
+    "  under the walk, so nothing this plate could be checked against before the",
+    "  layer existed is occluded by it — the cusps of the caustic above all. The",
+    "  whole construction is then contracted about the centre of the frame until",
+    "  its ink is inside the margin the drawing field keeps clear: the painter it",
+    "  was ported from bleeds off its canvas on purpose, and a plate may not.",
+    "",
+    "  Each mark in the field is a star polygon whose vertex count and whose skip",
+    "  are read off the walked cell it stands for, so the field is a figure of the",
+    "  cells rather than a pattern laid over them. Its hue reports which of the",
+    "  walk's distinct cells that is, on the same ramp the envelope's bands use.",
+    "",
+    "  Every measured quantity of this layer — the stamps asked for, the stamps",
+    "  placed, the contraction, the ink box, and what each of the other modes would",
+    "  have asked this word for — is printed on the MODE CENSUS, which is a",
+    "  separate text so that every number on it can be checked against the engine.",
+    "",
+  ];
+}
+
 function formatLegend(
   letters: string,
   figure: Walk,
@@ -421,6 +667,8 @@ function formatLegend(
   marks: readonly PlacedMark[],
   sheetId: string,
   squareSource: SquareSource,
+  field: ModeField | undefined,
+  modeSource: ModeSource,
 ): string {
   const lines: string[] = [
     `LEGEND — ${sheetName(letters)}`,
@@ -527,6 +775,8 @@ function formatLegend(
     );
   }
 
+  lines.push(...legendModeSection(field, modeSource, correspondence));
+
   if (marks.length === 0 && correspondence === undefined) {
     // The old text blamed "the concept's brushes" here, on sheets that have no
     // concept at all — SWEATSHOP's legend said a concept it does not have chose
@@ -566,12 +816,132 @@ function formatLegend(
  *   - A reason may only claim what the code it describes actually does. Every
  *     string below was re-read against its module before it was written.
  */
+/**
+ * What the mode contributed, and what would differ under a different one.
+ *
+ * Three choices, and every reason below states a consequence a reader could go
+ * and check on a second plate — which is what house rule 6 asks for. They carry
+ * no numeral for the reason `legendModeSection` gives: the numbers are on the
+ * mode census, where a relation table checks each of them.
+ *
+ * The alternative named in the first reason is not decorative. It is the mode
+ * the CONTACT SHEET is read against, and the sentence says what the two
+ * constructions actually do differently — where the stamps land, whether ink
+ * reaches the border, whether anything but stamps is drawn — rather than calling
+ * one busier than the other.
+ */
+function gradeModeChoices(
+  field: ModeField | undefined,
+  modeSource: ModeSource,
+  correspondence: ConceptCorrespondence | undefined,
+  letters: string,
+): readonly Choice[] {
+  if (field === undefined) {
+    return [
+      Object.freeze({
+        element: "the composition mode",
+        provenance: "control" as const,
+        necessity: "free" as const,
+        reason:
+          modeSource === "requested"
+            ? "The caller asked for no field, so no construction painted one and this plate is the envelope and the walk. Name any of the ten and a field of stamps appears over the envelope, every one of them a figure of a walked cell, and the drawing number changes with the ink."
+            : `No concept rides ${letters === "" ? "an input with no letters" : `"${letters}"`}, so no composition names a mode and this plate carries the envelope and the walk alone — which is what every plate in this system carried before the mode engine read the composition table. Put these letters in the concept table and the mode it names paints a field over the envelope; nothing about the walk, the cusps or the receipt moves, because none of them is downstream of the field.`,
+      }),
+    ];
+  }
+
+  const other = MODE_IDS[(MODE_IDS.indexOf(field.mode) + 1) % MODE_IDS.length]!;
+  const drawsStructure = field.paths.some((p) => p.role === "structure");
+  const drawsRadiance = field.paths.some((p) => p.role === "radiance");
+
+  return [
+    Object.freeze({
+      element: "the composition mode",
+      provenance: modeSource === "concept" ? ("walk-derived" as const) : ("control" as const),
+      necessity: "load-bearing" as const,
+      reason:
+        `${
+          modeSource === "concept"
+            ? `The concept "${correspondence?.concept ?? "?"}" names ${field.mode} in its composition, and until the mode engine existed nothing read that field: every word in the table drew the envelope and the walk and nothing else, whatever mode it asked for.`
+            : `The caller named ${field.mode} outright, so no concept chose it.`
+        } ${modeSpec(field.mode).label} places its marks by ${modeRuleInWords(field.mode)}${
+          drawsStructure
+            ? ", and draws the chords of that construction under them"
+            : drawsRadiance
+              ? ", and rings each mark with the radiance ticks that give the mode its name"
+              : ""
+        }. Ask for ${other} instead and the same walk, the same cells and the same stamps land by ${modeRuleInWords(other)}: the positions move, the count moves with the mode's own ceiling, the ink box moves, and the drawing number moves with them. What does not move is the walk, the cusp count or the word the receipt hands back — none of them is downstream of the field.`,
+    }),
+    Object.freeze({
+      element: "the mode's stamp",
+      provenance: "walk-derived" as const,
+      necessity: "load-bearing" as const,
+      reason:
+        "Each mark is a star polygon whose vertex count and whose skip are read off the walked cell it stands for, and its hue reports which of the walk's distinct cells that is. The painter this mode came from stamps a character picked at random out of a Unicode pool, set in <text>, which carries nothing about the word and cannot be drawn on a plate at all. Flatten every mark here to one shape and the field keeps its positions exactly; what it loses is that the marks differ where the cells differ, so two words walking different cells onto one construction would paint indistinguishable fields.",
+    }),
+    Object.freeze({
+      element: "the field's place in the stack",
+      provenance: "control" as const,
+      necessity: "answerable" as const,
+      reason:
+        "The field is painted under the envelope, under the correspondence marks and under the walk. Swap it above the chords and almost nothing on this sheet moves — that was rendered both ways for three words in all ten modes, and the worst case is recorded in composeFigure; the stamps are open outlines with thin strokes, so the caustic reads through them either way. It is kept underneath for what stays true by construction rather than for what is true of today's stamps: the plate's instruction is to count the cusps to check the sheet, and a mode whose marks were filled rather than outlined would bury the caustic from above and could not from below. That is the same failure the node count was reduced to avoid, reached by another route.",
+    }),
+    Object.freeze({
+      element: "the mode's contraction",
+      provenance: "control" as const,
+      necessity: field.contraction < 1 ? ("load-bearing" as const) : ("answerable" as const),
+      // Which of the three sentences is true is decided by the field's REACH,
+      // not by whether it contracted at all. The first draft said "remove the
+      // contraction and this field's ink crosses the viewBox" on every
+      // contracted plate, and that is false wherever the construction only
+      // crossed the margin — which is most of them. The reach is printed on the
+      // mode census so a reader can check which case this plate is in.
+      reason:
+        field.contraction >= 1
+          ? "This construction already fitted the drawing field, so the contraction is the identity and deleting it would not move one mark of this sheet. It is recorded because of what it does elsewhere: the golden-angle packing puts its outermost seed near the edge of the frame and then draws a mark centred on it, and that mark's ink leaves the margin the drawing field keeps clear."
+          : field.reach > BOX / 2
+            ? "The construction reached past the frame itself, so the whole of it is scaled about the centre until its ink is inside. Scaled rather than clamped mark by mark: a contracted spiral is the same spiral drawn smaller, a clamped one is a spiral with a rim of marks piled against the border. Remove the contraction and this field's outermost ink crosses the viewBox the sheet declares — which a browser crops into looking correct and a printer does not."
+            : "The construction fitted inside the frame but reached across the margin the drawing field keeps clear, so the whole of it is scaled about the centre until its ink is back inside that margin. Scaled rather than clamped mark by mark: a contracted spiral is the same spiral drawn smaller, a clamped one is a spiral with a rim of marks piled against the border. Remove the contraction here and no ink leaves the viewBox — what it loses is the clear band the correspondence marks are placed in, and the outermost stamps sit on the border of the drawing field.",
+    }),
+  ];
+}
+
+/** The construction in words, with no numeral in it. See `legendModeSection`. */
+function modeRuleInWords(mode: ModeId): string {
+  switch (mode) {
+    case "phyllotaxis":
+      return "a golden-angle packing, each mark one turn of the angle further round and one step further out";
+    case "lattice":
+      return "a hexagonal grid, every mark equidistant from six neighbours";
+    case "metatron":
+      return "the nodes of Metatron's Cube — a centre and two concentric hexagons";
+    case "organic":
+      return "a dart-throw that rejects any mark falling within one exclusion radius of a mark already placed";
+    case "cymatic":
+      return "the nodal set of a standing wave, keeping only the places where the wave is at rest";
+    case "attractor":
+      return "an orbit of the de Jong map, sampled along its own path";
+    case "mandelbrot":
+      return "the escape-time boundary of the Mandelbrot set, keeping only the points that neither escape at once nor survive to the iteration ceiling";
+    case "chaos":
+      return "an unstructured draw over the whole frame, with the mark sizes cubed so most are small and a few are very large";
+    case "haring":
+      return "a grid jittered inside its own cells, tilted the opposite way on every other cell";
+    case "minimal":
+      return "the golden section, one large mark with at most two satellites and the rest of the frame left empty";
+    default:
+      return "its own construction";
+  }
+}
+
 function gradeChoices(
   figure: Walk,
   envelope: EnvelopeFamily,
   correspondence: ConceptCorrespondence | undefined,
   squareSource: SquareSource,
   letters: string,
+  field: ModeField | undefined,
+  modeSource: ModeSource,
 ): readonly Choice[] {
   const cells = digitString(figure.resolution);
   const walked = figure.steps.length;
@@ -677,6 +1047,7 @@ function gradeChoices(
       reason:
         "Near-black because the studio's instruments are. The ground is painted outside the figure group, and the drawing number hashes only that group's markup, so any ground colour whatsoever yields the same number — nothing measured on this sheet moves with it.",
     }),
+    ...gradeModeChoices(field, modeSource, correspondence, letters),
   ]);
 }
 
@@ -707,6 +1078,140 @@ function formatCensus(choices: readonly Choice[]): string {
       : `${arbitrary.length} choice(s) have no recorded reason. Printed honestly; the census discloses, it does not gate.`,
     "",
   );
+  return `${lines.join("\n")}\n`;
+}
+
+/**
+ * THE MODE CENSUS — the measured half of what the mode did.
+ *
+ * Every line here is a quantity read back off the field the sheet actually
+ * painted, and every one is checked by a relation in `tests/mode-engine.test.ts`
+ * — including the coverage rule that fails a sentence carrying a number no
+ * relation can evaluate. That discipline is copied from `tests/ring.test.ts`
+ * rather than invented: it is what caught the last false derivation in this
+ * repository, and a new text with new numbers and no such suite would be the
+ * sixth.
+ *
+ * The counterfactual table at the end is the census's answer to "what would
+ * differ under a different mode". It is not an adjective: for each of the ten
+ * constructions it prints what THIS word would have asked that construction for
+ * and how large its marks would have been, both computed by the engine's own
+ * `requestedFor` and `baseStampRadius` — so the comparison is arithmetic a
+ * reader can redo, not a claim that one mode is busier than another.
+ */
+function formatModeCensus(
+  letters: string,
+  figure: Walk,
+  field: ModeField | undefined,
+  modeSource: ModeSource,
+  correspondence: ConceptCorrespondence | undefined,
+): string {
+  const ctx = contextFromWalk(figure);
+  const head = `MODE CENSUS — ${sheetName(letters)}`;
+  if (field === undefined) {
+    return (
+      [
+        head,
+        "",
+        modeSource === "requested"
+          ? "  no field. The caller asked for none, so no construction ran."
+          : `  no field. ${
+              correspondence === undefined
+                ? "No concept rides these letters, so no composition names a mode."
+                : "This concept names no mode this engine implements."
+            }`,
+        "",
+        "  This plate is the envelope and the walk — what every plate in this system was",
+        "  before the composition table was read. The counterfactual below is therefore",
+        "  the whole of the difference a mode would make.",
+        "",
+        `  the walk reduces to    ${ctx.reduced}`,
+        "",
+        "  WHAT EACH MODE WOULD ASK THIS WORD FOR",
+        "  mode          stamps   mark radius",
+        ...MODE_IDS.map(
+          (m) =>
+            `  ${m.padEnd(13)} ${String(requestedFor(m, ctx.reduced)).padStart(4)}   ` +
+            `${baseStampRadius(m).toFixed(2)}`,
+        ),
+        "",
+      ].join("\n") + "\n"
+    );
+  }
+
+  const spec = modeSpec(field.mode);
+  const box = field.inkBounds;
+  const byRole = (role: string): number => field.paths.filter((p) => p.role === role).length;
+  // TWO hue populations, and they report different quantities, so they are
+  // printed as two numbers. A stamp's hue is the rank of its cell in the walk's
+  // activated set — a readout of the word. A structure chord's hue is the rank of
+  // its LENGTH among the distinct chord lengths of the construction — a readout
+  // of the construction. Summed into one figure they contradicted the sentence
+  // printed beside them: Metatron's LUNAR plate showed 10 hues over a walk with 4
+  // activated cells, and the census called the first a reading of the second.
+  const stampHues = new Set(
+    field.paths.filter((p) => p.role !== "structure").map((p) => p.hue),
+  ).size;
+  const structureHues = new Set(
+    field.paths.filter((p) => p.role === "structure").map((p) => p.hue),
+  ).size;
+
+  const lines: string[] = [
+    head,
+    `mode ${field.mode} · ${spec.label} · ${spec.rule}`,
+    `chosen by ${
+      modeSource === "requested"
+        ? "the caller"
+        : `the concept "${correspondence?.concept ?? "?"}"`
+    }`,
+    "",
+    "WHAT THIS FIELD IS",
+    `  seed                   ${field.seed}`,
+    `  the walk reduces to    ${ctx.reduced}`,
+    `  stamps asked for       ${field.requested}   (this mode's ceiling is ${field.cap})`,
+    `  stamps placed          ${field.nodes.length}`,
+    `  paths emitted          ${field.paths.length}   = ${byRole("field")} field · ${byRole("structure")} structure · ${byRole("radiance")} radiance`,
+    `  hues on the stamps     ${stampHues}   (the walk activates ${figure.activatedCells.length} distinct cells)`,
+    ...(structureHues === 0
+      ? []
+      : [`  hues on the structure  ${structureHues}   (distinct chord lengths in the construction)`]),
+    `  mark radius            ${field.stampRadius.toFixed(4)}   (this mode's base radius is ${baseStampRadius(field.mode).toFixed(4)})`,
+    `  contraction            ${field.contraction.toFixed(6)}`,
+    `  reach before it        ${field.reach.toFixed(3)}   (the frame's half-width is ${figure.viewBox[2] / 2})`,
+    `  ink box                ${box.map((v) => v.toFixed(3)).join("  ")}`,
+    `  the frame it is in     0  0  ${figure.viewBox[2]}  ${figure.viewBox[3]}`,
+    "",
+    "  The seed is FNV-1a over the walk itself — its cells, their sum, its activated",
+    "  set, its letter count, the order of its square and the mode's own index — so",
+    "  two spellings of one word are one walk and paint one field. The painter this",
+    "  mode came from hashes the typed string instead, and a trailing space moves it.",
+    "",
+    "  The count is the mode's ceiling times its authored density, scaled by the",
+    "  walk's reduction against 5 — the painter's own slider position. Rejection",
+    "  samplers may place fewer than were asked for and grids may round up, which is",
+    "  why both numbers are printed.",
+    "",
+    "  Every coordinate above is in figure units, absolute, straight off the emitted",
+    "  path data. The ink box is measured from the bytes the sheet carries, not",
+    "  reconstructed — so it is the box the drawing is actually in.",
+    "",
+    "WHAT EACH MODE WOULD ASK THIS WORD FOR",
+    "  mode          stamps   mark radius",
+    ...MODE_IDS.map(
+      (m) =>
+        `  ${m.padEnd(13)} ${String(requestedFor(m, ctx.reduced)).padStart(4)}   ` +
+        `${baseStampRadius(m).toFixed(2)}${m === field.mode ? "   <- this sheet" : ""}`,
+    ),
+    "",
+    "SIGNED CONSTANTS OF THIS CONSTRUCTION",
+    "  Every number the painter chose without deriving it, with what a reader would",
+    "  measure differently if it were flipped. `walk` marks the ones this port",
+    "  replaced with a quantity the word produces; `painter` the ones it kept.",
+    "",
+  ];
+  for (const s of spec.signatures) {
+    lines.push(`  ${s.constant}`, `    ${s.origin} · ${s.value}`, `    ${s.reason}`, "");
+  }
   return `${lines.join("\n")}\n`;
 }
 

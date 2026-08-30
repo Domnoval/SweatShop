@@ -1,0 +1,12 @@
+{
+  "name": "@studio137/mode-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The painter's ten composition modes, ported onto the walk",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@studio137/plate-core": "workspace:*",
+    "@studio137/walk-engine": "workspace:*"
+  }
+}

@@ -105,31 +105,51 @@ export function ringSlug(word: string): string {
  * and `ring SUN --square venus` are different requests that produce different
  * sheets, and naming both `sun` was the same silent clobber one rename away.
  *
+ * The cipher joined them at **v2**, and the version bump is the point. `--cipher`
+ * exists because the instrument grew a CIPHER control that did nothing —
+ * `ring()` passed the literal `"PYTH"` — and a flag that changes the drawing has
+ * to change the name or `ring SUN` and `ring SUN --cipher NAEQ` write over each
+ * other. Leaving the string at `v1` and appending the cipher only when it was
+ * non-default would have kept every existing filename, which is exactly why it
+ * was not done: a digest whose input depends on whether a field happens to hold
+ * its default is a digest nobody can reason about two options from now. So every
+ * stem moved once, on purpose, and this is the log of it.
+ *
  * Fields are JSON-encoded before they are joined, so no word can contain the
  * separator and forge another word's digest: a NUL typed inside a word
  * comes back from JSON.stringify as the six characters \u0000, never as a delimiter.
  */
-export function ringDigest(word: string, square: string | undefined): string {
+export function ringDigest(
+  word: string,
+  square: string | undefined,
+  cipher: string | undefined = undefined,
+): string {
   return sha256Hex(
-    `s137.ring.v1\u0000${JSON.stringify(word)}\u0000${JSON.stringify(square ?? null)}`,
+    `s137.ring.v2\u0000${JSON.stringify(word)}\u0000${JSON.stringify(square ?? null)}` +
+      `\u0000${JSON.stringify(cipher ?? null)}`,
   ).slice(0, 16);
 }
 
 /**
  * Where this request's four artifacts go.
  *
- * A pure function of `(outDir, word, square)` — same request, same path, every
- * run and every machine, which is the determinism half of house rule 2 applied to
- * the filename rather than to the bytes inside it.
+ * A pure function of `(outDir, word, square, cipher)` — same request, same path,
+ * every run and every machine, which is the determinism half of house rule 2
+ * applied to the filename rather than to the bytes inside it.
  *
  * When the slug is empty — the word was `""`, or `🙂`, or `ᛒ`, none of which has an
  * ASCII-alphanumeric to show — the name falls back to `word-<digest>`. It must
  * never fall back to the empty string: `""` + `.sheet.svg` is `.sheet.svg`, a
  * dotfile that `ls` does not show and that the next empty-ish word overwrites.
  */
-export function ringStem(outDir: string, word: string, square: string | undefined): string {
+export function ringStem(
+  outDir: string,
+  word: string,
+  square: string | undefined,
+  cipher: string | undefined = undefined,
+): string {
   const slug = ringSlug(word);
-  const digest = ringDigest(word, square);
+  const digest = ringDigest(word, square, cipher);
   return join(outDir, slug === "" ? `word-${digest}` : `${slug}-${digest}`);
 }
 

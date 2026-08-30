@@ -312,16 +312,23 @@ function main(): void {
       const outDir = stringOption(options, "out") ?? "artifacts/ring";
       mkdirSync(outDir, { recursive: true });
 
-      // Read once and reuse: the square selects the sheet AND names the file, and
-      // those two have to be the same string or the name stops identifying the run.
+      // Read once and reuse: these select the sheet AND name the file, and the two
+      // have to be the same strings or the name stops identifying the run.
       const square = stringOption(options, "square");
+      // `--cipher` exists so the CLI can express what the instrument's CIPHER
+      // control expresses. Without it the browser could draw a plate no CLI
+      // invocation could produce, and `scripts/build-browser-bundle.ts` compares
+      // the two by running this command — a knob only one side has is a hole in
+      // the parity check, not a feature.
+      const cipher = stringOption(options, "cipher");
 
       const artifacts = ring(word, {
         vocabulary: WORD_CORRESPONDENCE.map((w) => w.word),
         ...(square === undefined ? {} : { square: square as never }),
+        ...(cipher === undefined ? {} : { cipher: cipher as never }),
       });
 
-      const stem = ringStem(outDir, word, square);
+      const stem = ringStem(outDir, word, square, cipher);
       const written = writeRingArtifacts(
         stem,
         [
@@ -375,11 +382,11 @@ function main(): void {
           "               [--preset <id>] [--mode exact|stylized] [--out <dir>]",
           "               [--key <path>] [--background solid|transparent] [--no-png]",
           "",
-          "  s137 ring    <WORD> [--square <planet>] [--out <dir>] [--force]",
+          "  s137 ring    <WORD> [--square <planet>] [--cipher PYTH|NAEQ|HEB] [--out <dir>] [--force]",
           "      One word in, four artifacts out: the sheet, the legend, the",
           "      census, and the receipt that reads the mark back to the word.",
           "      Any word resolves - the concept table rides, it never gates.",
-          "      Files are named <slug>-<digest of the exact word and square>, so",
+          "      Files are named <slug>-<digest of the word, square and cipher>, so",
           "      SUN-DOG and SUN DOG keep their own four files. An existing file",
           "      whose bytes differ is refused, not replaced; --force replaces it.",
           "",

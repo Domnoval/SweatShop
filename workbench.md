@@ -408,6 +408,93 @@ Known limit, recorded rather than papered: the auditor's scope stops at the emit
 text. Source comments, this file, `README.md` and commit messages are outside the
 net, and that is exactly where generations three and four survived.
 
+---
+
+## PHASE 8 — the instrument, and what wiring the inert knob turned up
+
+The gap the owner named: *"this is the symbol painter but where's the whole thing
+that utilizes the entire everything."* Sharpest form of it — the concept table has
+always carried `composition: { mode, arch, palette, fold, words }` on all nineteen
+concepts, and `packages/ring/src/index.ts` read `planet` and `brushes`. `lunar`
+asked for `cymatic`; `war` asked for `haring`; both drew the same figure.
+
+**Built:** `packages/mode-engine` (the painter's ten constructions on the walk),
+`packages/spine-browser` + `scripts/build-browser-bundle.ts` (one bundle, proven
+identical to the CLI), `scripts/build-instrument.ts` → `artifacts/instrument/index.html`
+(type a word, live redraw, SQUARE / CIPHER / TRACE / MODE / VIEW).
+
+### Six defects graded, six closed
+
+| | defect | closed by |
+|---|---|---|
+| D1 | `attractor` broke browser↔CLI parity: the de Jong map iterates `Math.sin` up to 12,600× and Node/Chromium disagree by 1 ULP on ~3.3% of arguments. **4 of 44 comparisons failed.** | `packages/mode-engine/src/trig.ts` — sine and cosine from `+ − × ÷` alone (Cody-Waite + fdlibm kernels), which IEEE-754 pins down. **52 of 52 pass.** |
+| D2 | attractor's signature said "no vocabulary word needs more than **7** of its 24 draws"; the guard measured over 19 concept words while the sentence named 170. True max is **16**. | Guard widened to the population the sentence names; the burn-in claim now measures the one word it names instead of a max over a population it doesn't. |
+| D3 | "count the colours and you have the activated set" — false for **190 of 1,700** word×mode pairs. | The true statement, plus a test that reads the paragraph out of the source and fails on any numeral it cannot produce. |
+| D4 | `spine-browser` still said "`ring()` does not read either list today". It had for thirty commits. | Corrected, with the stale sentence quoted so the failure mode stays visible. |
+| D5 | The instrument's masthead claimed unconditional CLI parity while attractor diverged. | Scoped to what the two checks actually re-measure; `CROSS_RUNTIME_DIVERGENT_MODES` is now `[]` **and still re-measured every build**. |
+| D6 | `artifacts/browser/*` was stale against its own source. | Rebuilt; the build carries a source fingerprint taken before and after. |
+
+### What the inert CIPHER knob was hiding
+
+`RingOptions` had no `cipher` field, so the instrument's three-way picker moved
+nothing. Wiring it turned up two things nobody could have seen while it was dead:
+
+1. **`ring()` called the blind reader without the cipher**, so every plate was
+   decoded as PYTH. Measured over all 170 vocabulary words: PYTH read back 170,
+   **NAEQ read back 0**, HEB read back 114 — and the 114 was a coincidence, since
+   HEB and PYTH agree on the cells of A–I. All three now read back **170 of 170**.
+2. **`inverseCipher` keyed on the raw cipher value, not the cell.** A cell is
+   `reduceToCell(value, order²)`; HEB assigns J = 10 and S = 100. The map held a
+   `10` and a `100` no reading could ever contain, and a `1` holding only `A`.
+   PYTH's values are already 1–9 and the smallest square has 9 cells, so nothing
+   ever disagreed — the defect sat one option away from reachable for the life of
+   the file.
+
+And one theorem, which looks exactly like the dead knob it replaced: **on Saturn,
+HEB and PYTH are the same cipher.** The digit root of Hebrew place value is the
+Pythagorean value for all 26 letters — `(i mod 9) + 1` is `i+1`, `i−8`, `i−17` over
+the three ranges, which is what `(i−8)·10` and `(i−17)·100` reduce to. They separate
+on every larger square, from 1 letter on Jupiter to 8 on Luna. The page says so
+under the knob rather than leaving the owner to conclude it is still broken.
+
+`reduceToCell` also gained a guard: below 9 the loop cannot terminate, because the
+digit sum of a one-digit number is itself. Passing an order where a cell count
+belonged hung the process on the word SUN with no stack to read. A browser tab has
+no timeout to save it, so the hang is now a sentence.
+
+### The residual, measured rather than argued
+
+`trig.ts` covers `mode-engine`. The committed packages still call the built-ins —
+`envelope-engine` placing ring nodes, `walk-engine` drawing the cap bar,
+`ring/annotate.ts` drawing ticks — and the argument for leaving them is that every
+result is rounded before it reaches a path. That argument is now an experiment:
+`scripts/measure-ulp-exposure.ts` replaces both built-ins with versions returning
+the next representable double on **every** call — strictly worse than Chromium —
+and compiles all 170 words on all 7 squares twice. **741,608 perturbed calls; 0 of
+1,190 plates changed a byte.** Non-zero is the trigger to move `trig.ts` beneath
+`walk-engine` and rebaseline.
+
+The cross-runtime probe also now measures `Math.sqrt`, `Math.atan2` and
+`Math.hypot` — **0 of 50,000 differ** — so "the disagreement is sine and cosine" is
+a reading off a table rather than a guess about V8.
+
+### Hash reset — `ringDigest` v1 → v2
+
+`--cipher` changes the drawing, so it has to change the filename or `ring SUN` and
+`ring SUN --cipher NAEQ` overwrite each other's four files. Every stem in
+`tests/cli-ring-paths.test.ts` moved once, on purpose. Appending the cipher only
+when non-default would have preserved all 30 strings, and that is precisely why it
+was not done: a digest whose input depends on whether a field holds its default is
+a digest nobody can reason about two options from now.
+
+### Standing
+
+- `pnpm exec vitest run` — **557 passing**, 24 files
+- `scripts/build-browser-bundle.ts` — **52 of 52** comparisons byte-identical, both variants; 4 planted failures all caught
+- `scripts/build-instrument.ts --verify` — **32 of 32** artifacts identical to the CLI; console silent and no overflow at 1440×900 and 375×812; all 11 modes 0/20 divergent
+
+---
+
 ## Next move
 
 Nothing outstanding on the build. What waits on a human:

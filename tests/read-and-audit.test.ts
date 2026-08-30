@@ -160,10 +160,46 @@ describe("the read is blind", () => {
 
 describe("the inverse cipher", () => {
   it("gives every Pythagorean value its two or three letters", () => {
-    const inv = inverseCipher("PYTH");
+    const inv = inverseCipher("PYTH", 9);
     expect(inv.get(1)).toStrictEqual(["A", "J", "S"]);
     expect(inv.get(9)).toStrictEqual(["I", "R"]);
     expect([...inv.keys()].sort((a, b) => a - b)).toStrictEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+
+  /**
+   * The reason the second argument exists, stated as the experiment that used to
+   * fail. The map is of CELLS, and a cell is `reduceToCell(value, order)`. PYTH
+   * hides the distinction — its values are already 1 to 9 and every square in the
+   * set has at least 9 cells — so keyed on the raw value it looked right for
+   * years. HEB does not hide it: J is 10 and S is 100, and on a 3x3 both reduce
+   * to cell 1 alongside A.
+   */
+  it("keys on the cell the plate carries, not the number the cipher assigns", () => {
+    const heb = inverseCipher("HEB", 9);
+    expect(heb.get(1)).toStrictEqual(["A", "J", "S"]);
+    // The raw values are gone: no reading can contain a 10, so a bucket under 10
+    // is a bucket no reader can ever reach.
+    expect([...heb.keys()].every((k) => k >= 1 && k <= 9)).toBe(true);
+    expect(heb.get(10)).toBeUndefined();
+    expect(heb.get(100)).toBeUndefined();
+    // Every letter still lands somewhere. A letter with no bucket is a letter the
+    // reader can never propose, which is how a word stops being recoverable.
+    const placed = [...heb.values()].flat().sort();
+    expect(placed).toStrictEqual([..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"]);
+  });
+
+  it("gives a bigger square finer buckets, because fewer values need reducing", () => {
+    // Luna is 9x9 = 81 cells, so HEB's tens survive unreduced and J is alone in
+    // cell 10 — a cell PYTH can never reach, since its values stop at 9.
+    const luna = inverseCipher("HEB", 81);
+    expect(luna.get(10)).toStrictEqual(["J"]);
+    // S is 100, still over 81, so it reduces to 1 and shares with A. T is 200,
+    // which reduces to 2. The hundreds are the only letters still collapsing.
+    expect(luna.get(1)).toStrictEqual(["A", "S"]);
+    expect(luna.get(2)).toStrictEqual(["B", "T"]);
+    // Strictly more buckets than on a 3x3: the same cipher, read at a finer
+    // resolution, is a less ambiguous cipher.
+    expect(luna.size).toBeGreaterThan(inverseCipher("HEB", 9).size);
   });
 });
 

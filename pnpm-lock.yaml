@@ -29,6 +29,9 @@ importers:
       '@studio137/layout-engine':
         specifier: workspace:*
         version: link:packages/layout-engine
+      '@studio137/mode-engine':
+        specifier: workspace:*
+        version: link:packages/mode-engine
       '@studio137/plate-compiler':
         specifier: workspace:*
         version: link:packages/plate-compiler
@@ -158,6 +161,15 @@ importers:
       '@studio137/substrate-engine':
         specifier: workspace:*
         version: link:../substrate-engine
+
+  packages/mode-engine:
+    dependencies:
+      '@studio137/plate-core':
+        specifier: workspace:*
+        version: link:../plate-core
+      '@studio137/walk-engine':
+        specifier: workspace:*
+        version: link:../walk-engine
 
   packages/plate-compiler:
     dependencies:

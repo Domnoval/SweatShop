@@ -37,7 +37,7 @@ import { describe, expect, it } from "vitest";
 import { sha256Hex } from "@studio137/plate-core";
 import { WORD_CORRESPONDENCE } from "@studio137/glyph-registry";
 import { ring, type RingArtifacts, type RingOptions } from "@studio137/ring";
-import { digitString, read, reduceToCell, SQUARE_IDS, walk } from "@studio137/walk-engine";
+import { cipherValue, digitString, kamea, read, reduceToCell, SQUARE_IDS, walk } from "@studio137/walk-engine";
 
 // The numeral set is not re-exported from the glyph-registry barrel, so it is
 // reached by path — the same workaround `packages/ring/src/annotate.ts` records.
@@ -1443,6 +1443,119 @@ describe("the stroke gauge is the plate's own measured minimum", () => {
 });
 
 /* ── 9. the receipt discloses a clipped reading set ──────────────────────── */
+
+describe("the cipher knob turns something", () => {
+  const VOCAB = WORD_CORRESPONDENCE.map((w) => w.word);
+  const CIPHERS = ["PYTH", "NAEQ", "HEB"] as const;
+
+  /**
+   * `RingOptions.cipher` did not exist until the instrument grew a CIPHER
+   * control, and `ring()` passed the literal `"PYTH"` to `walk()`. Two thirds of
+   * that picker was decoration: the user moved it and the plate did not change.
+   * These are the two things that had to become true — the knob moves the
+   * drawing, and the drawing still reads back — and they are separate claims,
+   * because wiring the first without the second is what shipped for one commit.
+   */
+  /**
+   * HEB AND PYTH ARE THE SAME CIPHER ON SATURN, AND THAT IS A THEOREM.
+   *
+   * Wiring the knob turned this up, and it is worth stating in full because the
+   * obvious reading of it is "the knob is still broken". `reduceToCell(v, cells)`
+   * takes digit sums until the value fits, so on Saturn — 3x3, nine cells —
+   * every cipher value collapses to its digit root. Write the letter index i
+   * from 0. PYTH is `(i mod 9) + 1`. HEB is place value: `i + 1` for i < 9,
+   * `(i - 8) * 10` for 9 <= i < 18, `(i - 17) * 100` for i >= 18. The digit root
+   * of `(i - 8) * 10` is `i - 8`; of `(i - 17) * 100` it is `i - 17`; and
+   * `(i mod 9) + 1` is exactly `i + 1`, `i - 8` and `i - 17` over those three
+   * ranges. They agree on all 26 letters, necessarily.
+   *
+   * The divergence starts where a HEB value stops needing to be reduced: J is 10,
+   * which fits inside Jupiter's sixteen cells and does not collapse. So the count
+   * of letters on which HEB differs from PYTH is a function of the square, and it
+   * climbs from 0 on Saturn to 8 on Luna. Not stated as a table here — recomputed
+   * below from the two ciphers, so this comment cannot outlive the arithmetic.
+   */
+  it("is the same cipher twice on Saturn and three ciphers everywhere else", () => {
+    const disagreements = (cells: number, a: "PYTH" | "NAEQ" | "HEB", b: "PYTH" | "NAEQ" | "HEB"): number =>
+      [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].filter(
+        (L) => reduceToCell(cipherValue(L, a), cells) !== reduceToCell(cipherValue(L, b), cells),
+      ).length;
+
+    // The theorem, on the square it holds for.
+    expect(disagreements(9, "PYTH", "HEB")).toBe(0);
+    // And that it is Saturn's alone: every larger square separates them.
+    for (const id of SQUARE_IDS) {
+      const cells = kamea(id).n * kamea(id).n;
+      if (cells === 9) continue;
+      expect(disagreements(cells, "PYTH", "HEB"), `${id} should separate PYTH from HEB`).toBeGreaterThan(0);
+    }
+    // NAEQ is a different ordering outright and separates from PYTH everywhere.
+    for (const id of SQUARE_IDS) {
+      const cells = kamea(id).n * kamea(id).n;
+      expect(disagreements(cells, "PYTH", "NAEQ"), `${id} should separate PYTH from NAEQ`).toBeGreaterThan(0);
+    }
+  });
+
+  it("draws a different plate for each cipher that is actually a different cipher", () => {
+    // DESCENT rides saturn, where PYTH and HEB coincide by the theorem above, so
+    // it draws TWO plates and not three. Every word on a larger square draws
+    // three. A test that demanded three everywhere would be demanding the
+    // arithmetic be false.
+    const descent = CIPHERS.map((cipher) => ring("DESCENT", { vocabulary: VOCAB, cipher }).sheetId);
+    expect(ring("DESCENT", { vocabulary: VOCAB }).walk.square).toBe("saturn");
+    expect(new Set(descent).size).toBe(2);
+    expect(descent[0]).toBe(descent[2]);
+
+    for (const word of ["AWAKENING", "QZXJVW"]) {
+      const square = ring(word, { vocabulary: VOCAB }).walk.square;
+      expect(kamea(square).n * kamea(square).n, `${word} must not ride saturn for this case`).toBeGreaterThan(9);
+      const ids = CIPHERS.map((cipher) => ring(word, { vocabulary: VOCAB, cipher }).sheetId);
+      expect(new Set(ids).size, `${word} drew ${new Set(ids).size} distinct plates over 3 ciphers`).toBe(3);
+    }
+  });
+
+  it("defaults to PYTH, so every plate drawn before the option existed still is", () => {
+    for (const word of ["DESCENT", "AWAKENING", "", "0123456789"]) {
+      const bare = ring(word, { vocabulary: VOCAB });
+      const named = ring(word, { vocabulary: VOCAB, cipher: "PYTH" });
+      expect(bare.sheetSvg).toBe(named.sheetSvg);
+      expect(bare.receipt).toBe(named.receipt);
+      expect(bare.legend).toBe(named.legend);
+      expect(bare.census).toBe(named.census);
+    }
+  });
+
+  /**
+   * The receipt is the reason the reader had to be told the cipher too.
+   *
+   * `ring()` called `read()` without one, so every plate was decoded as if it
+   * were PYTH. Measured at the time, over all 170 vocabulary words: PYTH read
+   * back 170, NAEQ read back 0, and HEB read back 114 — and the 114 was a
+   * coincidence, not a success, since HEB and PYTH agree on the cells of A-I.
+   * A reader handed the wrong key reports the miss as a property of the drawing.
+   */
+  it("reads every vocabulary word back under every cipher, not just the house one", () => {
+    for (const cipher of CIPHERS) {
+      const missed: string[] = [];
+      for (const word of VOCAB) {
+        const artifacts = ring(word, { vocabulary: VOCAB, cipher });
+        if (!/spoken word recovered\s+yes/u.test(artifacts.receipt)) missed.push(word);
+      }
+      expect(
+        missed.slice(0, 12).join(", "),
+        `${cipher}: ${missed.length} of ${VOCAB.length} vocabulary words do not read back. ` +
+          "Before the reader was handed the cipher this was 170 for NAEQ; a non-zero number here " +
+          "means either the drawing lost information or read() is being given the wrong key again.",
+      ).toBe("");
+    }
+  });
+
+  it("says on the legend which cipher drew the plate, so a reader is not guessing", () => {
+    for (const cipher of CIPHERS) {
+      expect(ring("DESCENT", { vocabulary: VOCAB, cipher }).legend).toContain(`cipher ${cipher}`);
+    }
+  });
+});
 
 describe("a ceiling is printed as a ceiling", () => {
   /**

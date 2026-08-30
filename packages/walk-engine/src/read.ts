@@ -30,7 +30,7 @@
  *     `figurePoints` and a LINEA figure of ZZ goes blank (it has no cap).
  */
 
-import { cipherValue, type CipherId } from "./cipher.js";
+import { cipherValue, reduceToCell, type CipherId } from "./cipher.js";
 import { kamea, SQUARE_IDS, type SquareId } from "./squares.js";
 import { arrivalNormal, type WalkPath } from "./walk.js";
 
@@ -48,11 +48,37 @@ const SPAN = BOX - MARGIN * 2;
  */
 const near = (a: number, b: number): boolean => Math.abs(a - b) < 1e-3;
 
-/** Every letter that could have produced each value, under a given cipher. */
-export function inverseCipher(cipher: CipherId): ReadonlyMap<number, readonly string[]> {
+/**
+ * Every letter that could have produced each CELL, under a given cipher, on a
+ * square of a given order.
+ *
+ * `cells` is the CELL COUNT the square has — 9 for Saturn's 3x3, 81 for Luna's
+ * 9x9 — which is exactly what `resolve()` reduces against. It is not optional,
+ * and the reason is a bug this signature used to permit.
+ * The map was keyed on `cipherValue` — the raw number the cipher assigns — while
+ * the thing a reader reads off the lattice is `reduceToCell(value, order)`, the
+ * theosophic reduction of it. For PYTH those two are the same number on every
+ * square in the set (its values run 1 to 9, and the smallest square has 9 cells),
+ * so nothing ever disagreed. HEB assigns J = 10 and S = 100, both of which reduce
+ * to cell 1 on a 3x3; keyed on the raw value the map had a `10` and a `100` that
+ * no reading could ever contain and a `1` holding only `A`. `ring()` hardcoded PYTH,
+ * so the whole defect sat one option away from being reachable, and the day
+ * `--cipher` landed it read as a property of the drawing: HEB recovered 9 of the
+ * 170 vocabulary words instead of the letters actually being ambiguous.
+ *
+ * Reductions collapse, so the buckets get bigger — on a 3x3, HEB puts A, J and T
+ * in cell 1 — and a reader with more letters per cell is a reader with more
+ * candidate words. That is the truth about the cipher, not a regression: HEB IS
+ * lossier than PYTH at this resolution, and the receipt now says so by finding
+ * more matches rather than by finding none.
+ */
+export function inverseCipher(
+  cipher: CipherId,
+  cells: number,
+): ReadonlyMap<number, readonly string[]> {
   const map = new Map<number, string[]>();
   for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-    const v = cipherValue(letter, cipher);
+    const v = reduceToCell(cipherValue(letter, cipher), cells);
     const bucket = map.get(v);
     if (bucket === undefined) map.set(v, [letter]);
     else bucket.push(letter);
@@ -397,7 +423,12 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
     assignments = next;
   }
 
-  const readings: number[][] = [];
+  // Each reading keeps the ORDER of the lattice it came off. It has to: the cells
+  // in it mean different letters on different squares, because the reduction that
+  // produced them is `reduceToCell(value, order)`. Dropping the order here and
+  // inverting every reading against one map is the same mistake `inverseCipher`
+  // used to make one level down.
+  const readings: { order: number; cells: number[] }[] = [];
   for (const lattice of lattices) {
     for (const assignment of assignments) {
       if (readings.length >= MAX_READINGS) {
@@ -413,20 +444,35 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
         out.push(cell);
         for (let k = 0; k < perVisit[i]!; k += 1) out.push(cell);
       });
-      readings.push(out);
+      readings.push({ order: lattice.order, cells: out });
     }
   }
-  const cells = readings[0] ?? lattices[0]!.cells;
+  const cells = readings[0]?.cells ?? lattices[0]!.cells;
 
-  const inverse = inverseCipher(cipher);
+  const inverseFor = ((): ((order: number) => ReadonlyMap<number, readonly string[]>) => {
+    const cache = new Map<number, ReadonlyMap<number, readonly string[]>>();
+    return (order: number) => {
+      const hit = cache.get(order);
+      if (hit !== undefined) return hit;
+      // Order squared: `lattice.order` is the grid SIDE, and what a cell was
+      // reduced against is `order * order`. Passing the side hangs
+      // `reduceToCell` outright — see the guard it now carries.
+      const built = inverseCipher(cipher, order * order);
+      cache.set(order, built);
+      return built;
+    };
+  })();
   const vocabulary = options.vocabulary;
   const matches: string[] = [];
   let candidateCount = 0;
   let truncated = false;
 
-  const distinctReadings = [...new Set(readings.map((r) => r.join(",")))].map((k) =>
-    k === "" ? [] : k.split(",").map(Number),
-  );
+  // Deduped on the ORDER as well as the cells: the same cell sequence off two
+  // different squares is two different readings, because it spells two different
+  // sets of words.
+  const distinctReadings = [
+    ...new Map(readings.map((r) => [`${r.order}:${r.cells.join(",")}`, r])).values(),
+  ];
 
   if (vocabulary !== undefined) {
     const prefixes = new Set<string>();
@@ -437,7 +483,8 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
       for (let i = 1; i <= u.length; i += 1) prefixes.add(u.slice(0, i));
     }
     for (const reading of distinctReadings) {
-      const letterSets = reading.map((c) => inverse.get(c) ?? []);
+      const inverse = inverseFor(reading.order);
+      const letterSets = reading.cells.map((c) => inverse.get(c) ?? []);
       const walkPrefix = (depth: number, acc: string): void => {
         if (depth === letterSets.length) {
           candidateCount += 1;
@@ -460,10 +507,10 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
     // sequence reported a candidate that cannot be written down, and the
     // vocabulary branch above — which enumerates rather than multiplies — has
     // always returned 0 for the same reading.
-    candidateCount = distinctReadings.reduce(
-      (total, reading) => total + reading.reduce((n, c) => n * (inverse.get(c)?.length ?? 0), 1),
-      0,
-    );
+    candidateCount = distinctReadings.reduce((total, reading) => {
+      const inverse = inverseFor(reading.order);
+      return total + reading.cells.reduce((n, c) => n * (inverse.get(c)?.length ?? 0), 1);
+    }, 0);
     if (candidateCount > ceiling) {
       candidateCount = ceiling;
       truncated = true;
@@ -472,7 +519,7 @@ export function read(paths: readonly WalkPath[], options: ReadOptions = {}): Rea
 
   return Object.freeze({
     cells: Object.freeze(cells),
-    readings: Object.freeze(distinctReadings.map((r) => Object.freeze(r))),
+    readings: Object.freeze(distinctReadings.map((r) => Object.freeze(r.cells))),
     order: lattices[0]!.order,
     square: lattices[0]!.squareId,
     orders: Object.freeze(lattices.map((l) => l.order)),
