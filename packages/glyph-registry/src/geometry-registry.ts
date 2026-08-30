@@ -26,7 +26,13 @@ import {
   MINIMUM_PRINT_STROKE_PT,
   type GeometrySource,
 } from "./geometry.v1.js";
+import {
+  GEOMETRY_V2_IS_PROVISIONAL,
+  GEOMETRY_V2_SOURCE,
+  GEOMETRY_V2_VERSION,
+} from "./geometry.v2.js";
 import { GEOMETRY_V1_INTEGRITY } from "./geometry-integrity.v1.js";
+import { GEOMETRY_V2_INTEGRITY } from "./geometry-integrity.v2.js";
 import type { GeometryRegistry, GlyphGeometryRecord } from "./types.js";
 
 /**
@@ -59,10 +65,10 @@ function envelopeFromInkBounds(
   ]);
 }
 
-function buildRecord(source: GeometrySource): GlyphGeometryRecord {
+function buildRecord(source: GeometrySource, version: string): GlyphGeometryRecord {
   return Object.freeze({
     id: source.id,
-    version: GEOMETRY_VERSION,
+    version,
     viewBox: source.viewBox,
     paths: source.paths,
     anchors: source.anchors,
@@ -108,7 +114,7 @@ class LockedGeometryRegistry implements GeometryRegistry {
           { id: source.id, inkBounds: source.inkBounds },
         );
       }
-      records.set(source.id, buildRecord(source));
+      records.set(source.id, buildRecord(source, version));
       bounds.set(
         source.id,
         Object.freeze({ x: minX, y: minY, width: maxX - minX, height: maxY - minY }),
@@ -179,10 +185,43 @@ export function createGeometryRegistry(): GeometryRegistry {
   );
 }
 
-/** Shared singleton. The registry is immutable, so one instance is sufficient. */
+/**
+ * `geometry/v2` — everything v1 carried, plus the studio's fifty authored marks.
+ *
+ * v2 **supersedes** v1 rather than replacing it, and that is a correction. The
+ * two vocabularies were built disjoint: v1 holds the seventeen structural records
+ * the grammar names (`root-signal`, `mod-negate`, `sep-relation`, …) plus the
+ * literal-escape frame, and v2 held only `mark-*`. Pointing the version contract
+ * at a disjoint v2 would have made every grammar reference dangle at once — the
+ * compiler throws `UNKNOWN_GEOMETRY` on the first word of the first plate. A
+ * version that shares nothing with the version it replaces is not a version.
+ *
+ * So the flip is a union, and one thing it is *not* is worth stating plainly:
+ * this does not make a word draw an authored mark. The grammar still resolves
+ * roots to the provisional structural records. What the union buys is that a
+ * plate may now pin, load and hash authored geometry under a contract that names
+ * it — the door, not the room. Words reach authored marks through the
+ * correspondence table, on the sheet, not through the root families.
+ */
+export function createGeometryRegistryV2(): GeometryRegistry {
+  return new LockedGeometryRegistry(
+    GEOMETRY_V2_VERSION,
+    GEOMETRY_V2_IS_PROVISIONAL,
+    Object.freeze([...GEOMETRY_V1_SOURCE, ...GEOMETRY_V2_SOURCE]),
+    Object.freeze({ ...GEOMETRY_V1_INTEGRITY, ...GEOMETRY_V2_INTEGRITY }),
+  );
+}
+
+/** Shared singletons. A registry is immutable, so one instance each suffices. */
 let cached: GeometryRegistry | undefined;
+let cachedV2: GeometryRegistry | undefined;
 
 export function geometryRegistry(): GeometryRegistry {
   cached ??= createGeometryRegistry();
   return cached;
+}
+
+export function geometryRegistryV2(): GeometryRegistry {
+  cachedV2 ??= createGeometryRegistryV2();
+  return cachedV2;
 }

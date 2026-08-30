@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symbol Painter · MK·137</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&family=Noto+Sans+Egyptian+Hieroglyphs&family=Noto+Sans+Runic&family=Noto+Sans+Hebrew:wght@500&family=Noto+Serif+Hebrew&family=Noto+Rashi+Hebrew&family=Frank+Ruhl+Libre:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#07090c;--rail:#0a0f15;--panel:#0d141c;--ink:#090d12;
+  --line:#1a2531;--line-2:#243443;
+  --bone:#c9d2da;--bone-dim:#76828f;--bone-faint:#46515d;
+  --geo:#5ef2c4;--vio:#8a7ff0;--gold:#e8c46a;--cy:#56c9ff;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --s2:3px;--s3:5px;--s5:8px;--s8:13px;--s13:21px;--s21:34px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--void);color:var(--bone);font-family:var(--mono);-webkit-font-smoothing:antialiased;letter-spacing:.01em;overflow:hidden}
+::selection{background:rgba(94,242,196,.22)}
+.u-sym{font-family:"Noto Sans Symbols","Segoe UI Symbol",var(--mono)}
+.u-sym2{font-family:"Noto Sans Symbols 2","Segoe UI Symbol","Segoe UI Historic",var(--mono)}
+.u-hiero{font-family:"Noto Sans Egyptian Hieroglyphs","Segoe UI Historic",var(--mono)}
+.u-runic{font-family:"Noto Sans Runic","Segoe UI Historic","Segoe UI Symbol",var(--mono)}
+.u-heb{font-family:"Noto Sans Hebrew","Segoe UI",sans-serif}
+.app{display:grid;grid-template-columns:312px 1fr;height:100vh;height:100dvh}
+.rail{background:linear-gradient(180deg,var(--rail),var(--void));border-right:1px solid var(--line);overflow-y:auto;padding:var(--s13) var(--s13) var(--s21)}
+.rail::-webkit-scrollbar{width:8px}.rail::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+.brand{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--bone-dim)}
+.brand .a{color:var(--gold)}
+h1{font-size:19px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:var(--s5) 0 var(--s3)}
+h1 .t{color:var(--bone-dim);font-weight:400}
+.sub{font-size:11px;color:var(--bone-faint);line-height:1.5;margin:0 0 var(--s13)}
+.sec{font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--bone-dim);margin:var(--s13) 0 var(--s5);display:flex;justify-content:space-between;align-items:baseline}
+.sec .v{color:var(--vio);letter-spacing:.08em}
+.modes{display:flex;flex-direction:column;gap:3px}
+.mode{text-align:left;background:#070b10;border:1px solid var(--line-2);border-radius:3px;padding:6px 9px;cursor:pointer;transition:.14s;color:var(--bone-dim)}
+.mode:hover{border-color:var(--bone-faint);color:var(--bone)}
+.mode[aria-pressed=true]{border-color:var(--vio);background:linear-gradient(90deg,rgba(138,127,240,.16),transparent);color:var(--bone)}
+.mode .nm{font-size:12px;letter-spacing:.04em;display:block;font-weight:600}
+.mode[aria-pressed=true] .nm{color:var(--vio)}
+.mode .rule{font-size:9.5px;color:var(--bone-faint);letter-spacing:.02em;line-height:1.3;display:block;margin-top:1px}
+.chips{display:flex;flex-wrap:wrap;gap:3px}
+.chip{background:#070b10;border:1px solid var(--line-2);border-radius:2px;color:var(--bone-dim);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;cursor:pointer;transition:.14s}
+.chip:hover{color:var(--bone);border-color:var(--bone-faint)}
+.chip[aria-pressed=true]{color:var(--ink);font-weight:700;border-color:transparent;background:var(--geo)}
+.pals{display:flex;flex-wrap:wrap;gap:4px}
+.pal{display:flex;align-items:center;gap:5px;background:#070b10;border:1px solid var(--line-2);border-radius:2px;color:var(--bone-dim);font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;cursor:pointer}
+.pal:hover{color:var(--bone);border-color:var(--bone-faint)}
+.pal[aria-pressed=true]{color:var(--bone);border-color:var(--bone)}
+.pal .sw{display:flex;gap:2px}.pal .sw i{width:7px;height:7px;border-radius:50%}
+.ctl{margin-bottom:var(--s8)}
+.ctl label{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin-bottom:4px}
+.ctl label b{color:var(--geo);font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--line-2);border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--geo);cursor:pointer;box-shadow:0 0 6px rgba(94,242,196,.5)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border:none;border-radius:50%;background:var(--geo);cursor:pointer}
+.row{display:flex;gap:5px}
+.btn{flex:1;background:transparent;border:1px solid var(--line-2);border-radius:2px;color:var(--bone-dim);font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:8px 6px;cursor:pointer;transition:.14s}
+.btn:hover{color:var(--geo);border-color:var(--geo)}
+.btn.alt:hover{color:var(--vio);border-color:var(--vio)}
+.seedline{display:flex;gap:5px;align-items:center}
+.seedline input{flex:1;background:#05080c;border:1px solid var(--line-2);color:var(--bone);font-family:var(--mono);font-size:12px;letter-spacing:.1em;padding:6px 8px;border-radius:2px;outline:none}
+.seedline input:focus{border-color:var(--geo)}
+.stage{position:relative;display:grid;place-items:center;padding:var(--s21);background:
+  radial-gradient(900px 600px at 80% -10%,rgba(138,127,240,.05),transparent 60%),
+  radial-gradient(700px 500px at 6% 110%,rgba(94,242,196,.04),transparent 60%)}
+.frame{position:relative;width:min(86vh,100%);aspect-ratio:1;border:1px solid var(--line-2);box-shadow:0 0 0 1px rgba(0,0,0,.4),0 30px 80px -30px rgba(0,0,0,.8)}
+.frame svg{display:block;width:100%;height:100%}
+.tag{position:absolute;left:0;bottom:-22px;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--bone-faint)}
+.tag b{color:var(--bone-dim)}
+.float{position:absolute;right:-1px;top:-22px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-faint)}
+@media(max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;height:auto}
+  .rail{border-right:none;border-bottom:1px solid var(--line);max-height:none}
+  .stage{padding:var(--s21) var(--s13) var(--s34)}
+  .frame{width:100%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.stack{display:flex;flex-direction:column;gap:3px;margin-bottom:5px}
+.layer{display:flex;align-items:center;gap:6px;background:#070b10;border:1px solid var(--line-2);border-radius:3px;padding:5px 7px;cursor:pointer;transition:.14s}
+.layer:hover{border-color:var(--bone-faint)}
+.layer[aria-pressed=true]{border-color:var(--geo);background:linear-gradient(90deg,rgba(94,242,196,.12),transparent)}
+.layer .eye{flex:0 0 auto;width:9px;height:9px;border-radius:50%;border:1px solid var(--bone-faint);cursor:pointer}
+.layer .eye.on{background:var(--geo);border-color:var(--geo);box-shadow:0 0 5px rgba(94,242,196,.5)}
+.layer .ln{flex:1;font-size:11px;letter-spacing:.03em;color:var(--bone-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.layer[aria-pressed=true] .ln{color:var(--bone)}
+.layer .op{font-size:9px;color:var(--bone-faint);letter-spacing:.05em;min-width:30px;text-align:right}
+.layer .mv,.layer .rm{flex:0 0 auto;background:none;border:none;color:var(--bone-faint);cursor:pointer;font-family:var(--mono);font-size:10px;padding:0 1px;line-height:1}
+.layer .mv:hover{color:var(--geo)}.layer .rm:hover{color:#ff5d5d}
+.addl{width:100%;margin-bottom:var(--s5)}
+.addl:hover{color:var(--gold);border-color:var(--gold)}
+.cfg{display:flex;flex-direction:column;gap:4px}
+.cfgrow{display:grid;grid-template-columns:54px 1fr 1fr;gap:4px;align-items:center}
+.cfgrow .cn{font-size:10px;letter-spacing:.03em;color:var(--bone-dim);text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cfg select{width:100%;background:#05080c;border:1px solid var(--line-2);color:var(--bone);font-family:var(--mono);font-size:10px;padding:4px 3px;border-radius:2px;outline:none;cursor:pointer}
+.cfg select:focus{border-color:var(--vio)}
+.cfg select:disabled{opacity:.35;cursor:default}
+.ovl{position:fixed;inset:0;background:rgba(3,5,8,.86);backdrop-filter:blur(6px);z-index:50;display:none;align-items:center;justify-content:center;padding:24px}
+.ovl.show{display:flex}
+.ovlbox{background:linear-gradient(180deg,#0b1118,#070b10);border:1px solid var(--line-2);border-radius:8px;max-width:1120px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px;position:relative}
+.ovlbox::-webkit-scrollbar{width:8px}.ovlbox::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px}
+.ovlx{position:absolute;right:14px;top:12px;cursor:pointer;color:var(--bone-dim);font-size:16px;background:none;border:none;font-family:var(--mono)}
+.ovlhd{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--bone-dim);margin-bottom:14px;display:flex;gap:14px;align-items:center;justify-content:space-between;padding-right:24px}
+.ovlhd button{background:#070d14;border:1px solid var(--line-2);color:var(--geo);border-radius:3px;font-size:10px;padding:6px 11px;cursor:pointer;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.ovlhd button:hover{border-color:var(--geo)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.gcell{border:1px solid var(--line-2);border-radius:5px;overflow:hidden;background:#04070b}
+.gcell img{display:block;width:100%;aspect-ratio:1;object-fit:contain;background:#04070b}
+.gcap{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--bone-dim);gap:6px}
+.gcap button{background:none;border:1px solid var(--line-2);color:var(--bone-dim);border-radius:3px;font-size:9px;padding:3px 7px;cursor:pointer;font-family:var(--mono)}
+.gcap button:hover{color:var(--geo);border-color:var(--geo)}
+.prodbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.prodbar button{background:#070d14;border:1px solid var(--line-2);color:var(--bone-dim);border-radius:3px;font-size:10px;padding:6px 12px;cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em}
+.prodbar button[aria-pressed=true]{background:var(--geo);color:var(--ink);border-color:transparent;font-weight:700}
+.mockwrap,.cardwrap{display:flex;justify-content:center}
+.mockwrap svg{max-height:60vh;width:auto}
+.cardwrap svg{max-height:78vh;width:auto;box-shadow:0 20px 60px -20px rgba(0,0,0,.8)}
+</style>
+</head>
+<body>
+<svg id="fdefs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<filter id="f-neon" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur in="SourceGraphic" stdDev="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="f-spray" x="-35%" y="-35%" width="170%" height="170%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-chalk" x="-35%" y="-35%" width="170%" height="170%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-char" x="-35%" y="-35%" width="170%" height="170%"><feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-wet" x="-45%" y="-45%" width="190%" height="190%"><feGaussianBlur in="SourceGraphic" stdDev="0.9" result="bl"/><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="5" result="n"/><feDisplacementMap in="bl" in2="n" scale="3.6" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-pencil" x="-35%" y="-35%" width="170%" height="170%"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-xerox" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0" result="gray"/><feComponentTransfer in="gray" result="crush"><feFuncR type="linear" slope="3.2" intercept="-1.0"/><feFuncG type="linear" slope="3.2" intercept="-1.0"/><feFuncB type="linear" slope="3.2" intercept="-1.0"/></feComponentTransfer><feTurbulence type="turbulence" baseFrequency="0.7" numOctaves="2" seed="23" result="grain"/><feColorMatrix in="grain" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.15" result="dots"/><feComposite in="dots" in2="crush" operator="over" result="toned"/><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="9" result="warp"/><feDisplacementMap in="toned" in2="warp" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="f-vellum" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceGraphic" stdDev="0.5" result="bleed"/><feColorMatrix in="bleed" type="matrix" values="0.39 0.35 0.18 0 0.05  0.30 0.32 0.16 0 0.03  0.20 0.22 0.13 0 0.01  0 0 0 1 0" result="sepia"/><feComponentTransfer in="sepia" result="aged"><feFuncR type="linear" slope="0.9" intercept="0.08"/><feFuncG type="linear" slope="0.9" intercept="0.06"/><feFuncB type="linear" slope="0.88" intercept="0.05"/></feComponentTransfer><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" seed="13" result="paper"/><feColorMatrix in="paper" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.12 0" result="grain"/><feBlend in="aged" in2="grain" mode="multiply"/></filter>
+</defs></svg>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">Studio 137 · <span class="a">α ≈ 1/137</span> · paint-with-symbols</div>
+    <h1>Symbol Painter <span class="t">/ mk·137</span></h1>
+    <p class="sub">The vibe is the algorithm. Pick a composition engine, choose what to pour through it, and the field decides where every mark lands. Seeded — so anything you love comes back.</p>
+
+    <div class="sec">Compose from story <span class="v">777</span></div>
+    <div class="seedline" style="margin-bottom:6px">
+      <input id="storyInput" type="text" placeholder="a story, theme, or direction…" value="descent into the underworld and return">
+      <button class="btn" id="storyGo" style="flex:0 0 auto;min-width:42px">⟐</button>
+    </div>
+    <div id="storyEx" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+      <button class="chip" data-s="solar victory and the golden crown">solar victory</button>
+      <button class="chip" data-s="lunar grief and the tides of dream">lunar grief</button>
+      <button class="chip" data-s="chaos becoming order">chaos→order</button>
+      <button class="chip" data-s="the sacred marriage of sun and moon">union</button>
+    </div>
+    <div id="storyTrace" style="display:none;font-size:9px;line-height:1.65;letter-spacing:.03em;color:var(--geo);background:#04070b;border:1px solid var(--line);border-radius:3px;padding:7px 9px;margin-bottom:4px"></div>
+
+    <div class="sec">Layers <span class="v" id="layerCount">1</span></div>
+    <div class="stack" id="stack"></div>
+    <button class="btn alt addl" id="addLayer">+ add layer</button>
+    <div class="ctl" style="margin-top:var(--s8)">
+      <label>Layer opacity <b id="opaV">100%</b></label>
+      <input id="opa" type="range" min="5" max="100" value="100">
+    </div>
+
+    <div class="sec">Composition <span class="v" id="modeRule">golden angle</span></div>
+    <div class="modes" id="modes"></div>
+
+    <div class="sec">Brush — what you pour</div>
+    <div class="chips" id="brushes"></div>
+
+    <div class="sec">Medium &amp; Type <span class="v">all layers</span></div>
+    <div class="cfg" id="cfg"></div>
+
+    <div class="sec">Palette</div>
+    <div class="pals" id="pals"></div>
+
+    <div class="ctl" style="margin-top:var(--s13)">
+      <label>Density <b id="densV">—</b></label>
+      <input id="dens" type="range" min="1" max="100" value="62">
+    </div>
+    <div class="ctl">
+      <label>Scale <b id="sclV">—</b></label>
+      <input id="scl" type="range" min="8" max="320" value="60">
+    </div>
+    <div class="ctl">
+      <label>Stroke weight <b id="wgtV">—</b></label>
+      <input id="wgt" type="range" min="5" max="40" value="14">
+    </div>
+
+    <div class="sec">Finish <span class="v" id="finNote">none</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px" id="finish">
+      <button class="chip" data-fin="" aria-pressed="true">none</button>
+      <button class="chip" data-fin="f-xerox">xerox liturgy</button>
+      <button class="chip" data-fin="f-vellum">aged vellum</button>
+    </div>
+
+    <div class="sec">Composition <span class="v" id="archNote">scatter</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px" id="arch">
+      <button class="chip" data-a="none" aria-pressed="true">scatter</button>
+      <button class="chip" data-a="mandala">mandala</button>
+      <button class="chip" data-a="emblem">emblem</button>
+      <button class="chip" data-a="hero">hero sigil</button>
+      <button class="chip" data-a="dimensional">dimensional</button>
+    </div>
+    <div id="archDim" style="display:none;margin-top:8px">
+      <label style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin:8px 0 5px">Rotate X <b id="rxV" style="color:var(--geo)">28</b></label><input id="rx" type="range" min="-180" max="180" value="28">
+      <label style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin:8px 0 5px">Rotate Y <b id="ryV" style="color:var(--geo)">-34</b></label><input id="ry" type="range" min="-180" max="180" value="-34">
+      <label style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin:8px 0 5px">Rotate Z <b id="rzV" style="color:var(--geo)">0</b></label><input id="rz" type="range" min="-180" max="180" value="0">
+      <label style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin:8px 0 5px">Collapse → form <b id="colV" style="color:var(--geo)">0.20</b></label><input id="collapse" type="range" min="0" max="100" value="20">
+      <div style="display:flex;gap:5px;margin-top:6px" id="lift">
+        <button class="chip" data-l="sphere" aria-pressed="true">sphere</button>
+        <button class="chip" data-l="shells">shells</button>
+        <button class="chip" data-l="helix">helix</button>
+      </div>
+    </div>
+    <div id="archMandala" style="display:none;margin-top:8px">
+      <label style="font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bone-dim);display:flex;justify-content:space-between;margin-bottom:5px">Radial fold <b id="symV" style="color:var(--geo)">8</b></label>
+      <input id="sym" type="range" min="3" max="16" value="8">
+      <div style="display:flex;gap:5px;margin-top:6px"><button class="chip" id="tgMirror" aria-pressed="true">⇋ mirror axis</button></div>
+    </div>
+    <div id="archHero" style="display:none;margin-top:8px">
+      <div class="seedline">
+        <input id="word" type="text" value="THELEMA" placeholder="intention" style="text-transform:uppercase">
+        <select id="planet" style="flex:0 0 auto;background:#070b10;border:1px solid var(--line-2);color:var(--bone);font-family:var(--mono);font-size:11px;border-radius:2px;padding:7px 6px">
+          <option value="saturn">♄ Saturn 3²</option>
+          <option value="jupiter" selected>♃ Jupiter 4²</option>
+          <option value="mars">♂ Mars 5²</option>
+          <option value="sol">☉ Sol 6²</option>
+          <option value="venus">♀ Venus 7²</option>
+          <option value="mercury">☿ Mercury 8²</option>
+          <option value="luna">☽ Luna 9²</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:5px;margin-top:6px"><button class="chip" id="tgRingText" aria-pressed="true">◯ ring text</button></div>
+    </div>
+
+    <div class="sec">Seed</div>
+    <div class="seedline">
+      <input id="seed" type="text" inputmode="numeric" value="137137">
+      <button class="btn alt" id="reroll" style="flex:0 0 auto;padding:8px 12px">↻</button>
+    </div>
+
+    <div class="sec">Format <span class="v" id="fmtNote">1:1 · 1000²</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px" id="fmt">
+      <button class="chip" data-f="square" aria-pressed="true">1:1 sticker</button>
+      <button class="chip" data-f="tee">4:5 tee</button>
+      <button class="chip" data-f="poster">2:3 poster</button>
+      <button class="chip" data-f="banner">16:9 banner</button>
+      <button class="chip" data-f="story">9:16 story</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px" id="opts">
+      <button class="chip" id="tgTile" aria-pressed="false">⊞ seamless tile</button>
+      <button class="chip" id="tgTransp" aria-pressed="false">▢ transparent</button>
+      <button class="chip" id="tgSafe" aria-pressed="false">⌖ safe guide</button>
+    </div>
+
+    <div class="sec">Export <span class="v" id="dimNote">2048²</span></div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px" id="resSeg">
+      <button class="chip" data-r="2048" aria-pressed="true">2K</button>
+      <button class="chip" data-r="4096">4K</button>
+      <button class="chip" data-r="5400">5.4K print</button>
+    </div>
+    <div class="row">
+      <button class="btn" id="exSVG">↓ SVG</button>
+      <button class="btn" id="exPNG">↓ PNG</button>
+    </div>
+    <div class="sec">Atelier <span class="v">name · proof · product</span></div>
+    <div class="seedline" style="margin-bottom:6px">
+      <input id="title" type="text" placeholder="title — defaults to word" style="text-transform:uppercase">
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px">
+      <button class="chip" id="tgTitle" aria-pressed="false">A title on art</button>
+      <button class="chip" id="tgSign" aria-pressed="false">✦ signature</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="btnCollection">⚄ collection</button>
+      <button class="btn" id="btnMockup">▣ mockup</button>
+    </div>
+    <div class="row" style="margin-top:5px">
+      <button class="btn alt" id="btnCard">↓ certificate of derivation</button>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="frame">
+      <svg id="cv" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" aria-label="Symbol composition"></svg>
+      <div class="tag" id="tag">—</div>
+      <div class="float">no clock · seeded · vector-out</div>
+    </div>
+  </main>
+</div>
+<script>
+/* ════ core ════ */
+const NS="http://www.w3.org/2000/svg", TAU=Math.PI*2, K="currentColor";
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function ap(p,t,a){const e=el(t,a);p.appendChild(e);return e;}
+function P(g,d,w,f){ap(g,"path",{d,fill:f||"none",stroke:K,"stroke-width":w==null?1.4:w,"stroke-linejoin":"round","stroke-linecap":"round"});}
+function ring(g,cx,cy,r,w){ap(g,"circle",{cx,cy,r,fill:"none",stroke:K,"stroke-width":w==null?1.4:w});}
+function dot(g,cx,cy,r){ap(g,"circle",{cx,cy,r,fill:K});}
+function ln(g,x1,y1,x2,y2,w){ap(g,"line",{x1,y1,x2,y2,stroke:K,"stroke-width":w==null?1.4:w,"stroke-linecap":"round"});}
+function ngon(cx,cy,r,n,rot,step){const p=[];step=step||1;rot=rot||0;for(let i=0;i<n;i++){const a=rot-Math.PI/2+((i*step)%n)*TAU/n;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return p;}
+function pth(pts,close){return pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")+(close?"Z":"");}
+function smooth(pts,closed){if(pts.length<3)return pth(pts,closed);
+  const A=closed?[pts[pts.length-1],...pts,pts[0],pts[1]]:[pts[0],...pts,pts[pts.length-1]];
+  let d="M"+pts[0][0].toFixed(1)+" "+pts[0][1].toFixed(1);const n=closed?pts.length:pts.length-1;
+  for(let i=0;i<n;i++){const p0=A[i],p1=A[i+1],p2=A[i+2],p3=A[i+3];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6],c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=" C"+c1[0].toFixed(1)+" "+c1[1].toFixed(1)+" "+c2[0].toFixed(1)+" "+c2[1].toFixed(1)+" "+p2[0].toFixed(1)+" "+p2[1].toFixed(1);}
+  if(closed)d+="Z";return d;}
+const R3=Math.sqrt(3);
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ════ geometric stamps — drawn in a 0..100 box ════ */
+const GEO={
+ vesica(g){ring(g,38,50,30,2.2);ring(g,62,50,30,2.2);},
+ seed(g){const r=17,c=50;ring(g,c,c,r,2);for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;ring(g,c+Math.cos(a)*r,c+Math.sin(a)*r,r,2);}},
+ flower(g){const r=15,c=50;ring(g,c,c,r,1.7);for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;ring(g,c+Math.cos(a)*r,c+Math.sin(a)*r,r,1.7);}for(let i=0;i<6;i++){const a=-Math.PI/2+(i+.5)*TAU/6;ring(g,c+Math.cos(a)*r*R3,c+Math.sin(a)*r*R3,r,1.5);}},
+ metatron(g){const c=50,st=15,N=[[c,c]];for(let rg=1;rg<=2;rg++)for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;N.push([c+Math.cos(a)*st*rg,c+Math.sin(a)*st*rg]);}for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++)ln(g,N[i][0],N[i][1],N[j][0],N[j][1],.5);N.forEach(p=>dot(g,p[0],p[1],1.6));},
+ merkaba(g){const c=50;P(g,pth(ngon(c,c,40,3,0),true),2.2);P(g,pth(ngon(c,c,40,3,Math.PI),true),2.2);},
+ pentagram(g){const c=50;P(g,pth(ngon(c,c,42,5,0,2),true),2.2);},
+ hexagram(g){const c=50;P(g,pth(ngon(c,c,42,3,0),true),2.2);P(g,pth(ngon(c,c,42,3,Math.PI),true),2.2);},
+ unicursal(g){const c=50;P(g,pth(ngon(c,c,44,3,0),true),2);P(g,pth(ngon(c,c,44,3,Math.PI),true),2);ring(g,c,c,5,1.6);dot(g,c,c,1.6);},
+ triquetra(g){const c=50,r=20,o=11,cs=[[c,c-o],[c-o*.87,c+o*.5],[c+o*.87,c+o*.5]];cs.forEach((p,i)=>{const a0=i*TAU/3-Math.PI/2,arc=[];for(let t=-1.05;t<=1.05;t+=.1)arc.push([p[0]+Math.cos(a0+t+Math.PI)*r,p[1]+Math.sin(a0+t+Math.PI)*r]);P(g,pth(arc),2.2);});},
+ triskele(g){const c=50;for(let i=0;i<3;i++){const a0=i*TAU/3;let d="M"+c+" "+c;for(let t=0;t<3.4;t+=.16){const rr=t*6,x=c+rr*Math.cos(a0+t),y=c+rr*Math.sin(a0+t);d+="L"+x.toFixed(1)+" "+y.toFixed(1);}P(g,d,2.4);}},
+ vegvisir(g){const c=50;ring(g,c,c,42,.7);for(let i=0;i<8;i++){const a=i*TAU/8,ux=c+Math.cos(a)*40,uy=c+Math.sin(a)*40,v=i%4,px=Math.cos(a),py=Math.sin(a),qx=-py,qy=px;ln(g,c,c,ux,uy,2);if(v===0){ln(g,ux,uy,ux-px*7+qx*7,uy-py*7+qy*7,1.8);ln(g,ux,uy,ux-px*7-qx*7,uy-py*7-qy*7,1.8);}else if(v===1){ln(g,ux-px*5+qx*8,uy-py*5+qy*8,ux-px*5-qx*8,uy-py*5-qy*8,1.8);}else if(v===2){ring(g,ux,uy,3.4,1.6);}else{ln(g,ux,uy,ux+qx*7,uy+qy*7,1.8);}}},
+ valknut(g){const c=50,r=20;[[c,c-12],[c-15,c+10],[c+15,c+10]].forEach(o=>P(g,pth(ngon(o[0],o[1]+6,r,3,0),true),2));},
+ eye(g){P(g,"M22 50 Q42 33 64 48 Q52 60 38 58 Q26 56 22 50Z",2.2);ring(g,44,50,6,2.2);dot(g,44,50,2.4);P(g,"M40 58 L36 74",2.2);P(g,"M50 59 Q52 70 62 70",2.2);},
+ ankh(g){const c=50;ring(g,c,30,12,2.4);ln(g,c,42,c,84,2.4);ln(g,32,54,68,54,2.4);},
+ spiral(g){let b=.306,d="",c=50;for(let t=0;t<5.6*Math.PI;t+=.14){const rr=2.2*Math.exp(b*t),x=c+rr*Math.cos(t),y=c+rr*Math.sin(t);d+=(d?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);}P(g,d,2.2);},
+ monad(g){const c=50;P(g,"M40 30 A 10 10 0 0 0 60 30",2.4);ring(g,c,44,8,2.4);dot(g,c,44,1.4);ln(g,c,52,c,74,2.4);ln(g,c-6,63,c+6,63,2.4);P(g,"M42 84 A 6 6 0 0 1 50 76 A 6 6 0 0 1 58 84",2.2);}
+};
+const GEOKEYS=Object.keys(GEO);
+
+/* ════ unicode glyph pools ════ */
+const GLYPHS={
+ alchemy:{f:"u-sym2",ch:["🜂","🜄","🜁","🜃","🜍","🜔","🜀","🜊","🜋","🜖","🜐","🜛","☉","☽","☿","♀","♂","♃","♄"]},
+ astro:{f:"u-sym",ch:["☉","☽","☿","♀","♂","♃","♄","♅","♆","♇","♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"]},
+ runic:{f:"u-runic",ch:["ᚠ","ᚢ","ᚦ","ᚨ","ᚱ","ᚲ","ᚷ","ᚹ","ᚺ","ᚾ","ᛁ","ᛃ","ᛇ","ᛈ","ᛉ","ᛊ","ᛏ","ᛒ","ᛖ","ᛗ","ᛚ","ᛜ","ᛞ","ᛟ"]},
+ hebrew:{f:"u-heb",ch:["א","ב","ג","ד","ה","ו","ז","ח","ט","י","כ","ל","מ","נ","ס","ע","פ","צ","ק","ר","ש","ת"]},
+ hiero:{f:"u-hiero",ch:["𓁹","𓊽","𓌀","𓆣","𓆄","𓄤","𓇳","𓂀","𓋹","𓍝","𓆃","𓃭"]},
+ trigram:{f:"u-sym",ch:["☰","☱","☲","☳","☴","☵","☶","☷"]}
+};
+
+/* ════ kamea sigil engine (compact, 7 squares) ════ */
+const KAM={
+ saturn:[[4,9,2],[3,5,7],[8,1,6]],
+ jupiter:[[16,3,2,13],[5,10,11,8],[9,6,7,12],[4,15,14,1]],
+ mars:[[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]],
+ sol:[[6,32,3,34,35,1],[7,11,27,28,8,30],[19,14,16,15,23,24],[18,20,22,21,17,13],[25,29,10,9,26,12],[36,5,33,4,2,31]],
+ venus:[[22,47,16,41,10,35,4],[5,23,48,17,42,11,29],[30,6,24,49,18,36,12],[13,31,7,25,43,19,37],[38,14,32,1,26,44,20],[21,39,8,33,2,27,45],[46,15,40,9,34,3,28]],
+ mercury:[[8,58,59,5,4,62,63,1],[49,15,14,52,53,11,10,56],[41,23,22,44,45,19,18,48],[32,34,35,29,28,38,39,25],[40,26,27,37,36,30,31,33],[17,47,46,20,21,43,42,24],[9,55,54,12,13,51,50,16],[64,2,3,61,60,6,7,57]],
+ luna:[[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]
+};
+const PLN=Object.keys(KAM);
+function cipher(ch){const i=ch.charCodeAt(0)-65;if(i<0||i>25)return 0;if(i<9)return i+1;if(i<18)return(i-8)*10;return(i-17)*100;}
+function reduceTo(v,m){while(v>m){let s=0,t=v;while(t>0){s+=t%10;t=(t/10)|0;}v=s;}return v||m;}
+function sigilPath(word,planet,smoothFlag){const grid=KAM[planet],n=grid.length,pos={};
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)pos[grid[r][c]]=[r,c];
+  const M=24,sp=220-2*M,st=sp/n;
+  const pts=word.toUpperCase().replace(/[^A-Z]/g,"").split("").filter(Boolean).map(ch=>{const cell=reduceTo(cipher(ch),n*n),p=pos[cell];return[M+st*(p[1]+.5),M+st*(p[0]+.5)];});
+  return{d:smoothFlag?smooth(pts,false):pth(pts,false),pts};}
+const WORDS=["SOL","LUNA","AZOTH","ABRAXAS","KETHER","NOX","LUX","FIRE","AETHER","CHAOS","VOID","SIGIL","THELEMA","BABALON","HADIT","NUIT","ALPHA","OMEGA","ZAZEL","SORATH","AGIEL","HAGITH"];
+
+/* ════ stamp picker ════ */
+function pickStamp(rng,brushes,wgt){
+  const cats=brushes.length?brushes:["geometry"];
+  const cat=cats[(rng()*cats.length)|0];
+  if(cat==="geometry"){const k=GEOKEYS[(rng()*GEOKEYS.length)|0];return{native:100,cat:"geometry",paint:g=>GEO[k](g)};}
+  if(cat==="sigil"){const w=WORDS[(rng()*WORDS.length)|0],pl=PLN[(rng()*PLN.length)|0],sm=rng()<.5,s=sigilPath(w,pl,sm);
+    return{native:220,cat:"sigil",paint:g=>{P(g,s.d,2.4);s.pts.forEach(p=>dot(g,p[0],p[1],2.6));if(s.pts[0])ring(g,s.pts[0][0],s.pts[0][1],5.5,2);}};}
+  const pool=GLYPHS[cat],ch=pool.ch[(rng()*pool.ch.length)|0];
+  return{native:100,cat:cat,paint:g=>{const t=ap(g,"text",{x:50,y:50,"text-anchor":"middle","dominant-baseline":"central","font-size":76,fill:K});t.style.fontFamily=(typeof CAT!=="undefined"&&CAT[cat]&&CAT[cat].font)||pool.f;t.textContent=ch;}};
+}
+
+/* ════ global stroke gain (wraps the helpers so one slider controls all weight) ════ */
+let GW=1;
+const _P=P,_ring=ring,_ln=ln;
+P=function(g,d,w,f){_P(g,d,(w==null?1.4:w)*GW,f);};
+ring=function(g,cx,cy,r,w){_ring(g,cx,cy,r,(w==null?1.4:w)*GW);};
+ln=function(g,x1,y1,x2,y2,w){_ln(g,x1,y1,x2,y2,(w==null?1.4:w)*GW);};
+
+/* ════ helpers for structured fields ════ */
+function metatronNodes(W,H){const cx=W/2,cy=H/2,R=Math.min(W,H)*0.235,N=[[cx,cy]];for(let rg=1;rg<=2;rg++)for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;N.push([cx+Math.cos(a)*R*rg,cy+Math.sin(a)*R*rg]);}return N;}
+function drawMetatronLines(svg,W,H){const N=metatronNodes(W,H),g=ap(svg,"g",{opacity:.18});for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++)ap(g,"line",{x1:N[i][0],y1:N[i][1],x2:N[j][0],y2:N[j][1],stroke:"var(--vio)","stroke-width":1});}
+
+/* ════ composition engines — the vibe IS the placement field ════ */
+const MODES={
+ phyllotaxis:{label:"Phyllotaxis",rule:"golden angle · 137.5°",cap:420,base:46,dens:64,fn(W,H,n,rng){
+   const GA=Math.PI*(3-Math.sqrt(5)),cx=W/2,cy=H/2,k=Math.min(W,H)*0.47/Math.sqrt(n),out=[];
+   for(let i=1;i<=n;i++){const r=k*Math.sqrt(i),a=i*GA;out.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),s:0.45+0.55*(i/n),rot:a*180/Math.PI,op:1});}return out;}},
+ lattice:{label:"Lattice",rule:"hexagonal grid",cap:340,base:58,dens:54,fn(W,H,n,rng){
+   const a=Math.sqrt(W*H/Math.max(1,n)),sp=a*1.02,out=[];let row=0;
+   for(let y=sp*0.5;y<H-1;y+=sp*0.5*R3,row++){const off=(row%2)?sp/2:0;for(let x=sp*0.5+off;x<W-1;x+=sp)out.push({x,y,s:1,rot:0,op:1});}
+   return out.slice(0,n);}},
+ metatron:{label:"Metatron",rule:"the thirteen nodes",cap:13,base:84,dens:100,fn(W,H,n,rng){
+   return metatronNodes(W,H).slice(0,Math.max(1,n)).map(p=>({x:p[0],y:p[1],s:1,rot:0,op:1}));}},
+ organic:{label:"Organic",rule:"poisson spacing · even but alive",cap:280,base:56,dens:60,fn(W,H,n,rng){
+   const r=Math.sqrt(W*H/Math.max(1,n))*0.86,r2=r*r,out=[];let att=0,cap=n*40;
+   while(out.length<n&&att++<cap){const x=rng()*W,y=rng()*H;let ok=true;for(let i=0;i<out.length;i++){const dx=out[i].x-x,dy=out[i].y-y;if(dx*dx+dy*dy<r2){ok=false;break;}}if(ok)out.push({x,y,s:0.85+rng()*0.3,rot:(rng()-0.5)*20,op:1});}
+   return out;}},
+ cymatic:{label:"Cymatic",rule:"standing-wave nodes",cap:520,base:30,dens:64,fn(W,H,n,rng){
+   const kx=2+((rng()*6)|0),ky=2+((rng()*6)|0),out=[];let att=0,cap=n*220;
+   const f=(X,Y)=>Math.sin(kx*Math.PI*X)*Math.sin(ky*Math.PI*Y)+Math.sin(ky*Math.PI*X)*Math.sin(kx*Math.PI*Y);
+   while(out.length<n&&att++<cap){const X=rng(),Y=rng();if(Math.abs(f(X,Y))<0.05)out.push({x:X*W,y:Y*H,s:0.4+rng()*0.3,rot:0,op:0.82});}
+   return out;}},
+ attractor:{label:"Strange Attractor",rule:"de Jong orbit · order in chaos",cap:700,base:26,dens:70,fn(W,H,n,rng){
+   const a=-3+rng()*6,b=-3+rng()*6,c=-3+rng()*6,d=-3+rng()*6;let x=0,y=0;const pts=[],total=n*16+1400;
+   for(let i=0;i<total;i++){const nx=Math.sin(a*y)-Math.cos(b*x),ny=Math.sin(c*x)-Math.cos(d*y);x=nx;y=ny;if(i>600)pts.push([x,y]);}
+   const out=[],step=Math.max(1,Math.floor(pts.length/n)),pad=W*0.08;
+   for(let i=0;i<pts.length&&out.length<n;i+=step)out.push({x:pad+(pts[i][0]+2)/4*(W-2*pad),y:pad+(pts[i][1]+2)/4*(H-2*pad),s:0.4+rng()*0.3,rot:rng()*360,op:0.72});
+   return out;}},
+ mandelbrot:{label:"Mandelbrot",rule:"escape-time boundary",cap:520,base:30,dens:64,fn(W,H,n,rng){
+   const re0=-2.2,re1=0.8,im0=-1.25,im1=1.25,out=[];let att=0,cap=n*260;
+   while(out.length<n&&att++<cap){const cr=re0+rng()*(re1-re0),ci=im0+rng()*(im1-im0);let zr=0,zi=0,it=0;
+     while(zr*zr+zi*zi<=4&&it<64){const t=zr*zr-zi*zi+cr;zi=2*zr*zi+ci;zr=t;it++;}
+     if(it>9&&it<58)out.push({x:(cr-re0)/(re1-re0)*W,y:(ci-im0)/(im1-im0)*H,s:0.3+0.6*(it/58),rot:rng()*360,op:0.6+0.35*(it/58)});}
+   return out;}},
+ chaos:{label:"Chaos",rule:"pure entropy",cap:420,base:54,dens:56,fn(W,H,n,rng){
+   const out=[];for(let i=0;i<n;i++){const t=rng();out.push({x:rng()*W,y:rng()*H,s:0.2+t*t*t*2.0,rot:rng()*360,op:0.5+rng()*0.5});}return out;}},
+ haring:{label:"Haring",rule:"rhythmic repetition + radiance",cap:150,base:70,dens:68,fn(W,H,n,rng){
+   const cols=Math.max(2,Math.round(Math.sqrt(n))),rows=Math.max(1,Math.round(n/cols)),cw=W/cols,ch=H/rows,out=[];
+   for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const jx=(rng()-0.5)*cw*0.16,jy=(rng()-0.5)*ch*0.16,sign=((r+c)%2)?1:-1;
+     out.push({x:cw*(c+0.5)+jx,y:ch*(r+0.5)+jy,s:0.66+rng()*0.18,rot:sign*(7+rng()*9),op:1,haring:true});}
+   return out;}},
+ minimal:{label:"Minimal",rule:"one mark · much void",cap:3,base:280,dens:100,fn(W,H,n,rng){
+   const pts=[[0.382,0.382,1.0],[0.70,0.66,0.42],[0.30,0.74,0.30]];
+   return pts.slice(0,Math.max(1,Math.min(3,n))).map(p=>({x:W*p[0],y:H*p[1],s:p[2],rot:0,op:1}));}}
+};
+const MODEKEYS=["phyllotaxis","lattice","metatron","organic","cymatic","attractor","mandelbrot","chaos","haring","minimal"];
+
+/* ════ palettes ════ */
+const PAL={
+ phosphor:{bg:"#07090c",ink:["#5ef2c4","#8a7ff0","#e8c46a","#56c9ff"],mode:"cycle"},
+ voidp:{bg:"#05070a",ink:["#c9d2da"],mode:"mono"},
+ blueprint:{bg:"#081019",ink:["#56c9ff","#9fb7c9","#5ef2c4"],mode:"cycle"},
+ bone:{bg:"#0c0a07",ink:["#d4b483","#c9d2da","#c2693f"],mode:"cycle"},
+ haring:{bg:"#0e0b05",ink:["#ff3b30","#ffcc00","#34c759","#2d9cff","#ff2d9b","#f4f1e8"],mode:"cycle"},
+ spectrum:{bg:"#060708",ink:null,mode:"spectrum"}
+};
+const PALMETA={auto:["auto",["#5ef2c4","#8a7ff0"]],phosphor:["phosphor",["#5ef2c4","#8a7ff0","#e8c46a"]],voidp:["void",["#c9d2da"]],blueprint:["blueprint",["#56c9ff","#9fb7c9"]],bone:["bone",["#d4b483","#c2693f"]],haring:["haring",["#ff3b30","#ffcc00","#2d9cff"]],spectrum:["spectrum",["#ff5d5d","#5ef2c4","#8a7ff0"]]};
+const PALKEYS=["auto","phosphor","voidp","blueprint","bone","haring","spectrum"];
+const AUTO={phyllotaxis:"phosphor",lattice:"bone",metatron:"phosphor",organic:"bone",cymatic:"blueprint",attractor:"spectrum",mandelbrot:"phosphor",chaos:"phosphor",haring:"haring",minimal:"voidp"};
+
+/* ════ brushes ════ */
+const BRUSHMETA=[["geometry","Geometry"],["sigil","Sigils"],["alchemy","Alchemy"],["astro","Astro"],["runic","Runic"],["hebrew","Hebrew"],["hiero","Hiero"],["trigram","Trigram"]];
+
+/* ════ state — a stack of layers, each its own field ════ */
+function defaults(modeKey){const m=MODES[modeKey];return{density:m.dens,baseSize:m.base};}
+function newLayer(opts){const base={mode:"phyllotaxis",palette:"auto",weight:14,seed:137137,opacity:1,visible:true,brushes:["geometry","sigil","alchemy"],arch:"none",sym:8,mirror:true,word:"THELEMA",planet:"jupiter",ringText:true,rx:28,ry:-34,rz:0,collapse:0.2,lift:"sphere"};const d=defaults(base.mode);return Object.assign(base,{density:d.density,baseSize:d.baseSize},opts||{});}
+let layers=[newLayer()];
+let active=0;
+const L=()=>layers[active];
+function curPalOf(ly){return PAL[ly.palette==="auto"?AUTO[ly.mode]:ly.palette];}
+function pickColor(pal,i,n,nd,rng){if(nd.color)return nd.color;if(pal.mode==="spectrum")return "hsl("+(Math.round(360*i/Math.max(1,n))%360)+" 72% 63%)";if(pal.mode==="mono")return pal.ink[0];return pal.ink[i%pal.ink.length];}
+
+/* ════ render ════ */
+const cv=document.getElementById("cv"); let W=1000, H=1000;
+/* ════ product output: format + tile + transparent + print-res ════ */
+const FORMATS={square:[1,1],tee:[4,5],poster:[2,3],banner:[16,9],story:[9,16]};
+let FMT="square", TILE=false, TRANSP=false, SAFE=false, RES=2048; const LONG=1000;
+function setFormat(key){FMT=key;const f=FORMATS[key],ar=f[0],br=f[1];
+  if(ar>=br){W=LONG;H=Math.round(LONG*br/ar);}else{H=LONG;W=Math.round(LONG*ar/br);}
+  cv.setAttribute("viewBox","0 0 "+W+" "+H);
+  const fr=document.querySelector(".frame");
+  fr.style.aspectRatio=W+" / "+H;
+  if(H>W){fr.style.height="86vh";fr.style.width="auto";}else{fr.style.width="min(86vh,100%)";fr.style.height="auto";}
+  render();}
+function pxDims(){let pw,ph;if(W>=H){pw=RES;ph=Math.round(RES*H/W);}else{ph=RES;pw=Math.round(RES*W/H);}return[pw,ph];}
+function updNotes(){const d=pxDims();
+  const fn=document.getElementById("fmtNote");if(fn)fn.textContent=(TILE?"tile · ":"")+W+"×"+H;
+  const dn=document.getElementById("dimNote");if(dn)dn.textContent=d[0]+"×"+d[1]+(TRANSP?" · α":"");}
+function paintStampAt(parent,ly,nd,i,n,pal,rng){
+  const st=pickStamp(rng,ly.brushes.length?ly.brushes:["geometry"]);
+  const col=pickColor(pal,i,n,nd,rng);
+  const dev=DEVICES[(CAT[st.cat]&&CAT[st.cat].device)||"ink"];
+  GW=(ly.weight/14)*dev.sw;
+  const scl=(ly.baseSize*nd.s)/st.native;
+  const g=ap(parent,"g",{transform:"translate("+nd.x.toFixed(1)+" "+nd.y.toFixed(1)+") rotate("+(nd.rot||0).toFixed(1)+") scale("+scl.toFixed(4)+")",opacity:((nd.op==null?1:nd.op)*dev.op).toFixed(3)});
+  g.style.color=col;
+  if(nd.haring){const Rr=st.native;for(let t=0;t<8;t++){const a=t*TAU/8;ln(g,Math.cos(a)*Rr*0.58,Math.sin(a)*Rr*0.58,Math.cos(a)*Rr*0.70,Math.sin(a)*Rr*0.70,2.4);}}
+  const rc=ap(g,"g",{transform:"translate("+(-st.native/2)+" "+(-st.native/2)+")"});
+  if(dev.filter)rc.setAttribute("filter","url(#"+dev.filter+")");
+  st.paint(rc);
+}
+function drawHeroSigil(parent,ly,word,planet,cx,cy,diam,col){
+  const s=sigilPath((word&&word.trim())||"SIGIL",planet||"jupiter",true);
+  const k=diam/220;
+  GW=(ly.weight/14);
+  const g=ap(parent,"g",{transform:"translate("+cx+" "+cy+") scale("+k.toFixed(4)+") translate(-110 -110)"});
+  g.style.color=col;
+  P(g,s.d,3.0);
+  s.pts.forEach(p=>dot(g,p[0],p[1],3.2));
+  if(s.pts[0])ring(g,s.pts[0][0],s.pts[0][1],7,2.2);
+  if(s.pts.length>1){const e=s.pts[s.pts.length-1];ln(g,e[0]-6,e[1]-6,e[0]+6,e[1]+6,2.2);ln(g,e[0]-6,e[1]+6,e[0]+6,e[1]-6,2.2);}
+  return s;
+}
+function drawTextRing(parent,ly,text,cx,cy,r,pal){
+  text=(text&&text.trim())?text.trim().toUpperCase():"STUDIO 137";
+  const id="tr"+((Math.random()*1e9)|0);
+  const d="M "+(cx-r)+" "+cy+" a "+r+" "+r+" 0 1 1 "+(2*r)+" 0 a "+r+" "+r+" 0 1 1 "+(-2*r)+" 0";
+  const defs=ap(parent,"defs",{});ap(defs,"path",{id:id,d:d});
+  const fs=Math.max(9,Math.round(r*0.085));
+  const t=ap(parent,"text",{"font-size":fs,"letter-spacing":Math.round(fs*0.5),fill:(pal.ink[1]||pal.ink[0])});
+  t.style.fontFamily='"JetBrains Mono",ui-monospace,monospace';
+  const tp=document.createElementNS(NS,"textPath");
+  tp.setAttribute("href","#"+id);tp.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href","#"+id);
+  tp.setAttribute("startOffset","0");
+  const unit=text+"   ·   ";const reps=Math.max(2,Math.round((TAU*r)/(unit.length*fs*0.62)));
+  tp.textContent=unit.repeat(reps);
+  t.appendChild(tp);
+}
+function drawLayer(parent,ly){
+  const pal=curPalOf(ly), rng=mulberry(ly.seed>>>0), m=MODES[ly.mode], n=Math.max(1,Math.round(ly.density/100*m.cap));
+  const arch=ly.arch||"none", cx=W/2, cy=H/2, R=Math.min(W,H)/2;
+  if(ly.mode==="metatron"&&arch==="none")drawMetatronLines(parent,W,H);
+  const nodes=m.fn(W,H,n,rng);
+
+  if(arch==="mandala"){
+    const N=Math.max(3,(ly.sym|0)||8), seg=TAU/N;
+    const folded=nodes.map(nd=>{const dx=nd.x-cx,dy=nd.y-cy;const r=Math.min(Math.hypot(dx,dy),R*0.96);const th=Math.atan2(dy,dx);const a=((th%seg)+seg)%seg;return Object.assign({},nd,{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a),rot:a*180/Math.PI});});
+    const wedge=el("g",{});
+    folded.forEach((nd,i)=>paintStampAt(wedge,ly,nd,i,folded.length,pal,rng));
+    for(let kk=0;kk<N;kk++){const c=wedge.cloneNode(true);const deg=(kk*360/N).toFixed(2);
+      c.setAttribute("transform",(ly.mirror&&kk%2)?("translate("+cx+" "+cy+") rotate("+deg+") scale(1 -1) translate("+(-cx)+" "+(-cy)+")"):("rotate("+deg+" "+cx+" "+cy+")"));
+      parent.appendChild(c);}
+    return nodes.length*N;
+  }
+
+  if(arch==="emblem"){
+    GW=(ly.weight/14);const fr=ap(parent,"g",{});fr.style.color=(pal.ink[0]||"#fff");
+    ring(fr,cx,cy,R*0.95,2);ring(fr,cx,cy,R*0.89,1);ring(fr,cx,cy,R*0.50,0.8);
+    const KK=Math.min(nodes.length,28),courtR=R*0.69,court=[];
+    for(let i=0;i<KK;i++){const a=-Math.PI/2+i*TAU/KK,b=nodes[i%nodes.length];court.push(Object.assign({},b,{x:cx+courtR*Math.cos(a),y:cy+courtR*Math.sin(a),s:0.5,rot:a*180/Math.PI+90,op:1,haring:false,color:null}));}
+    court.forEach((nd,i)=>paintStampAt(parent,ly,nd,i,court.length,pal,rng));
+    if(ly.ringText)drawTextRing(parent,ly,ly.word,cx,cy,R*0.80,pal);
+    drawHeroSigil(parent,ly,ly.word,ly.planet,cx,cy,R*0.80,(pal.ink[0]||"#fff"));
+    return court.length+1;
+  }
+
+  if(arch==="hero"){
+    GW=(ly.weight/14);const bg=ap(parent,"g",{opacity:0.5});bg.style.color=(pal.ink[1]||pal.ink[0]||"#fff");
+    ring(bg,cx,cy,R*0.93,0.8);ring(bg,cx,cy,R*0.60,0.6);
+    const aura=nodes.map(nd=>{const th=Math.atan2(nd.y-cy,nd.x-cx);const rr=Math.min(Math.max(R*(0.52+0.42*(nd.s||0.5)),R*0.5),R*0.95);const fall=Math.max(0,1-(rr-R*0.5)/(R*0.45));return Object.assign({},nd,{x:cx+rr*Math.cos(th),y:cy+rr*Math.sin(th),s:(nd.s||0.5)*0.6,rot:th*180/Math.PI,op:0.22+0.6*fall,haring:false,color:null});});
+    aura.forEach((nd,i)=>paintStampAt(parent,ly,nd,i,aura.length,pal,rng));
+    if(ly.ringText)drawTextRing(parent,ly,ly.word,cx,cy,R*0.80,pal);
+    drawHeroSigil(parent,ly,ly.word,ly.planet,cx,cy,R*0.92,(pal.ink[0]||"#fff"));
+    return aura.length+1;
+  }
+
+  if(arch==="dimensional"){
+    const S=R*0.92, c=Math.max(0,Math.min(1,ly.collapse==null?0.2:ly.collapse)), D=R*3.2, shape=ly.lift||"sphere", NN=nodes.length;
+    const rx=(ly.rx||0)*Math.PI/180, ry=(ly.ry||0)*Math.PI/180, rz=(ly.rz||0)*Math.PI/180;
+    const cx2=Math.cos(rx),sx2=Math.sin(rx),cy2=Math.cos(ry),sy2=Math.sin(ry),cz2=Math.cos(rz),sz2=Math.sin(rz), L1=(a,b)=>a+(b-a)*c;
+    const pts=nodes.map((nd,i)=>{
+      let nx=(nd.x-cx)/R, ny=(nd.y-cy)/R, r2=Math.min(1,Math.hypot(nx,ny)), th=Math.atan2(ny,nx), X,Y,Z;
+      if(shape==="sphere"){const phi=r2*Math.PI; X=Math.sin(phi)*Math.cos(th)*S; Y=Math.sin(phi)*Math.sin(th)*S; Z=Math.cos(phi)*S;}
+      else if(shape==="helix"){const t=NN>1?i/(NN-1):0.5, ang=t*Math.PI*2*4, rad=R*0.7; X=Math.cos(ang)*rad; Y=(t-0.5)*2*S; Z=Math.sin(ang)*rad;}
+      else {X=nx*R; Y=ny*R; Z=R*0.55*Math.cos(r2*Math.PI*2.2);}
+      let y1=Y*cx2-Z*sx2, z1=Y*sx2+Z*cx2, x1=X;
+      let x2=x1*cy2+z1*sy2, z2=-x1*sy2+z1*cy2, y2=y1;
+      let x3=x2*cz2-y2*sz2, y3=x2*sz2+y2*cz2, z3=z2;
+      const persp=D/(D-z3);
+      return {nd:nd,i:i,sx:cx+x3*persp,sy:cy-y3*persp,persp:persp,z:z3};
+    });
+    pts.sort((a,b)=>a.z-b.z);
+    let zmin=Infinity,zmax=-Infinity;pts.forEach(p=>{if(p.z<zmin)zmin=p.z;if(p.z>zmax)zmax=p.z;});const zr=(zmax-zmin)||1;
+    pts.forEach(p=>{const dep=(p.z-zmin)/zr;
+      paintStampAt(parent,ly,{x:L1(p.sx,p.nd.x),y:L1(p.sy,p.nd.y),s:L1(Math.max(0.3,Math.min(2.4,p.persp)),1)*(p.nd.s||0.5),rot:0,op:(p.nd.op==null?1:p.nd.op)*L1(0.3+0.7*dep,1),color:p.nd.color},p.i,NN,pal,rng);});
+    return NN;
+  }
+
+  for(let i=0;i<nodes.length;i++)paintStampAt(parent,ly,nodes[i],i,nodes.length,pal,rng);
+  return nodes.length;
+}
+let FIN="";
+function render(){
+  while(cv.firstChild)cv.removeChild(cv.firstChild);
+  const base=layers.find(l=>l.visible)||layers[0];
+  const root=FIN?ap(cv,"g",{filter:"url(#"+FIN+")"}):cv;
+  ap(root,"rect",{"class":"bgrect",x:0,y:0,width:W,height:H,fill:curPalOf(base).bg});
+  let total=0;
+  if(TILE){
+    const defs=ap(root,"defs",{});const cp=ap(defs,"clipPath",{id:"_tc"});ap(cp,"rect",{x:0,y:0,width:W,height:H});
+    const comp=el("g",{});
+    layers.forEach(ly=>{if(!ly.visible)return;const g=ap(comp,"g",{opacity:ly.opacity});total+=drawLayer(g,ly);});
+    const wrap=ap(root,"g",{"clip-path":"url(#_tc)"});
+    for(let dx=-W;dx<=W;dx+=W)for(let dy=-H;dy<=H;dy+=H){const c=comp.cloneNode(true);c.setAttribute("transform","translate("+dx+" "+dy+")");wrap.appendChild(c);}
+  }else{
+    layers.forEach(ly=>{if(!ly.visible)return;const g=ap(root,"g",{opacity:ly.opacity});total+=drawLayer(g,ly);});
+  }
+  if(TITLE_ON)drawTitleMark(cv);
+  if(SIGN)drawSignature(cv);
+  if(SAFE){const mx=Math.round(Math.min(W,H)*0.07);ap(cv,"rect",{"class":"noexport",x:mx,y:mx,width:W-2*mx,height:H-2*mx,fill:"none",stroke:"#8a7ff0","stroke-width":2,"stroke-dasharray":"10 8",opacity:0.6});}
+  const ly=L(), m=MODES[ly.mode], vis=layers.filter(l=>l.visible).length;
+  document.getElementById("tag").innerHTML="<b>"+vis+" layer"+(vis>1?"s":"")+"</b> · "+total+" marks · "+(TILE?"tile · ":"")+m.label.toLowerCase();
+  document.getElementById("densV").textContent=Math.max(1,Math.round(ly.density/100*m.cap));
+  document.getElementById("sclV").textContent=ly.baseSize;
+  document.getElementById("wgtV").textContent=(ly.weight/14).toFixed(2)+"×";
+  document.getElementById("opaV").textContent=Math.round(ly.opacity*100)+"%";
+  document.getElementById("modeRule").textContent=m.rule.split(" · ")[0];
+  document.getElementById("layerCount").textContent=layers.length;
+  updNotes();
+}
+
+/* ════ export ════ */
+function serialize(opts){opts=opts||{};const c=cv.cloneNode(true);c.setAttribute("xmlns",NS);
+  c.querySelectorAll('[class~="noexport"]').forEach(n=>n.remove());
+  if(opts.transparent)c.querySelectorAll('[class~="bgrect"]').forEach(n=>n.remove());
+  c.setAttribute("width",opts.w||W);c.setAttribute("height",opts.h||H);
+  let s=new XMLSerializer().serializeToString(c);const defs=document.getElementById("fdefs").innerHTML;return s.replace(/(<svg[^>]*>)/,"$1"+defs);}
+function fname(ext){return "studio137_"+FMT+(TILE?"_tile":"")+(TRANSP?"_alpha":"")+"_"+L().mode+"_"+L().seed+"."+ext;}
+function dl(b,n){const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+function exSVG(){dl(new Blob([serialize({transparent:TRANSP})],{type:"image/svg+xml"}),fname("svg"));}
+function exPNG(){const d=pxDims(),pw=d[0],ph=d[1],svg=serialize({transparent:TRANSP,w:pw,h:ph}),img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+  img.onload=()=>{const cvn=document.createElement("canvas");cvn.width=pw;cvn.height=ph;const x=cvn.getContext("2d");
+    if(!TRANSP){const base=layers.find(l=>l.visible)||layers[0];x.fillStyle=curPalOf(base).bg;x.fillRect(0,0,pw,ph);}
+    x.drawImage(img,0,0,pw,ph);URL.revokeObjectURL(url);cvn.toBlob(b=>dl(b,fname("png")),"image/png");};
+  img.src=url;}
+
+/* ════ UI ════ */
+const modesEl=document.getElementById("modes"), modeBtns={};
+MODEKEYS.forEach(k=>{const m=MODES[k],b=document.createElement("button");b.className="mode";
+  b.innerHTML='<span class="nm">'+m.label+'</span><span class="rule">'+m.rule+'</span>';
+  b.addEventListener("click",()=>{const ly=L();ly.mode=k;const d=defaults(k);ly.density=d.density;ly.baseSize=d.baseSize;sync();render();});
+  modeBtns[k]=b;modesEl.appendChild(b);});
+
+const brushEl=document.getElementById("brushes"), brushBtns={};
+BRUSHMETA.forEach(function(pair){const key=pair[0],label=pair[1];const b=document.createElement("button");b.className="chip";b.textContent=label;
+  b.addEventListener("click",()=>{const ly=L(),i=ly.brushes.indexOf(key);if(i>=0&&ly.brushes.length>1)ly.brushes.splice(i,1);else if(i<0)ly.brushes.push(key);sync();render();});
+  brushBtns[key]=b;brushEl.appendChild(b);});
+
+const palEl=document.getElementById("pals"), palBtns={};
+PALKEYS.forEach(key=>{const meta=PALMETA[key],b=document.createElement("button");b.className="pal";
+  b.innerHTML='<span class="sw">'+meta[1].map(c=>'<i style="background:'+c+'"></i>').join("")+'</span>'+meta[0];
+  b.addEventListener("click",()=>{L().palette=key;sync();render();});
+  palBtns[key]=b;palEl.appendChild(b);});
+
+const stackEl=document.getElementById("stack");
+function buildStack(){
+  stackEl.innerHTML="";
+  for(let idx=layers.length-1;idx>=0;idx--){
+    (function(idx){
+    const ly=layers[idx],row=document.createElement("div");row.className="layer";row.setAttribute("aria-pressed",String(idx===active));
+    const eye=document.createElement("span");eye.className="eye"+(ly.visible?" on":"");eye.title="toggle visibility";
+    eye.addEventListener("click",e=>{e.stopPropagation();ly.visible=!ly.visible;buildStack();render();});
+    const ln=document.createElement("span");ln.className="ln";ln.textContent=(layers.length-idx)+". "+MODES[ly.mode].label;
+    const op=document.createElement("span");op.className="op";op.textContent=Math.round(ly.opacity*100)+"%";
+    const up=document.createElement("button");up.className="mv";up.textContent="▲";up.title="up";
+    up.addEventListener("click",e=>{e.stopPropagation();if(idx<layers.length-1){const t=layers[idx];layers[idx]=layers[idx+1];layers[idx+1]=t;active=active===idx?idx+1:active===idx+1?idx:active;buildStack();render();}});
+    const dn=document.createElement("button");dn.className="mv";dn.textContent="▼";dn.title="down";
+    dn.addEventListener("click",e=>{e.stopPropagation();if(idx>0){const t=layers[idx];layers[idx]=layers[idx-1];layers[idx-1]=t;active=active===idx?idx-1:active===idx-1?idx:active;buildStack();render();}});
+    row.appendChild(eye);row.appendChild(ln);row.appendChild(op);row.appendChild(up);row.appendChild(dn);
+    if(layers.length>1){const rm=document.createElement("button");rm.className="rm";rm.textContent="×";rm.title="remove";
+      rm.addEventListener("click",e=>{e.stopPropagation();layers.splice(idx,1);if(active>=layers.length)active=layers.length-1;sync();render();});
+      row.appendChild(rm);}
+    row.addEventListener("click",()=>{active=idx;sync();render();});
+    stackEl.appendChild(row);
+    })(idx);
+  }
+}
+document.getElementById("addLayer").addEventListener("click",()=>{layers.push(newLayer({seed:Math.floor(Math.random()*1e6)}));active=layers.length-1;sync();render();});
+
+document.getElementById("dens").addEventListener("input",e=>{L().density=+e.target.value;render();});
+document.getElementById("scl").addEventListener("input",e=>{L().baseSize=+e.target.value;render();});
+document.getElementById("wgt").addEventListener("input",e=>{L().weight=+e.target.value;render();});
+document.getElementById("opa").addEventListener("input",e=>{L().opacity=+e.target.value/100;render();});
+document.getElementById("seed").addEventListener("input",e=>{const v=parseInt(e.target.value,10);L().seed=isNaN(v)?0:v;render();});
+document.getElementById("reroll").addEventListener("click",()=>{L().seed=Math.floor(Math.random()*1e6);sync();render();});
+function archPanels(){const a=L().arch||"none";document.getElementById("archMandala").style.display=(a==="mandala")?"block":"none";document.getElementById("archHero").style.display=(a==="emblem"||a==="hero")?"block":"none";document.getElementById("archDim").style.display=(a==="dimensional")?"block":"none";}
+document.getElementById("arch").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;L().arch=b.dataset.a;[].forEach.call(document.getElementById("arch").children,x=>x.setAttribute("aria-pressed",String(x===b)));document.getElementById("archNote").textContent=b.textContent;archPanels();render();});
+document.getElementById("sym").addEventListener("input",e=>{L().sym=+e.target.value;document.getElementById("symV").textContent=e.target.value;render();});
+document.getElementById("finish").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;FIN=b.dataset.fin;[].forEach.call(document.getElementById("finish").children,x=>x.setAttribute("aria-pressed",String(x===b)));document.getElementById("finNote").textContent=b.textContent;render();});
+["rx","ry","rz"].forEach(k=>document.getElementById(k).addEventListener("input",e=>{L()[k]=+e.target.value;document.getElementById(k+"V").textContent=e.target.value;render();}));
+document.getElementById("collapse").addEventListener("input",e=>{L().collapse=+e.target.value/100;document.getElementById("colV").textContent=(+e.target.value/100).toFixed(2);render();});
+document.getElementById("lift").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;L().lift=b.dataset.l;[].forEach.call(document.getElementById("lift").children,x=>x.setAttribute("aria-pressed",String(x===b)));render();});
+document.getElementById("tgMirror").addEventListener("click",e=>{const v=L().mirror=!L().mirror;e.currentTarget.setAttribute("aria-pressed",String(v));render();});
+document.getElementById("word").addEventListener("input",e=>{L().word=e.target.value;render();});
+document.getElementById("planet").addEventListener("change",e=>{L().planet=e.target.value;render();});
+document.getElementById("tgRingText").addEventListener("click",e=>{const v=L().ringText=!L().ringText;e.currentTarget.setAttribute("aria-pressed",String(v));render();});
+document.getElementById("fmt").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [].forEach.call(document.getElementById("fmt").children,x=>x.setAttribute("aria-pressed",String(x===b)));
+  if(TILE){TILE=false;document.getElementById("tgTile").setAttribute("aria-pressed","false");}
+  setFormat(b.dataset.f);});
+document.getElementById("tgTile").addEventListener("click",e=>{TILE=!TILE;e.currentTarget.setAttribute("aria-pressed",String(TILE));
+  if(TILE){[].forEach.call(document.getElementById("fmt").children,x=>x.setAttribute("aria-pressed",String(x.dataset.f==="square")));setFormat("square");}else render();});
+document.getElementById("tgTransp").addEventListener("click",e=>{TRANSP=!TRANSP;e.currentTarget.setAttribute("aria-pressed",String(TRANSP));updNotes();});
+document.getElementById("tgSafe").addEventListener("click",e=>{SAFE=!SAFE;e.currentTarget.setAttribute("aria-pressed",String(SAFE));render();});
+document.getElementById("resSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  [].forEach.call(document.getElementById("resSeg").children,x=>x.setAttribute("aria-pressed",String(x===b)));RES=+b.dataset.r;updNotes();});
+document.getElementById("exSVG").addEventListener("click",exSVG);
+document.getElementById("exPNG").addEventListener("click",exPNG);
+
+/* reflect the active layer into every control */
+function sync(){
+  const ly=L();
+  Object.keys(modeBtns).forEach(k=>modeBtns[k].setAttribute("aria-pressed",String(k===ly.mode)));
+  Object.keys(brushBtns).forEach(k=>brushBtns[k].setAttribute("aria-pressed",String(ly.brushes.indexOf(k)>=0)));
+  Object.keys(palBtns).forEach(k=>palBtns[k].setAttribute("aria-pressed",String(k===ly.palette)));
+  document.getElementById("dens").value=ly.density;
+  document.getElementById("scl").value=ly.baseSize;
+  document.getElementById("wgt").value=ly.weight;
+  document.getElementById("opa").value=Math.round(ly.opacity*100);
+  document.getElementById("seed").value=ly.seed;
+  (function(){const a=ly.arch||"none";
+    [].forEach.call(document.getElementById("arch").children,x=>x.setAttribute("aria-pressed",String(x.dataset.a===a)));
+    document.getElementById("archNote").textContent=a==="none"?"scatter":a;
+    document.getElementById("archMandala").style.display=(a==="mandala")?"block":"none";
+    document.getElementById("archHero").style.display=(a==="emblem"||a==="hero")?"block":"none";
+    document.getElementById("archDim").style.display=(a==="dimensional")?"block":"none";
+    document.getElementById("sym").value=ly.sym;document.getElementById("symV").textContent=ly.sym;
+    document.getElementById("tgMirror").setAttribute("aria-pressed",String(!!ly.mirror));
+    document.getElementById("word").value=ly.word||"";
+    document.getElementById("planet").value=ly.planet||"jupiter";
+    document.getElementById("tgRingText").setAttribute("aria-pressed",String(!!ly.ringText));
+    document.getElementById("rx").value=ly.rx;document.getElementById("rxV").textContent=ly.rx;
+    document.getElementById("ry").value=ly.ry;document.getElementById("ryV").textContent=ly.ry;
+    document.getElementById("rz").value=ly.rz;document.getElementById("rzV").textContent=ly.rz;
+    document.getElementById("collapse").value=Math.round((ly.collapse||0)*100);document.getElementById("colV").textContent=(ly.collapse||0).toFixed(2);
+    [].forEach.call(document.getElementById("lift").children,x=>x.setAttribute("aria-pressed",String(x.dataset.l===(ly.lift||"sphere"))));})();
+  buildStack();
+}
+
+/* ════ devices (the writing instrument) + per-category type ════ */
+const DEVICES={
+ ink:{label:"Ink pen",filter:null,sw:1,op:1},
+ marker:{label:"Marker",filter:null,sw:2.0,op:1},
+ wet:{label:"Wet brush",filter:"f-wet",sw:1.7,op:0.82},
+ spray:{label:"Spray can",filter:"f-spray",sw:1.3,op:0.92},
+ chalk:{label:"Chalk",filter:"f-chalk",sw:1.5,op:0.9},
+ charcoal:{label:"Charcoal",filter:"f-char",sw:2.4,op:0.72},
+ neon:{label:"Neon tube",filter:"f-neon",sw:0.85,op:1},
+ pencil:{label:"Pencil",filter:"f-pencil",sw:0.7,op:0.6}
+};
+const DEVKEYS=["ink","marker","wet","spray","chalk","charcoal","neon","pencil"];
+const FONTS={
+ alchemy:[["Noto Sym2",'"Noto Sans Symbols 2","Segoe UI Symbol",monospace'],["Segoe Sym",'"Segoe UI Symbol","Noto Sans Symbols 2",monospace'],["Segoe Hist",'"Segoe UI Historic","Noto Sans Symbols 2",monospace']],
+ astro:[["Noto Sym",'"Noto Sans Symbols","Segoe UI Symbol",monospace'],["Segoe Sym",'"Segoe UI Symbol","Noto Sans Symbols",monospace']],
+ runic:[["Noto Runic",'"Noto Sans Runic","Segoe UI Historic",monospace'],["Segoe Hist",'"Segoe UI Historic","Noto Sans Runic",monospace']],
+ hebrew:[["Noto Sans",'"Noto Sans Hebrew",sans-serif'],["Noto Serif",'"Noto Serif Hebrew",serif'],["Rashi",'"Noto Rashi Hebrew",serif'],["Frank Ruhl",'"Frank Ruhl Libre",serif'],["David",'"David","Noto Sans Hebrew",sans-serif']],
+ hiero:[["Noto Hiero",'"Noto Sans Egyptian Hieroglyphs","Segoe UI Historic",monospace'],["Segoe Hist",'"Segoe UI Historic","Noto Sans Egyptian Hieroglyphs",monospace']],
+ trigram:[["Noto Sym",'"Noto Sans Symbols","Segoe UI Symbol",monospace'],["Segoe Sym",'"Segoe UI Symbol","Noto Sans Symbols",monospace']]
+};
+const CATKEYS=["geometry","sigil","alchemy","astro","runic","hebrew","hiero","trigram"];
+const CAT={};
+CATKEYS.forEach(k=>{CAT[k]={device:"ink",font:FONTS[k]?FONTS[k][0][1]:null};});
+const cfgEl=document.getElementById("cfg");
+function buildCfg(){cfgEl.innerHTML="";CATKEYS.forEach(k=>{
+  const row=document.createElement("div");row.className="cfgrow";
+  const nm=document.createElement("span");nm.className="cn";nm.textContent=k==="geometry"?"geo":k==="trigram"?"i-ching":k;row.appendChild(nm);
+  const ds=document.createElement("select");DEVKEYS.forEach(dk=>{const o=document.createElement("option");o.value=dk;o.textContent=DEVICES[dk].label;if(dk===CAT[k].device)o.selected=true;ds.appendChild(o);});
+  ds.addEventListener("change",()=>{CAT[k].device=ds.value;render();});row.appendChild(ds);
+  const fs=document.createElement("select");
+  if(FONTS[k]){FONTS[k].forEach(f=>{const o=document.createElement("option");o.value=f[1];o.textContent=f[0];if(f[1]===CAT[k].font)o.selected=true;fs.appendChild(o);});fs.addEventListener("change",()=>{CAT[k].font=fs.value;render();});}
+  else{const o=document.createElement("option");o.textContent="drawn";fs.appendChild(o);fs.disabled=true;}
+  row.appendChild(fs);cfgEl.appendChild(row);});}
+buildCfg();
+
+/* ════════ ATELIER — provenance · collection · mockup ════════ */
+const PG={saturn:"♄",jupiter:"♃",mars:"♂",sol:"☉",venus:"♀",mercury:"☿",luna:"☽"};
+let SIGN=false, TITLE_ON=false, TITLE_TXT="";
+
+function prov(ly){
+  const w=((ly.word||"")+"").toUpperCase().replace(/[^A-Z]/g,"")||"SIGIL";
+  const pl=ly.planet||"jupiter", grid=KAM[pl], n=grid.length;
+  const cells=w.split("").map(ch=>reduceTo(cipher(ch),n*n));
+  const name=pl[0].toUpperCase()+pl.slice(1);
+  return {word:w,pl:pl,glyph:PG[pl]||"✶",name:name,n:n,cells:cells,line:(PG[pl]||"")+" "+name+" "+n+"² · "+w+" · "+cells.join("·")};
+}
+function titleText(){const t=(TITLE_TXT||"").trim();return (t||prov(L()).word).toUpperCase();}
+
+function drawSignature(parent){
+  const p=prov(L()),mn=Math.min(W,H);
+  const g=ap(parent,"g",{opacity:0.8});g.style.color="#9aa6b2";
+  const t=ap(g,"text",{x:Math.round(mn*0.05),y:H-Math.round(mn*0.045),"font-size":Math.max(10,Math.round(mn*0.018)),fill:"currentColor"});
+  t.style.fontFamily='"JetBrains Mono",ui-monospace,monospace';t.style.letterSpacing="0.16em";
+  t.textContent="STUDIO 137 · α 1/137 · "+p.glyph+" "+p.name+" "+p.n+"²";
+}
+function drawTitleMark(parent){
+  const tx=titleText();if(!tx)return;const base=layers.find(l=>l.visible)||layers[0];
+  const t=ap(parent,"text",{x:W/2,y:Math.round(H*0.93),"text-anchor":"middle","font-size":Math.round(Math.min(W,H)*0.07),fill:(curPalOf(base).ink[0]||"#fff")});
+  t.style.fontFamily='"JetBrains Mono",ui-monospace,monospace';t.style.letterSpacing="0.22em";t.style.fontWeight="700";
+  t.textContent=tx;
+}
+
+/* ── certificate of derivation ── */
+function txt(parent,x,y,str,size,fill,anchor,ls,weight){
+  const t=ap(parent,"text",{x:x,y:y,"font-size":size,fill:fill,"text-anchor":anchor||"start"});
+  t.style.fontFamily='"JetBrains Mono",ui-monospace,monospace';
+  if(ls)t.style.letterSpacing=ls+"em";if(weight)t.style.fontWeight=weight;
+  t.textContent=str;return t;
+}
+function drawKameaCard(parent,p,cx,cy,size,col,col2){
+  const grid=KAM[p.pl],n=grid.length,cell=size/n,x0=cx-size/2,y0=cy-size/2,pos={},walked={};
+  p.cells.forEach(v=>walked[v]=1);
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)pos[grid[r][c]]=[r,c];
+  const g=ap(parent,"g",{});
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){
+    const v=grid[r][c],hx=x0+c*cell,hy=y0+r*cell,hit=walked[v];
+    ap(g,"rect",{x:hx,y:hy,width:cell,height:cell,fill:hit?col:"none",opacity:hit?0.16:1,stroke:col2,"stroke-width":0.6});
+    txt(g,hx+cell/2,hy+cell/2+cell*0.12,String(v),Math.round(cell*0.32),hit?col:col2,"middle",0,hit?700:400);
+  }
+  const pts=p.cells.map(v=>{const rc=pos[v];return [x0+(rc[1]+0.5)*cell,y0+(rc[0]+0.5)*cell];});
+  GW=1;const pgrp=ap(parent,"g",{});pgrp.style.color=col;
+  if(pts.length>1)P(pgrp,smooth(pts,false),2.4);
+  pts.forEach((pt,i)=>dot(pgrp,pt[0],pt[1],i===0?5:3));
+}
+function buildCard(){
+  const ly=L(),p=prov(ly),pal=curPalOf(ly),CW=1000,CH=1400,c1=(pal.ink[0]||"#fff"),c2=(pal.ink[1]||pal.ink[0]||"#9aa6b2");
+  const svg=el("svg",{xmlns:NS,"xmlns:xlink":"http://www.w3.org/1999/xlink",viewBox:"0 0 "+CW+" "+CH,width:CW,height:CH});
+  ap(svg,"rect",{x:0,y:0,width:CW,height:CH,fill:pal.bg});
+  ap(svg,"rect",{x:30,y:30,width:CW-60,height:CH-60,fill:"none",stroke:c2,"stroke-width":1.5,opacity:0.5});
+  ap(svg,"rect",{x:42,y:42,width:CW-84,height:CH-84,fill:"none",stroke:c1,"stroke-width":0.8,opacity:0.3});
+  txt(svg,CW/2,90,"STUDIO 137",18,c1,"middle",0.4,700);
+  txt(svg,CW/2,114,"α ≈ 1 / 137 · DERIVATION OVER DECORATION",10,c2,"middle",0.3,400);
+  drawHeroSigil(svg,ly,p.word,p.pl,CW/2,430,520,c1);
+  txt(svg,CW/2,760,p.word,74,c1,"middle",0.22,700);
+  txt(svg,CW/2,802,p.glyph+"   "+p.name+"   "+p.n+"²",20,c2,"middle",0.32,400);
+  drawKameaCard(svg,p,CW/2,1015,300,c1,c2);
+  txt(svg,CW/2,1232,"CIPHER PATH · "+p.cells.join("  ·  "),12,c2,"middle",0.16,400);
+  txt(svg,CW/2,1320,"the37thmove.com",12,c1,"middle",0.3,400);
+  txt(svg,CW/2,1344,"seed "+ly.seed+"  ·  "+(ly.arch==="none"?"sigil":ly.arch),9,c2,"middle",0.18,400);
+  return new XMLSerializer().serializeToString(svg);
+}
+
+/* ── raster any svg string to png ── */
+function rasterDownload(svgStr,name,w,h){
+  const img=new Image(),url=URL.createObjectURL(new Blob([svgStr],{type:"image/svg+xml"}));
+  img.onload=()=>{const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");x.drawImage(img,0,0,w,h);URL.revokeObjectURL(url);c.toBlob(b=>dl(b,name),"image/png");};
+  img.onerror=()=>URL.revokeObjectURL(url);img.src=url;
+}
+function compDataURL(transparent){return "data:image/svg+xml;utf8,"+encodeURIComponent(serialize({transparent:!!transparent}));}
+
+/* ── collection generator ── */
+function generateCollection(count){
+  const ly=L(),saveSeed=ly.seed,saveSym=ly.sym,saveRy=ly.ry,dim=(ly.arch==="dimensional"),out=[];
+  for(let k=0;k<count;k++){
+    if(dim){ly.ry=-180+Math.round(360*k/count);}
+    else{ly.seed=((saveSeed>>>0)+k*2654435761)>>>0;if(ly.arch==="mandala")ly.sym=4+((k*3)%13);}
+    render();
+    out.push({seed:ly.seed,sym:ly.sym,ry:ly.ry,title:titleText()+(dim?" · "+ly.ry+"°":""),url:URL.createObjectURL(new Blob([serialize({transparent:false})],{type:"image/svg+xml"}))});
+  }
+  ly.seed=saveSeed;ly.sym=saveSym;ly.ry=saveRy;render();
+  return out;
+}
+function downloadSheet(vs){
+  const cols=3,rows=Math.ceil(vs.length/cols),cell=680,pad=22,W2=cols*cell+pad*(cols+1),H2=rows*cell+pad*(rows+1);
+  const c=document.createElement("canvas");c.width=W2;c.height=H2;const x=c.getContext("2d");x.fillStyle="#070b10";x.fillRect(0,0,W2,H2);
+  let done=0;const fin=()=>{if(++done===vs.length)c.toBlob(b=>dl(b,"studio137_collection_sheet.png"),"image/png");};
+  vs.forEach((v,i)=>{const im=new Image();im.onload=()=>{const cc=i%cols,rr=(i/cols)|0;x.drawImage(im,pad+cc*(cell+pad),pad+rr*(cell+pad),cell,cell);fin();};im.onerror=fin;im.src=v.url;});
+}
+
+/* ── procedural product mockups ── */
+function svgStr(w,h,inner){return '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'">'+inner+'</svg>';}
+function rectS(x,y,w,h,fill,rx){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'"'+(rx?(' rx="'+rx+'"'):'')+'/>';}
+function imgS(u,x,y,w,h){return '<image href="'+u+'" xlink:href="'+u+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" preserveAspectRatio="xMidYMid meet"/>';}
+function tS(x,y,s,fill,str){return '<text x="'+x+'" y="'+y+'" font-size="'+s+'" fill="'+fill+'" text-anchor="middle" font-family="JetBrains Mono, monospace" letter-spacing="0.18em">'+str+'</text>';}
+function teeSVG(u){const st="#2a2e35";return svgStr(600,680,
+  rectS(0,0,600,680,"#0b0e12")
+  +'<path d="M170 92 C200 122 240 137 300 137 C360 137 400 122 430 92 L470 112 L560 178 L520 252 L470 226 L470 600 L130 600 L130 226 L80 252 L40 178 L130 112 Z" fill="#16181d" stroke="'+st+'" stroke-width="2"/>'
+  +'<path d="M238 98 C264 130 336 130 362 98" fill="none" stroke="'+st+'" stroke-width="2"/>'
+  +imgS(u,214,250,172,196)+tS(300,648,10,"#5b6470","FRONT · DTG / DTF"));}
+function toteSVG(u){const st="#2a2e35";return svgStr(600,680,
+  rectS(0,0,600,680,"#0b0e12")
+  +'<path d="M212 152 C212 112 252 94 300 94 C348 94 388 112 388 152" fill="none" stroke="'+st+'" stroke-width="10"/>'
+  +rectS(150,152,300,418,"#16181d",10)+'<rect x="150" y="152" width="300" height="418" rx="10" fill="none" stroke="'+st+'" stroke-width="2"/>'
+  +imgS(u,186,202,228,298)+tS(300,640,10,"#5b6470","CANVAS TOTE · AOP READY"));}
+function posterSVG(u){return svgStr(600,720,
+  rectS(0,0,600,720,"#11141a")
+  +rectS(70,60,460,600,"#2b2f37",4)+rectS(95,85,410,550,"#0a0d12",2)
+  +imgS(u,118,108,364,504)+tS(300,690,10,"#5b6470","FRAMED PRINT"));}
+function stickerSVG(u){return svgStr(600,600,
+  rectS(0,0,600,600,"#0c0f14")
+  +rectS(118,118,364,364,"#f4f1e8",28)+'<rect x="118" y="118" width="364" height="364" rx="28" fill="none" stroke="#d9d4c4" stroke-width="3"/>'
+  +imgS(u,150,150,300,300)+tS(300,560,10,"#5b6470","DIE-CUT STICKER"));}
+const PRODUCTS={tee:teeSVG,tote:toteSVG,poster:posterSVG,sticker:stickerSVG};
+
+/* ════════ STORY COMPILER — theme → symbols (correspondence, 777-style) ════════ */
+function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+const hpick=(arr,h)=>arr[h%arr.length], hrange=(h,a,b)=>a+(h%(b-a+1)), cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const STOP=new Set(["the","and","of","a","to","into","from","in","on","with","for","is","are","as","at","by","an","that","this","its","it","or","my","your","our","be","story","tell","about","through","becoming","become","upon","over","under"]);
+const CONCEPTS={
+ solar:{mode:"phyllotaxis",arch:"mandala",palette:"bone",brushes:["geometry","astro","alchemy"],planet:"sol",words:["SOL","LUX","SORATH"],fold:12},
+ lunar:{mode:"cymatic",arch:"hero",palette:"blueprint",brushes:["astro","alchemy","sigil"],planet:"luna",words:["LUNA","NUIT","HAGITH"],fold:9},
+ fire:{mode:"chaos",arch:"hero",palette:"haring",brushes:["geometry","alchemy","sigil"],planet:"mars",words:["FIRE","LUX","SORATH"],fold:5},
+ water:{mode:"cymatic",arch:"mandala",palette:"blueprint",brushes:["alchemy","astro","sigil"],planet:"luna",words:["AZOTH","NUIT"],fold:8},
+ air:{mode:"lattice",arch:"emblem",palette:"phosphor",brushes:["astro","trigram","sigil"],planet:"mercury",words:["AETHER","LUX"],fold:6},
+ earth:{mode:"lattice",arch:"emblem",palette:"bone",brushes:["geometry","runic"],planet:"saturn",words:["KETHER","VOID"],fold:4},
+ chaos:{mode:"chaos",arch:"none",palette:"spectrum",brushes:["sigil","alchemy","runic"],planet:"mars",words:["CHAOS","NOX"],fold:7},
+ order:{mode:"lattice",arch:"mandala",palette:"blueprint",brushes:["geometry"],planet:"jupiter",words:["KETHER","ALPHA"],fold:6},
+ union:{mode:"metatron",arch:"emblem",palette:"bone",brushes:["geometry","sigil","alchemy"],planet:"venus",words:["AZOTH","BABALON"],fold:6},
+ descent:{mode:"attractor",arch:"hero",palette:"voidp",brushes:["runic","alchemy","sigil"],planet:"saturn",words:["NOX","ZAZEL","VOID"],fold:9},
+ return:{mode:"phyllotaxis",arch:"hero",palette:"bone",brushes:["alchemy","astro","sigil"],planet:"sol",words:["LUX","SOL"],fold:12},
+ threshold:{mode:"metatron",arch:"emblem",palette:"phosphor",brushes:["geometry","sigil"],planet:"mercury",words:["ALPHA","OMEGA"],fold:8},
+ cosmos:{mode:"phyllotaxis",arch:"mandala",palette:"phosphor",brushes:["astro","geometry"],planet:"jupiter",words:["AETHER","NUIT"],fold:13},
+ time:{mode:"mandelbrot",arch:"mandala",palette:"voidp",brushes:["runic","geometry"],planet:"saturn",words:["ZAZEL","NOX"],fold:9},
+ spirit:{mode:"metatron",arch:"hero",palette:"phosphor",brushes:["geometry","sigil","hebrew"],planet:"sol",words:["KETHER","AETHER"],fold:8},
+ war:{mode:"haring",arch:"emblem",palette:"haring",brushes:["runic","geometry"],planet:"mars",words:["SORATH","FIRE"],fold:5},
+ love:{mode:"organic",arch:"mandala",palette:"bone",brushes:["astro","alchemy"],planet:"venus",words:["BABALON","HAGITH"],fold:7},
+ mind:{mode:"lattice",arch:"emblem",palette:"phosphor",brushes:["hebrew","trigram","sigil"],planet:"mercury",words:["LUX","ALPHA"],fold:6},
+ shadow:{mode:"chaos",arch:"hero",palette:"voidp",brushes:["runic","sigil"],planet:"saturn",words:["NOX","ZAZEL"],fold:7}
+};
+const KEYS={
+ sun:"solar",solar:"solar",sol:"solar",gold:"solar",golden:"solar",king:"solar",victory:"solar",crown:"solar",glory:"solar",triumph:"solar",
+ moon:"lunar",lunar:"lunar",luna:"lunar",silver:"lunar",tide:"lunar",tides:"lunar",dream:"lunar",dreams:"lunar",reflection:"lunar",
+ fire:"fire",flame:"fire",flames:"fire",burn:"fire",burning:"fire",heat:"fire",passion:"fire",forge:"fire",ember:"fire",spark:"spirit",
+ water:"water",ocean:"water",sea:"water",river:"water",flow:"water",flood:"water",rain:"water",dissolve:"water",liquid:"water",
+ air:"air",wind:"air",breath:"air",sky:"air",cloud:"air",
+ earth:"earth",stone:"earth",ground:"earth",root:"earth",roots:"earth",mountain:"earth",body:"earth",soil:"earth",manifest:"earth",
+ chaos:"chaos",entropy:"chaos",abyss:"chaos",madness:"chaos",dissolution:"chaos",ruin:"chaos",storm:"chaos",
+ order:"order",law:"order",structure:"order",harmony:"order",balance:"order",pattern:"order",
+ union:"union",marriage:"union",wedding:"union",join:"union",merge:"union",coniunctio:"union",wholeness:"union",one:"union",
+ descent:"descent",fall:"descent",falling:"descent",underworld:"descent",death:"descent",dark:"descent",darkness:"descent",nigredo:"descent",grief:"descent",sink:"descent",
+ return:"return",rebirth:"return",resurrection:"return",resurrect:"return",renewal:"return",renew:"return",rise:"return",ascend:"return",ascent:"return",restore:"return",dawn:"return",awaken:"return",awakening:"return",
+ threshold:"threshold",gate:"threshold",gateway:"threshold",door:"threshold",portal:"threshold",liminal:"threshold",between:"threshold",crossing:"threshold",veil:"threshold",
+ cosmos:"cosmos",stars:"cosmos",star:"cosmos",galaxy:"cosmos",infinite:"cosmos",heaven:"cosmos",heavens:"cosmos",space:"cosmos",void:"shadow",
+ time:"time",decay:"time",cycle:"time",cycles:"time",age:"time",ages:"time",kronos:"time",saturn:"time",clock:"time",eternal:"time",
+ spirit:"spirit",soul:"spirit",divine:"spirit",sacred:"spirit",transcend:"spirit",aether:"spirit",holy:"spirit",pneuma:"spirit",
+ war:"war",battle:"war",conflict:"war",blade:"war",sword:"war",strife:"war",mars:"war",fight:"war",courage:"war",
+ love:"love",desire:"love",beauty:"love",heart:"love",venus:"love",eros:"love",lust:"love",longing:"love",
+ mind:"mind",thought:"mind",thoughts:"mind",magic:"mind",magick:"mind",hermes:"mind",mercury:"mind",word:"mind",words:"mind",idea:"mind",intellect:"mind",
+ shadow:"shadow",hidden:"shadow",occult:"shadow",secret:"shadow",unconscious:"shadow",mystery:"shadow",
+ light:"return",illumination:"return",clarity:"return",enlighten:"spirit"
+};
+function compose(theme){
+  theme=(theme||"").trim()||"the great work";
+  const h=hashStr(theme.toLowerCase());
+  const lws=(theme.toLowerCase().match(/[a-z]+/g)||[]);
+  const concepts=[];lws.forEach(w=>{const c=KEYS[w];if(c&&concepts.indexOf(c)<0)concepts.push(c);});
+  const themeWords=(theme.toUpperCase().match(/[A-Z]{3,}/g)||[]).filter(w=>!STOP.has(w.toLowerCase()));
+  if(concepts.length){
+    const prim=CONCEPTS[concepts[0]];
+    let brushes=[];concepts.forEach(c=>CONCEPTS[c].brushes.forEach(b=>{if(brushes.indexOf(b)<0)brushes.push(b);}));
+    brushes=brushes.slice(0,4);
+    const word=themeWords[0]||hpick(prim.words,h);
+    return{mode:prim.mode,arch:prim.arch,palette:prim.palette,brushes:brushes,planet:prim.planet,word:word,fold:prim.fold,title:theme,concepts:concepts,
+      trace:"✶ "+concepts.join(" → ")+"  ·  "+(PG[prim.planet]||"")+" "+cap(prim.planet)+"  ·  "+prim.arch+"  ·  "+prim.palette+"  ·  "+brushes.join("+")+"  ·  ⟐ "+word};
+  }
+  const mode=hpick(MODEKEYS,h),arch=hpick(["none","mandala","emblem","hero"],h>>>3),pal=hpick(["phosphor","voidp","blueprint","bone","haring","spectrum"],h>>>6),
+    planet=hpick(PLN,h>>>9),fold=hrange(h>>>12,3,16),ball=CATKEYS.filter(c=>c!=="hiero");
+  const brushes=[hpick(ball,h),hpick(ball,h>>>5),"sigil"].filter((v,i,a)=>a.indexOf(v)===i);
+  const word=themeWords[0]||hpick(WORDS,h);
+  return{mode:mode,arch:arch,palette:pal,brushes:brushes,planet:planet,word:word,fold:fold,title:theme,concepts:["uncharted"],
+    trace:"✶ uncharted  ·  hashed correspondence  ·  "+(PG[planet]||"")+" "+cap(planet)+"  ·  "+arch+"  ·  "+pal+"  ·  ⟐ "+word};
+}
+function applyTheme(theme){
+  const sp=compose(theme),ly=L();
+  ly.mode=sp.mode;ly.palette=sp.palette;ly.arch=sp.arch;ly.brushes=sp.brushes.slice();
+  ly.planet=sp.planet;ly.word=sp.word;ly.sym=sp.fold;
+  const d=defaults(sp.mode);ly.density=d.density;ly.baseSize=d.baseSize;
+  TITLE_TXT=sp.title;const ti=document.getElementById("title");if(ti)ti.value=sp.title;
+  sync();render();return sp;
+}
+function wireStory(){
+  const inp=document.getElementById("storyInput"),btn=document.getElementById("storyGo"),tr=document.getElementById("storyTrace");
+  const run=()=>{const sp=applyTheme(inp.value);tr.textContent=sp.trace;tr.style.display="block";};
+  btn.addEventListener("click",run);
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();run();}});
+  document.querySelectorAll("#storyEx button").forEach(b=>b.addEventListener("click",()=>{inp.value=b.dataset.s;run();}));
+}
+
+/* ── overlay + wiring ── */
+function wireAtelier(){
+  const ovl=document.createElement("div");ovl.className="ovl";
+  ovl.innerHTML='<div class="ovlbox"><button class="ovlx">✕</button><div class="ovlc"></div></div>';
+  document.body.appendChild(ovl);
+  const ovlc=ovl.querySelector(".ovlc");
+  ovl.addEventListener("click",e=>{if(e.target===ovl||e.target.classList.contains("ovlx"))ovl.classList.remove("show");});
+  const openOv=h=>{ovlc.innerHTML=h;ovl.classList.add("show");return ovlc;};
+
+  document.getElementById("title").addEventListener("input",e=>{TITLE_TXT=e.target.value;if(TITLE_ON)render();});
+  document.getElementById("tgTitle").addEventListener("click",e=>{TITLE_ON=!TITLE_ON;e.currentTarget.setAttribute("aria-pressed",String(TITLE_ON));render();});
+  document.getElementById("tgSign").addEventListener("click",e=>{SIGN=!SIGN;e.currentTarget.setAttribute("aria-pressed",String(SIGN));render();});
+
+  document.getElementById("btnCard").addEventListener("click",()=>{
+    const c=openOv('<div class="ovlhd"><span>certificate of derivation</span><button id="cardDl">↓ PNG</button></div><div class="cardwrap">'+buildCard()+'</div>');
+    c.querySelector("#cardDl").addEventListener("click",()=>rasterDownload(buildCard(),"studio137_certificate_"+prov(L()).word+"_"+L().seed+".png",1500,2100));
+  });
+
+  document.getElementById("btnCollection").addEventListener("click",()=>{
+    const vs=generateCollection(12);
+    let h='<div class="ovlhd"><span>collection · 12 variants · click adopt to load</span><button id="sheetDl">↓ contact sheet</button></div><div class="grid">';
+    vs.forEach((v,i)=>{h+='<div class="gcell"><img src="'+v.url+'"><div class="gcap"><span>'+v.title+' · '+v.seed+'</span><button data-i="'+i+'" class="adopt">adopt</button></div></div>';});
+    h+='</div>';
+    const c=openOv(h);
+    c.querySelectorAll(".adopt").forEach(b=>b.addEventListener("click",()=>{const v=vs[+b.dataset.i];L().seed=v.seed;L().sym=v.sym;L().ry=v.ry;sync();render();ovl.classList.remove("show");}));
+    c.querySelector("#sheetDl").addEventListener("click",()=>downloadSheet(vs));
+  });
+
+  document.getElementById("btnMockup").addEventListener("click",()=>{
+    let prod="tee";
+    const h='<div class="ovlhd"><span>product mockup · preview</span><button id="mockDl">↓ PNG</button></div>'
+      +'<div class="prodbar"><button data-p="tee" aria-pressed="true">tee</button><button data-p="tote">tote</button><button data-p="poster">poster</button><button data-p="sticker">sticker</button></div>'
+      +'<div class="mockwrap"></div>';
+    const c=openOv(h);
+    const draw=()=>{const transp=(prod==="tee"||prod==="tote");c.querySelector(".mockwrap").innerHTML=PRODUCTS[prod](compDataURL(transp));
+      c.querySelectorAll(".prodbar button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.p===prod)));};
+    c.querySelectorAll(".prodbar button").forEach(b=>b.addEventListener("click",()=>{prod=b.dataset.p;draw();}));
+    c.querySelector("#mockDl").addEventListener("click",()=>{const transp=(prod==="tee"||prod==="tote");rasterDownload(PRODUCTS[prod](compDataURL(transp)),"studio137_mockup_"+prod+".png",1200,1360);});
+    draw();
+  });
+}
+wireAtelier();
+wireStory();
+sync();
+render();
+</script>
+</body>
+</html>

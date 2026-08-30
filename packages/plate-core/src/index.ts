@@ -12,6 +12,7 @@
 
 export * from "./base64.js";
 export * from "./canonical.js";
+export * from "./density.js";
 export * from "./errors.js";
 export * from "./freeze.js";
 export * from "./identifiers.js";

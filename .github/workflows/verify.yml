@@ -1,0 +1,69 @@
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # A clean install from the committed lockfile is itself part of spec
+      # Phase 9: a fresh environment must reproduce the golden fixture exactly.
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Verification gates
+        run: pnpm test
+
+      - name: Reproduce the golden fixture through the CLI
+        run: pnpm golden --no-png
+
+      # Gate 3 pins these hashes through the library API. Asserting them again
+      # here covers the CLI path specifically: a regression in how the CLI wires
+      # up export options would produce a different plate while every library
+      # test still passed.
+      - name: Assert the CLI reproduces the pinned golden hashes
+        run: |
+          set -euo pipefail
+          expected_svg=$(node -p "require('./tests/fixtures/golden-hashes.json').canonicalSvgSha256")
+          expected_print=$(node -p "require('./tests/fixtures/golden-hashes.json').printSvgSha256")
+          actual_svg=$(sha256sum artifacts/golden-signal.canonical.svg | cut -d' ' -f1)
+          actual_print=$(sha256sum artifacts/golden-signal.print.svg | cut -d' ' -f1)
+
+          echo "canonical svg expected $expected_svg"
+          echo "canonical svg actual   $actual_svg"
+          echo "print svg     expected $expected_print"
+          echo "print svg     actual   $actual_print"
+
+          if [ "$actual_svg" != "$expected_svg" ]; then
+            echo "::error::CLI canonical SVG does not match the pinned golden hash"; exit 1
+          fi
+          if [ "$actual_print" != "$expected_print" ]; then
+            echo "::error::CLI print composition does not match the pinned golden hash"; exit 1
+          fi
+
+      - name: Confirm no private material was written without a key
+        run: |
+          set -euo pipefail
+          if ls artifacts/*.s137 >/dev/null 2>&1; then
+            echo "::error::A private manifest was written without a master key"; exit 1
+          fi
+          if ls artifacts/*.clause-sheet.* >/dev/null 2>&1; then
+            echo "::error::A clause sheet was written without a master key"; exit 1
+          fi
+          if grep -qa "SIGNAL SURVIVES" artifacts/golden-signal.canonical.svg; then
+            echo "::error::The source phrase leaked into a public artifact"; exit 1
+          fi

@@ -13,6 +13,12 @@
 export * from "./types.js";
 export * from "./grammar-types.js";
 export * from "./geometry.v1.js";
+export {
+  GEOMETRY_V2_IS_PROVISIONAL,
+  GEOMETRY_V2_SOURCE,
+  GEOMETRY_V2_VERSION,
+} from "./geometry.v2.js";
+export { GEOMETRY_V2_INTEGRITY } from "./geometry-integrity.v2.js";
 export * from "./geometry-registry.js";
 export {
   GRAMMAR_IS_PROVISIONAL,
@@ -23,3 +29,27 @@ export {
   SEPARATORS,
 } from "./grammar.v1.js";
 export * from "./grammar-registry.js";
+export {
+  BRUSH_BINDINGS,
+  CONCEPT_CORRESPONDENCE,
+  CORRESPONDENCE_COVERAGE,
+  CORRESPONDENCE_IS_PROVISIONAL,
+  CORRESPONDENCE_SOURCES,
+  CORRESPONDENCE_VERSION,
+  MARK_BINDINGS,
+  TRADITION_LABELS,
+  UNMAPPED_BRUSHES,
+  WORD_CORRESPONDENCE,
+  correspondenceForConcept,
+  correspondenceForWord,
+  type ArchKey,
+  type BrushBinding,
+  type BrushKey,
+  type ConceptCorrespondence,
+  type MarkBinding,
+  type ModeKey,
+  type PaletteKey,
+  type PlanetKey,
+  type TraditionKey,
+  type WordCorrespondence,
+} from "./correspondence.v1.js";

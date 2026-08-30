@@ -25,7 +25,7 @@ export type VersionContract = Readonly<{
 
 export const CURRENT_VERSIONS: VersionContract = Object.freeze({
   grammarVersion: "grammar/v1",
-  geometryVersion: "geometry/v1",
+  geometryVersion: "geometry/v2",
   unicodePolicyVersion: "unicode/none+semantic-nfc-v1",
   rngVersion: "rng/v1",
   layoutVersion: "layout/v1",
@@ -40,7 +40,8 @@ export const CURRENT_VERSIONS: VersionContract = Object.freeze({
 export const SUPPORTED_VERSIONS: Readonly<Record<keyof VersionContract, readonly string[]>> =
   Object.freeze({
     grammarVersion: Object.freeze(["grammar/v1"]),
-    geometryVersion: Object.freeze(["geometry/v1"]),
+    // v1 stays executable: a plate sealed under it must still verify.
+    geometryVersion: Object.freeze(["geometry/v1", "geometry/v2"]),
     unicodePolicyVersion: Object.freeze(["unicode/none+semantic-nfc-v1"]),
     rngVersion: Object.freeze(["rng/v1"]),
     layoutVersion: Object.freeze(["layout/v1"]),

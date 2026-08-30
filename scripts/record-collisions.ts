@@ -1,0 +1,124 @@
+/**
+ * Record the square's found homophones.
+ *
+ * Policy is report-only plus canonisation: the receipt prints the candidate set,
+ * and every found pair enters the Record as an authored entry — named, dated,
+ * citable. No disambiguation machinery is built. A tie-break glyph is real
+ * mechanism, and mechanism for a handful of pairs in 170 words is unaccountable
+ * complexity wearing engineering costume. The trigger for building it is written
+ * down instead, below, so the decision is deferred rather than forgotten.
+ *
+ *   pnpm exec tsx scripts/record-collisions.ts [--found 2026-08-28]
+ *
+ * `--found` is an argument rather than a clock read so that regenerating produces
+ * byte-identical output. A Record entry is dated once, when it was found.
+ */
+
+import { writeFileSync } from "node:fs";
+
+import { auditVocabulary, CIPHER_IDS, type CipherId } from "@studio137/walk-engine";
+import { WORD_CORRESPONDENCE } from "@studio137/glyph-registry";
+
+/** Build the census when this census would justify designing a tie-break. */
+const THRESHOLD_FRACTION = 0.05;
+
+const arg = (name: string): string | undefined => {
+  const i = process.argv.indexOf(`--${name}`);
+  return i === -1 ? undefined : process.argv[i + 1];
+};
+const found = arg("found") ?? "2026-08-28";
+
+const vocabulary = WORD_CORRESPONDENCE.map((w) => w.word);
+const byCipher = new Map<CipherId, ReturnType<typeof auditVocabulary>>(
+  CIPHER_IDS.map((c) => [c, auditVocabulary(vocabulary, { cipher: c, square: "jupiter" })] as const),
+);
+
+const canonical = byCipher.get("PYTH")!;
+const threshold = Math.ceil(vocabulary.length * THRESHOLD_FRACTION);
+
+const lines: string[] = [
+  "# Collisions — the found homophones of the square",
+  "",
+  "Two words that resolve to the same cell sequence draw the same mark. The square",
+  "cannot tell them apart, and neither can any reader of the plate.",
+  "",
+  "**These are findings, not failures.** A collision is the cipher speaking. The",
+  "cipher is a signed choice that every legend already discloses, so the ambiguity",
+  "is authored — which is exactly why it is allowed to stand.",
+  "",
+  "## Policy",
+  "",
+  "Report-only, plus canonisation. The receipt prints the full candidate set",
+  '(`resolves to {TIDE, TIME}, collision logged`) and each found pair is entered',
+  "below. No disambiguation machinery is built.",
+  "",
+  "A tie-break glyph would be real mechanism, and mechanism for this few pairs is",
+  "unaccountable complexity in engineering costume. So the trigger is written down",
+  "rather than the machine:",
+  "",
+  `> **If the collision census crosses ${(THRESHOLD_FRACTION * 100).toFixed(0)}% of the vocabulary** — currently`,
+  `> **${threshold} of ${vocabulary.length} words** — a second-cipher check-tick gets designed then,`,
+  "> walk-derived and graded on both axes like everything else.",
+  "",
+  `Today the census stands at **${canonical.collidingWords} of ${vocabulary.length}** words`,
+  `(${((canonical.collidingWords / vocabulary.length) * 100).toFixed(1)}%). The trigger is not met.`,
+  "",
+  "## Found entries",
+  "",
+  `Found ${found} by \`scripts/audit-vocabulary.ts\`, walking the Jupiter kamea.`,
+  "Vocabulary: the 170-word correspondence table.",
+  "",
+];
+
+if (canonical.collisions.length === 0) {
+  lines.push("_None found._", "");
+} else {
+  for (const collision of canonical.collisions) {
+    const separating = CIPHER_IDS.filter((c) => {
+      const other = byCipher.get(c)!;
+      return !other.collisions.some((x) => x.words.join() === collision.words.join());
+    });
+    const colliding = CIPHER_IDS.filter((c) => !separating.includes(c));
+
+    lines.push(
+      `### ${collision.words.join(" = ")}`,
+      "",
+      `- **cells** \`${collision.digits}\` on Jupiter`,
+      `- **collides under** ${colliding.join(", ")}`,
+      `- **separated by** ${separating.length === 0 ? "no available cipher" : separating.join(", ")}`,
+      `- **found** ${found}`,
+      "",
+    );
+  }
+}
+
+lines.push(
+  "## Why the ciphers disagree",
+  "",
+  "Worth recording, because it shows the collision is a property of the cipher and",
+  "not of the words. `TIDE` and `TIME` differ only in D against M:",
+  "",
+  "| cipher | D | M | outcome |",
+  "|---|---|---|---|",
+  "| Pythagorean | 4 | 4 | collides **at the cipher** — the value is the ordinal mod 9, and 13 mod 9 is 4 |",
+  "| Hebrew | 4 | 40 | collides **at the reduction** — 40 digit-sums to 4, so the cipher separates them and the fold puts them back together |",
+  "| NAEQ | 6 | 21 | **separates** — its letter order is not ordinal, so no arithmetic relation survives |",
+  "",
+  "Two of the three collide, by two different mechanisms. That is the argument for",
+  "a second-cipher check-tick when the threshold is crossed, and the argument for",
+  "not building it yet: a tick that reads NAEQ would resolve this pair and would",
+  "have nothing to say about a pair NAEQ happens to fold.",
+  "",
+  "---",
+  "",
+  "_Generated by `scripts/record-collisions.ts`. Regenerating with the same",
+  "`--found` date is byte-identical. Do not hand-edit; add findings by running the",
+  "audit and re-running this._",
+  "",
+);
+
+writeFileSync(new URL("../bible/COLLISIONS.md", import.meta.url), `${lines.join("\n")}\n`, "utf8");
+process.stdout.write(
+  `Wrote bible/COLLISIONS.md — ${canonical.collisions.length} entr${canonical.collisions.length === 1 ? "y" : "ies"}, ` +
+    `census ${canonical.collidingWords}/${vocabulary.length}, trigger at ${threshold}\n`,
+);

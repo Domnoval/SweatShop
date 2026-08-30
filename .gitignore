@@ -7,7 +7,13 @@ coverage/
 # Generated plate artifacts. Never commit private manifests.
 artifacts/
 *.private.s137
+*.clause-sheet.md
 *.clause-sheet.pdf
+
+# Artist master keys. Losing one makes every manifest unreadable; committing one
+# makes every manifest readable. Keep them outside the repository.
+.keys/
+*.key
 
 .env
 .env.*
@@ -15,3 +21,11 @@ artifacts/
 
 .DS_Store
 Thumbs.db
+assets/extracted-geometry.json
+
+# Scratch and reproduction harnesses. Agents working in this tree leave them
+# behind; one was swept into a commit earlier in this build and a grader flagged
+# the branch tip as a mixed snapshot of two agents' work rather than a
+# deliverable. Ignored so that cannot happen by accident again.
+.scratch-*
+scripts/_*.ts

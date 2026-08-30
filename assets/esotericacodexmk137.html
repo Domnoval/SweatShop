@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Esoterica Codex · MK·137</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&family=Noto+Sans+Egyptian+Hieroglyphs&family=Noto+Sans+Runic&family=Noto+Sans+Hebrew:wght@500&family=Noto+Sans+Tifinagh&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#07090c; --void-2:#0b1016; --panel:#0d141c; --ink:#090d12;
+  --line:#1a2531; --line-2:#243443;
+  --bone:#c9d2da; --bone-dim:#76828f; --bone-faint:#46515d;
+  --geo:#5ef2c4; --astro:#e8c46a; --alch:#c2693f; --ang:#8a7ff0; --goe:#d2603a;
+  --kab:#56c9ff; --rune:#9fb7c9; --egy:#d4b483; --herm:#7fd4c4; --chaos:#b6f24a;
+  --ich:#79d68f; --adk:#f2944a; --vod:#e26ab0; --alpha:#e8c46a;
+  --s2:3px;--s3:5px;--s5:8px;--s8:13px;--s13:21px;--s21:34px;--s34:55px;--s55:89px;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:
+   radial-gradient(1100px 640px at 82% -10%,rgba(138,127,240,.06),transparent 60%),
+   radial-gradient(900px 600px at 4% 106%,rgba(94,242,196,.05),transparent 60%),var(--void);
+  color:var(--bone);font-family:var(--mono);line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
+::selection{background:rgba(94,242,196,.22)}
+.wrap{max-width:1240px;margin:0 auto;padding:var(--s21) var(--s13) var(--s55)}
+.u-sym{font-family:"Noto Sans Symbols","Segoe UI Symbol",var(--mono)}
+.u-sym2{font-family:"Noto Sans Symbols 2","Segoe UI Symbol","Segoe UI Historic",var(--mono)}
+.u-hiero{font-family:"Noto Sans Egyptian Hieroglyphs","Segoe UI Historic",var(--mono)}
+.u-runic{font-family:"Noto Sans Runic","Segoe UI Historic","Segoe UI Symbol",var(--mono)}
+.u-heb{font-family:"Noto Sans Hebrew","Segoe UI",sans-serif}
+.u-tif{font-family:"Noto Sans Tifinagh","Segoe UI Symbol",var(--mono)}
+.mast{border:1px solid var(--line);padding:var(--s13) var(--s13) var(--s8);position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+.mast::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px);opacity:.5;mix-blend-mode:overlay}
+.eyebrow{font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--bone-dim)}
+.eyebrow .a{color:var(--alpha)}
+h1{font-size:clamp(26px,5vw,46px);line-height:1.02;margin:var(--s8) 0 var(--s5);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+h1 .thin{color:var(--bone-dim);font-weight:400}
+.thesis{max-width:66ch;font-size:13.5px;color:var(--bone)}
+.thesis b{color:var(--geo);font-weight:600}
+.stat{display:flex;gap:var(--s13);margin-top:var(--s8);flex-wrap:wrap}
+.stat span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-faint)}
+.stat b{color:var(--bone);font-weight:600}
+.controls{position:sticky;top:0;z-index:30;margin-top:var(--s13);padding:var(--s8) 0;
+  background:linear-gradient(180deg,var(--void) 70%,transparent);backdrop-filter:blur(6px)}
+.search{width:100%;background:#05080c;border:1px solid var(--line-2);color:var(--bone);font-family:var(--mono);
+  font-size:14px;letter-spacing:.04em;padding:var(--s5) var(--s8);outline:none;border-radius:2px}
+.search:focus{border-color:var(--geo);box-shadow:0 0 0 1px rgba(94,242,196,.35)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s5)}
+.chip{display:flex;align-items:center;gap:5px;background:#070b10;border:1px solid var(--line-2);color:var(--bone-dim);
+  font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;cursor:pointer;
+  border-radius:2px;transition:.14s;white-space:nowrap}
+.chip:hover{color:var(--bone);border-color:var(--bone-faint)}
+.chip[aria-pressed=true]{color:var(--ink);font-weight:700;border-color:transparent}
+.chip .d{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.count{font-size:10px;color:var(--bone-faint);letter-spacing:.16em;text-transform:uppercase;margin-top:var(--s5)}
+.inspector{display:grid;grid-template-columns:140px 1fr;gap:var(--s13);margin-top:var(--s8);
+  border:1px solid var(--line-2);background:var(--ink);padding:var(--s13);align-items:center;min-height:160px}
+@media(max-width:560px){.inspector{grid-template-columns:100px 1fr;gap:var(--s8);padding:var(--s8)}}
+.insp-glyph{aspect-ratio:1;display:grid;place-items:center;border:1px solid var(--line);
+  background:radial-gradient(130% 130% at 50% 38%,rgba(255,255,255,.02),transparent 70%)}
+.insp-glyph svg{width:88%;height:88%;overflow:visible}
+.insp-glyph .uni{font-size:64px;line-height:1}
+.insp-name{font-size:20px;font-weight:600;letter-spacing:.02em;margin:0 0 2px}
+.insp-tags{display:flex;gap:var(--s5);align-items:center;flex-wrap:wrap;margin-bottom:var(--s5)}
+.insp-trad{font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:2px 7px;border:1px solid;border-radius:2px}
+.insp-era{font-size:10px;color:var(--bone-faint);letter-spacing:.14em;text-transform:uppercase}
+.insp-mean{font-size:13.5px;color:var(--bone);max-width:70ch;line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:var(--s3);margin-top:var(--s8)}
+.tile{border:1px solid var(--line);background:var(--void-2);cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color .18s,transform .18s,background .18s;display:flex;flex-direction:column;font-family:var(--mono)}
+.tile:hover,.tile.sel{transform:translateY(-2px)}
+.tile.sel{border-color:var(--bone-faint)}
+.tile .gw{aspect-ratio:1;display:grid;place-items:center;position:relative;border-bottom:1px solid var(--line)}
+.tile svg{width:74%;height:74%;overflow:visible}
+.tile .uni{font-size:40px;line-height:1}
+.tile .corner{position:absolute;top:5px;left:5px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 6px currentColor}
+.tile .nm{font-size:9.5px;letter-spacing:.02em;color:var(--bone-dim);padding:4px 4px;text-align:center;
+  line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile:hover .nm,.tile.sel .nm{color:var(--bone)}
+.hidden{display:none!important}
+footer.notes{margin-top:var(--s21);border:1px solid var(--line);padding:var(--s13);background:var(--void-2)}
+footer.notes h4{font-size:11px;letter-spacing:.28em;text-transform:uppercase;margin:0 0 var(--s8);color:var(--bone)}
+footer.notes p{font-size:12px;color:var(--bone-dim);max-width:78ch;margin:0 0 var(--s5)}
+footer.notes b{color:var(--herm)} footer.notes .g{color:var(--geo)}
+.colophon{margin-top:var(--s8);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--bone-faint)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.mk-engine{margin-top:var(--s13);border:1px solid var(--line-2);background:linear-gradient(180deg,rgba(138,127,240,.06),transparent 30%),var(--ink);position:relative;overflow:hidden}
+.mk-engine::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(138,127,240,.05) 0 1px,transparent 1px 4px);opacity:.6}
+.mk-bar{display:flex;align-items:center;justify-content:space-between;gap:var(--s8);padding:var(--s5) var(--s13);border-bottom:1px solid var(--line-2);position:relative;z-index:1}
+.mk-bar .t{font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--ang);font-weight:600}
+.mk-bar .sub{font-size:10px;letter-spacing:.16em;color:var(--bone-faint);text-transform:uppercase}
+.mk-body{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);position:relative;z-index:1}
+@media(max-width:680px){.mk-body{grid-template-columns:1fr}}
+.mk-pane{background:var(--ink);padding:var(--s13)}
+.mk-view{aspect-ratio:1;background:radial-gradient(130% 130% at 50% 42%,rgba(138,127,240,.08),transparent 68%),#060a0f;border:1px solid var(--line-2);display:grid;place-items:center}
+.mk-view svg{width:90%;height:90%;overflow:visible}
+.mk-lab{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--bone-dim);margin:0 0 4px;display:block}
+.mk-in{width:100%;background:#05080c;border:1px solid var(--line-2);color:var(--bone);font-family:var(--mono);font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:6px 9px;outline:none;border-radius:2px}
+.mk-in:focus{border-color:var(--ang);box-shadow:0 0 0 1px rgba(138,127,240,.4)}
+.mk-seg{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:var(--s8)}
+.mk-seg button{flex:1 1 auto;min-width:42px;background:#070b10;border:1px solid var(--line-2);color:var(--bone-dim);font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:4px 5px;cursor:pointer;border-radius:2px;transition:.14s}
+.mk-seg button:hover{color:var(--bone);border-color:var(--bone-faint)}
+.mk-seg button[aria-pressed=true]{color:var(--ink);font-weight:700;border-color:transparent;background:var(--ang)}
+.mk-ex{display:flex;gap:5px;margin-top:6px}
+.mk-ex button{flex:1;background:transparent;border:1px solid var(--line-2);color:var(--bone-dim);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:6px;cursor:pointer;border-radius:2px;transition:.14s}
+.mk-ex button:hover{color:var(--geo);border-color:var(--geo)}
+.mk-tape{font-size:10.5px;line-height:1.7;color:var(--bone-dim);letter-spacing:.02em;margin-top:var(--s8);white-space:pre-wrap;word-break:break-word}
+.mk-tape .k{display:block;color:var(--bone-faint);text-transform:uppercase;letter-spacing:.18em;font-size:9px;margin-top:6px}
+.mk-tape .em{color:var(--ang)} .mk-tape .a{color:var(--alpha)} .mk-tape .w{color:var(--kab)}
+.mk-hint{font-size:10px;color:var(--bone-faint);letter-spacing:.04em;margin-top:6px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">Studio 137 · Transmission &nbsp;<span class="a">α ≈ 1/137</span>&nbsp; · the deep index</div>
+    <h1>Esoterica Codex <span class="thin">/ the whole spread</span></h1>
+    <p class="thesis">A working index of <b>marks built to do something</b> — generators, seals, addressing systems, scripts. Geometric forms are drawn from their rule in code; the authentic glyph-blocks (hieroglyphs, runes, alchemical, Hebrew, trigrams) are the real Unicode characters set in their proper faces. Filter by tradition, search by name, hover or tap any mark to read what it's for.</p>
+    <div class="stat" id="stat"></div>
+  </header>
+  <div class="controls">
+    <input id="search" class="search" type="text" placeholder="search — ankh, saturn, fehu, helm of awe, sulphur, gabriel…" spellcheck="false" autocomplete="off">
+    <div class="chips" id="chips"></div>
+    <div class="count" id="count"></div>
+  </div>
+  <div class="inspector">
+    <div class="insp-glyph" id="insp-glyph"></div>
+    <div>
+      <h2 class="insp-name" id="insp-name">—</h2>
+      <div class="insp-tags"><span class="insp-trad" id="insp-trad"></span><span class="insp-era" id="insp-era"></span></div>
+      <p class="insp-mean" id="insp-mean"></p>
+    </div>
+  </div>
+  <main class="grid" id="grid" aria-label="Symbol index"></main>
+  <footer class="notes">
+    <h4>Honest seams</h4>
+    <p>The <b>angelic, Olympic, and Goetic seals</b> are <span class="g">generated</span> — deterministic glyphs standing in for the historical plates, not photographic copies. The authentic move is to derive them: spirits and intelligences are kamea-walks of their names, and that lives in the companion <b>MK·137 instrument</b>. Swap in a manuscript plate any time you want fidelity over derivation.</p>
+    <p>The <b>Adinkra, veve, and Rose-Cross</b> renders are reduced to their essential geometry — the originals carry far more line-work. <b>Vodou veve</b> are living liturgical drawings; these are respectful diagrams, not ritual objects.</p>
+    <p>Unicode blocks render through <b>Noto webfonts</b> so the real characters appear even where the OS lacks them — the one external dependency, and it's load-bearing: without it the esoterica is tofu.</p>
+    <div class="colophon">No clock · Fibonacci spacing · tradition is colour · derivation over decoration</div>
+  </footer>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg", TAU=Math.PI*2, R3=Math.sqrt(3), K="currentColor";
+const S=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+function add(p,t,a){const e=S(t,a);p.appendChild(e);return e;}
+function ngon(cx,cy,r,n,rot,step){const p=[];step=step||1;rot=rot||0;for(let i=0;i<n;i++){const a=rot-Math.PI/2+((i*step)%n)*TAU/n;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return p;}
+function pth(pts,close){return pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")+(close?"Z":"");}
+function P(svg,d,w,fill,op){add(svg,"path",{d,fill:fill||"none",stroke:K,"stroke-width":w||1.4,"stroke-linejoin":"round","stroke-linecap":"round",opacity:op==null?1:op});}
+function ring(svg,cx,cy,r,w,op){add(svg,"circle",{cx,cy,r,fill:"none",stroke:K,"stroke-width":w||1.4,opacity:op==null?1:op});}
+function dot(svg,cx,cy,r){add(svg,"circle",{cx,cy,r,fill:K});}
+function line(svg,x1,y1,x2,y2,w,op){add(svg,"line",{x1,y1,x2,y2,stroke:K,"stroke-width":w||1.4,"stroke-linecap":"round",opacity:op==null?1:op});}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function rngOf(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function seedSeal(svg,name,style){
+  const r=rngOf(hash(name+style)), c=50;
+  ring(svg,c,c,40,1.3,.9);
+  if(style!=="goe"){ring(svg,c,c,40,.6,.45);ring(svg,c,c,34,.6,.4);}
+  const k=4+Math.floor(r()*5), baseR=style==="goe"?38:34, ang=[];
+  for(let i=0;i<k;i++)ang.push(r()*TAU); ang.sort((a,b)=>a-b);
+  const pts=ang.map(a=>[c+Math.cos(a)*baseR*(.6+r()*.4),c+Math.sin(a)*baseR*(.6+r()*.4)]);
+  let cur=[c+(r()-.5)*10,c+(r()-.5)*10];
+  pts.forEach(p=>{
+    if(style==="goe"&&r()<.5){const mid=[c+(r()-.5)*40,c+(r()-.5)*40];P(svg,pth([cur,mid,p]),1.4,"none",.95);}
+    else P(svg,pth([cur,p]),1.4,"none",.95);
+    const cap=Math.floor(r()*4);
+    if(cap===0)ring(svg,p[0],p[1],3,1.2);
+    else if(cap===1)dot(svg,p[0],p[1],1.8);
+    else if(cap===2){const a=Math.atan2(p[1]-cur[1],p[0]-cur[0])+Math.PI/2;line(svg,p[0]+Math.cos(a)*4,p[1]+Math.sin(a)*4,p[0]-Math.cos(a)*4,p[1]-Math.sin(a)*4,1.2);}
+    else{const a=Math.atan2(p[1]-cur[1],p[0]-cur[0]);line(svg,p[0],p[1],p[0]+Math.cos(a+.4)*5,p[1]+Math.sin(a+.4)*5,1.1);line(svg,p[0],p[1],p[0]+Math.cos(a-.4)*5,p[1]+Math.sin(a-.4)*5,1.1);}
+    if(r()<.6)cur=p;
+  });
+  for(let i=0;i<2+Math.floor(r()*2);i++){const a=pts[Math.floor(r()*pts.length)],b=pts[Math.floor(r()*pts.length)];P(svg,pth([a,b]),.8,"none",.55);}
+  const m=Math.floor(r()*3);
+  if(m===0)ring(svg,c,c,3.5,1.2);
+  else if(m===1)P(svg,pth(ngon(c,c,5,3),true),1.1,"none",.9);
+  else{line(svg,c-4,c,c+4,c,1.1);line(svg,c,c-4,c,c+4,1.1);}
+}
+const D={
+vesica(s){const r=30,c=50;ring(s,c-15,c,r,1.4,.85);ring(s,c+15,c,r,1.4,.85);const h=r*R3/2;P(s,"M"+c+" "+(c-h)+" A "+r+" "+r+" 0 0 1 "+c+" "+(c+h)+" A "+r+" "+r+" 0 0 1 "+c+" "+(c-h)+"Z",1.4,"rgba(94,242,196,.10)");},
+seed(s){const r=17,c=50;ring(s,c,c,r,1.3,.9);for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;ring(s,c+Math.cos(a)*r,c+Math.sin(a)*r,r,1.3,.9);}},
+flower(s){const r=11,c=50,lim=2*r*1.04,id="fc"+Math.random().toString(36).slice(2);const d=add(s,"defs",{});const cp=add(d,"clipPath",{id});add(cp,"circle",{cx:c,cy:c,r:2*r});const g=add(s,"g",{"clip-path":"url(#"+id+")"});for(let i=-3;i<=3;i++)for(let j=-3;j<=3;j++){const x=i*r+j*r/2,y=j*r*R3/2;if(Math.hypot(x,y)<=lim)ring(g,c+x,c+y,r,1,.85);}ring(s,c,c,2*r,1.4,1);},
+fruit(s){const r=8,c=50;ring(s,c,c,r,1.2,.9);for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;ring(s,c+Math.cos(a)*2*r,c+Math.sin(a)*2*r,r,1.2,.85);}for(let i=0;i<6;i++){const a=-Math.PI/2+(i+0.5)*TAU/6;ring(s,c+Math.cos(a)*2*r*R3,c+Math.sin(a)*2*r*R3,r,1.2,.85);}},
+metatron(s){const c=50,st=13,N=[[c,c]];for(let rg=1;rg<=2;rg++)for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;N.push([c+Math.cos(a)*st*rg,c+Math.sin(a)*st*rg]);}for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++)line(s,N[i][0],N[i][1],N[j][0],N[j][1],.4,.5);N.forEach(n=>{ring(s,n[0],n[1],st/2,.7,.5);dot(s,n[0],n[1],1.3);});},
+merkaba(s){const c=50,r=36;P(s,pth(ngon(c,c,r,3,0),true),1.5,"none",.95);P(s,pth(ngon(c,c,r,3,Math.PI),true),1.5,"none",.95);ring(s,c,c,r,.5,.3);},
+sriyantra(s){const c=50,up=[[78,40],[68,32],[60,24],[54,17]],dn=[[18,42],[30,34],[42,26],[50,18]];const tri=(ay,hw,d)=>{const by=d?ay-46:ay+46;return[[c,ay],[c-hw,by],[c+hw,by]];};up.forEach(a=>P(s,pth(tri(a[0],a[1],false),true),.8,"none",.85));dn.forEach(a=>P(s,pth(tri(a[0],a[1],true),true),.8,"none",.85));dot(s,c,50,2);add(s,"rect",{x:c-44,y:6,width:88,height:88,fill:"none",stroke:K,"stroke-width":.6,opacity:.4});},
+tree(s){const N={k:[50,8],c:[72,22],b:[28,22],h:[72,42],g:[28,42],t:[50,52],n:[72,70],ho:[28,70],y:[50,80],m:[50,94]};const E=[["k","c"],["k","b"],["k","t"],["c","b"],["c","h"],["c","t"],["b","g"],["b","t"],["h","g"],["h","t"],["h","n"],["g","t"],["g","ho"],["t","n"],["t","ho"],["t","y"],["n","ho"],["n","y"],["ho","y"],["y","m"],["c","g"],["b","h"]];E.forEach(e=>line(s,N[e[0]][0],N[e[0]][1],N[e[1]][0],N[e[1]][1],.7,.55));Object.values(N).forEach(p=>add(s,"circle",{cx:p[0],cy:p[1],r:5,fill:"var(--ink)",stroke:K,"stroke-width":1.1}));},
+borromean(s){const c=50,r=20,o=11;[[c,c-o],[c-o*.87,c+o*.5],[c+o*.87,c+o*.5]].forEach(p=>ring(s,p[0],p[1],r,1.4,.9));},
+goldenspiral(s){let b=.306,d="",c=50;for(let t=0;t<6.3*Math.PI;t+=.12){const rr=2.4*Math.exp(b*t),x=c+rr*Math.cos(t),y=c+rr*Math.sin(t);d+=(d?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);}P(s,d,1.4,"none",.95);},
+loshu(s){const g=[[4,9,2],[3,5,7],[8,1,6]],c=50,cell=18,o=c-cell*1.5;for(let i=0;i<=3;i++){line(s,o,o+cell*i,o+cell*3,o+cell*i,.6,.45);line(s,o+cell*i,o,o+cell*i,o+cell*3,.6,.45);}for(let r=0;r<3;r++)for(let col=0;col<3;col++){const t=add(s,"text",{x:o+cell*(col+.5),y:o+cell*(r+.5)+3.5,"text-anchor":"middle","font-size":9,fill:K,"font-family":"var(--mono)"});t.textContent=g[r][col];}},
+pentagram(s){const c=50;ring(s,c,c,40,1,.5);P(s,pth(ngon(c,c,38,5,0,2),true),1.5,"none",.95);},
+hexagram(s){const c=50;P(s,pth(ngon(c,c,38,3,0),true),1.5,"none",.95);P(s,pth(ngon(c,c,38,3,Math.PI),true),1.5,"none",.95);},
+unicursalhex(s){const c=50;P(s,pth(ngon(c,c,40,3,0),true),1.4,"none",.9);P(s,pth(ngon(c,c,40,3,Math.PI),true),1.4,"none",.9);ring(s,c,c,5,1.2);dot(s,c,c,1.4);},
+sigillumdei(s){const c=50,R=40;ring(s,c,c,R,1.2,.95);ring(s,c,c,R-5,.7,.6);for(let i=0;i<28;i++){const a=i*TAU/28;dot(s,c+Math.cos(a)*(R-2.5),c+Math.sin(a)*(R-2.5),.7);}P(s,pth(ngon(c,c,R-9,7,0,1),true),.9,"none",.85);P(s,pth(ngon(c,c,R-9,7,0,2),true),.9,"none",.9);P(s,pth(ngon(c,c,14,5,0,2),true),.9,"none",.9);},
+monas(s){const c=50;P(s,"M38 30 A 12 12 0 0 0 62 30",1.5);ring(s,c,46,9,1.5);dot(s,c,46,1.6);line(s,c,55,c,78,1.5);line(s,c-7,66,c+7,66,1.5);P(s,"M40 86 A 6 6 0 0 1 50 76 A 6 6 0 0 1 60 86",1.5);},
+squaredcircle(s){const c=50;ring(s,c,c,38,1.2,.6);P(s,pth(ngon(c,c,40,3,0),true),1.2,"none",.8);add(s,"rect",{x:c-22,y:c-22,width:44,height:44,fill:"none",stroke:K,"stroke-width":1.2,opacity:.85});ring(s,c,c,22,1.4,1);},
+eyeprov(s){const c=50;P(s,pth(ngon(c,52,40,3,0),true),1.4,"none",.9);for(let i=0;i<12;i++){const a=i*TAU/12;line(s,c+Math.cos(a)*30,52+Math.sin(a)*26,c+Math.cos(a)*38,52+Math.sin(a)*34,.6,.4);}P(s,"M36 52 Q50 42 64 52 Q50 62 36 52Z",1.3,"none",.95);dot(s,c,52,4);},
+rosecross(s){const c=50;line(s,c,16,c,84,1.5);line(s,20,c,80,c,1.5);[[c,16],[c,84],[20,c],[80,c]].forEach(p=>add(s,"rect",{x:p[0]-5,y:p[1]-5,width:10,height:10,fill:"none",stroke:K,"stroke-width":1}));for(let i=0;i<3;i++)ring(s,c,c,6+i*4,1,.9-i*.2);for(let i=0;i<12;i++){const a=i*TAU/12;P(s,"M"+c+" "+c+" Q "+(c+Math.cos(a)*8)+" "+(c+Math.sin(a)*8)+" "+(c+Math.cos(a)*14)+" "+(c+Math.sin(a)*14),.7,"none",.6);}},
+triquetra(s){const c=50,r=18,o=10,cs=[[c,c-o],[c-o*.87,c+o*.5],[c+o*.87,c+o*.5]];cs.forEach((p,i)=>{const a0=i*TAU/3-Math.PI/2,arc=[];for(let t=-1.05;t<=1.05;t+=.1)arc.push([p[0]+Math.cos(a0+t+Math.PI)*r,p[1]+Math.sin(a0+t+Math.PI)*r]);P(s,pth(arc),1.5,"none",.95);});ring(s,c,c,30,.6,.4);},
+triskele(s){const c=50;for(let i=0;i<3;i++){const a0=i*TAU/3;let d="M"+c+" "+c;for(let t=0;t<3.4;t+=.15){const rr=t*5.5,x=c+rr*Math.cos(a0+t),y=c+rr*Math.sin(a0+t);d+="L"+x.toFixed(1)+" "+y.toFixed(1);}P(s,d,1.6,"none",.95);}},
+triplemoon(s){const c=50;ring(s,c,c,15,1.6);P(s,"M30 35 A 16 16 0 0 0 30 65",1.6);P(s,"M70 35 A 16 16 0 0 1 70 65",1.6);},
+hecate(s){const c=50;ring(s,c,c,38,1.2,.9);ring(s,c,c,10,1.2);for(let i=0;i<3;i++){const a=i*TAU/3-Math.PI/2;P(s,"M"+(c+Math.cos(a)*10)+" "+(c+Math.sin(a)*10)+" L "+(c+Math.cos(a)*30)+" "+(c+Math.sin(a)*30),1.4);const a2=a+.5;P(s,"M"+(c+Math.cos(a)*30)+" "+(c+Math.sin(a)*30)+" A 30 30 0 0 1 "+(c+Math.cos(a2)*30)+" "+(c+Math.sin(a2)*30),1.4,"none",.8);}},
+hamsa(s){P(s,"M35 86 L35 50 Q35 40 42 40 Q48 40 48 50 M48 50 L48 30 Q48 22 53 22 Q58 22 58 30 L58 52 M58 52 L58 34 Q58 28 63 28 Q68 28 68 36 L68 56 M68 56 Q72 50 76 54 Q78 58 72 66 L66 80 Q60 88 50 88 L42 88 Q36 88 35 82",1.4,"none",.95);P(s,"M44 64 Q50 58 56 64 Q50 70 44 64Z",1.1,"none",.9);dot(s,50,64,1.6);},
+ouroboros(s){const c=50,r=30;P(s,"M "+(c+Math.cos(-1)*r)+" "+(c+Math.sin(-1)*r)+" A "+r+" "+r+" 0 1 1 "+(c+Math.cos(-.2)*r)+" "+(c+Math.sin(-.2)*r),3.2,"none",.9);const hx=c+Math.cos(-.2)*r,hy=c+Math.sin(-.2)*r;P(s,"M "+(hx-5)+" "+(hy-6)+" L "+(hx+6)+" "+hy+" L "+(hx-5)+" "+(hy+6)+"Z",1,K,.95);},
+valknut(s){const c=50,r=20;[[c,c-12],[c-15,c+10],[c+15,c+10]].forEach(o=>P(s,pth(ngon(o[0],o[1]+6,r,3,0),true),1.4,"none",.92));},
+webofwyrd(s){const c=50,pts=[];for(let i=0;i<9;i++){const a=i*TAU/9-Math.PI/2;pts.push([c+Math.cos(a)*36,c+Math.sin(a)*36]);}for(let i=0;i<9;i++)for(let j=i+1;j<9;j++)if((j-i)%3===0||(j-i)===1||(i+j)%4===0)line(s,pts[i][0],pts[i][1],pts[j][0],pts[j][1],.6,.5);},
+chaosstar(s){const c=50;for(let i=0;i<8;i++){const a=i*TAU/8,x=c+Math.cos(a)*38,y=c+Math.sin(a)*38;line(s,c,c,x,y,1.4);P(s,"M"+x+" "+y+" L "+(x-Math.cos(a-.5)*8)+" "+(y-Math.sin(a-.5)*8)+" M"+x+" "+y+" L "+(x-Math.cos(a+.5)*8)+" "+(y-Math.sin(a+.5)*8),1.3);}dot(s,c,c,2);},
+chaossphere(s){const c=50;ring(s,c,c,34,1.4);for(let i=0;i<8;i++){const a=i*TAU/8;line(s,c,c,c+Math.cos(a)*34,c+Math.sin(a)*34,.9,.7);}ring(s,c,c,18,1,.6);},
+vegvisir(s){const c=50;ring(s,c,c,40,.7,.5);for(let i=0;i<8;i++){const a=i*TAU/8,ux=c+Math.cos(a)*36,uy=c+Math.sin(a)*36,v=i%4,px=Math.cos(a),py=Math.sin(a),qx=-py,qy=px;line(s,c,c,ux,uy,1.5);if(v===0){line(s,ux,uy,ux-px*6+qx*6,uy-py*6+qy*6,1.3);line(s,ux,uy,ux-px*6-qx*6,uy-py*6-qy*6,1.3);}else if(v===1){line(s,ux-px*5+qx*7,uy-py*5+qy*7,ux-px*5-qx*7,uy-py*5-qy*7,1.3);}else if(v===2){ring(s,ux,uy,3,1.2);}else{line(s,ux,uy,ux+qx*6,uy+qy*6,1.3);line(s,ux-px*4,uy-py*4,ux-px*4+qx*6,uy-py*4+qy*6,1.3);}}},
+aegishjalmur(s){const c=50;for(let i=0;i<8;i++){const a=i*TAU/8,px=Math.cos(a),py=Math.sin(a),qx=-py,qy=px,ex=c+px*38,ey=c+py*38;line(s,c,c,ex,ey,1.5);line(s,ex,ey,ex-px*7+qx*7,ey-py*7+qy*7,1.4);line(s,ex,ey,ex-px*7-qx*7,ey-py*7-qy*7,1.4);for(let m=1;m<=2;m++){const bx=c+px*13*m,by=c+py*13*m;line(s,bx+qx*5,by+qy*5,bx-qx*5,by-qy*5,1.2);}}dot(s,c,c,2);},
+veldismagn(s){const c=50;for(let i=0;i<8;i++){const a=i*TAU/8,px=Math.cos(a),py=Math.sin(a),qx=-py,qy=px,ex=c+px*38,ey=c+py*38;line(s,c,c,ex,ey,1.5);const bx=c+px*26,by=c+py*26;line(s,bx+qx*6,by+qy*6,bx-qx*6,by-qy*6,1.3);dot(s,ex,ey,2.4);}},
+eyehorus(s){P(s,"M22 46 Q42 30 64 44 Q52 56 38 54 Q26 52 22 46Z",1.4,"none",.95);ring(s,44,46,5,1.4);dot(s,44,46,2);P(s,"M64 44 Q70 46 74 44",1.4);P(s,"M40 54 L36 70",1.4);P(s,"M48 55 Q50 66 60 66",1.4,"none",.9);},
+ankh(s){const c=50;ring(s,c,30,12,1.6);line(s,c,42,c,84,1.6);line(s,32,54,68,54,1.6);},
+tyet(s){const c=50;ring(s,c,30,10,1.6);line(s,c,40,c,78,1.6);P(s,"M40 44 Q34 58 44 70",1.6,"none",.95);P(s,"M60 44 Q66 58 56 70",1.6,"none",.95);},
+akhet(s){const c=50;ring(s,c,46,13,1.6);P(s,"M14 64 L40 64 M60 64 L86 64",1.6);P(s,"M22 64 L22 56 M30 64 L30 50 M70 64 L70 50 M78 64 L78 56",1.4,"none",.85);},
+sa(s){P(s,"M38 80 L38 40 Q38 24 50 24 Q62 24 62 40 L62 80",1.6,"none",.95);P(s,"M38 56 Q50 50 62 56",1.5,"none",.9);},
+baphomet(s){const c=50;ring(s,c,c,40,1.3);ring(s,c,c,33,.8,.6);P(s,pth(ngon(c,c,31,5,Math.PI,2),true),1.5,"none",.95);const heb=["ל","ת","ן","ו","י"],pts=ngon(c,c,37,5,Math.PI);pts.forEach((p,i)=>{const t=add(s,"text",{x:p[0],y:p[1]+3,"text-anchor":"middle","font-size":7,fill:K,"font-family":"'Noto Sans Hebrew',serif"});t.textContent=heb[i];});},
+leviathancross(s){const c=50;line(s,c,18,c,66,1.6);line(s,30,32,70,32,1.6);line(s,34,44,66,44,1.6);ring(s,c-9,74,9,1.6);ring(s,c+9,74,9,1.6);},
+lucifersigil(s){P(s,"M30 70 L50 50 L70 70",1.6,"none",.95);line(s,50,50,50,30,1.6);P(s,"M42 30 L58 30",1.6);ring(s,50,22,7,1.5);line(s,40,84,60,84,1.6);P(s,"M50 84 Q44 78 50 72 Q56 78 50 84",1.5,"none",.9);},
+adinkrahene(s){const c=50;for(let i=0;i<3;i++)ring(s,c,c,12+i*11,1.8,1);},
+gyenyame(s){P(s,"M50 20 Q72 24 72 46 Q72 64 52 64 Q40 64 40 52 Q40 44 48 44 M50 80 Q28 76 28 54 Q28 36 48 36 Q60 36 60 48 Q60 56 52 56",1.7,"none",.95);},
+sankofa(s){P(s,"M50 78 Q24 70 30 44 Q34 26 52 26 Q66 26 66 40 Q66 50 56 50 Q50 50 50 44",1.7,"none",.95);P(s,"M50 44 L42 36 M50 44 L58 36",1.5);dot(s,50,68,3);},
+dwennimmen(s){P(s,"M30 70 Q30 40 50 40 Q70 40 70 70",1.7,"none",.9);P(s,"M30 70 Q18 70 18 56 Q18 46 28 46",1.6,"none",.9);P(s,"M70 70 Q82 70 82 56 Q82 46 72 46",1.6,"none",.9);},
+akoma(s){P(s,"M50 78 C20 56 24 30 42 30 C50 30 50 40 50 44 C50 40 50 30 58 30 C76 30 80 56 50 78Z",1.7,"none",.92);},
+eban(s){add(s,"rect",{x:26,y:26,width:48,height:48,rx:6,fill:"none",stroke:K,"stroke-width":1.6});line(s,50,26,50,74,1.6);line(s,26,50,74,50,1.6);add(s,"rect",{x:40,y:40,width:20,height:20,fill:"none",stroke:K,"stroke-width":1.4});},
+nkyinkyim(s){P(s,"M26 78 L26 60 L44 60 L44 42 L62 42 L62 24 L74 24",1.7,"none",.95);},
+damballa(s){const c=50;line(s,c,16,c,84,1.6);[-1,1].forEach(d=>{P(s,"M50 30 q "+(14*d)+" 6 0 18 q "+(-14*d)+" 12 0 24",1.5,"none",.9);ring(s,50+18*d,26,5,1.2);dot(s,50+18*d,26,2.2);});for(let i=0;i<4;i++)line(s,c-12,30+i*14,c+12,30+i*14,1,.5);ring(s,c,50,6,1.3);},
+legba(s){const c=50;line(s,c,16,c,84,1.6);line(s,20,40,80,40,1.6);ring(s,c,c,7,1.4);ring(s,c,c,13,.8,.5);[[20,40],[80,40],[50,16],[50,84]].forEach(p=>dot(s,p[0],p[1],2));},
+erzulie(s){P(s,"M50 80 C16 54 22 26 42 26 C50 26 50 38 50 42 C50 38 50 26 58 26 C78 26 84 54 50 80Z",1.6,"none",.92);for(let i=0;i<5;i++){const a=-Math.PI/2+(i-2)*.4;line(s,50,40,50+Math.cos(a)*16,40+Math.sin(a)*16,.9,.6);}line(s,50,80,50,92,1.4);},
+baronsamedi(s){line(s,50,20,50,80,1.6);line(s,26,40,74,40,1.6);add(s,"rect",{x:40,y:62,width:20,height:18,fill:"none",stroke:K,"stroke-width":1.4});ring(s,50,30,6,1.3);dot(s,47,29,1);dot(s,53,29,1);[[26,40],[74,40]].forEach(p=>dot(s,p[0],p[1],2));},
+abraxas(s){ring(s,50,34,9,1.4);P(s,"M50 28 L50 18 M46 22 L54 22",1.3);line(s,50,43,50,64,1.5);P(s,"M40 50 L34 70 M60 50 L66 70",1.5,"none",.9);P(s,"M34 70 q -4 8 4 10 M66 70 q 4 8 -4 10",1.4,"none",.85);line(s,40,54,60,54,1.4);}
+};
+/* ───────── tradition meta ───────── */
+const T={
+ geo:["Sacred Geometry","--geo"], astro:["Planetary & Astrological","--astro"], alch:["Alchemy","--alch"],
+ ang:["Angelic & Theurgic","--ang"], goe:["Goetic & Infernal","--goe"], kab:["Kabbalah & Hebrew","--kab"],
+ rune:["Runic & Norse","--rune"], egy:["Egyptian","--egy"], herm:["Hermetic & Universal","--herm"],
+ chaos:["Chaos & Modern","--chaos"], ich:["I Ching & Taoist","--ich"], adk:["Adinkra (Akan)","--adk"], vod:["Vodou Veve","--vod"]
+};
+function U(n,t,e,g,f,m){return{n,t,e,g,f:f||"u-sym",m};}
+function G(id,n,t,e,m){return{n,t,e,d:1,id,m};}
+function SEAL(id,n,t,e,m){return{n,t,e,d:1,id,m};}
+
+const DATA=[
+/* SACRED GEOMETRY */
+G("vesica","Vesica Piscis","geo","pre-antiquity","Two circles each through the other's centre — the first division of unity, the womb from which √3 and every later form is generated."),
+G("seed","Seed of Life","geo","antiquity","Six circles around a seventh: the days of creation as hexagonal close-packing, the engine of the Flower."),
+G("flower","Flower of Life","geo","antiquity","The lattice continued and bounded — overlapping circles read as the blueprint of all proportion."),
+G("fruit","Fruit of Life","geo","antiquity","The 13 circles extracted from the Flower; connect their centres and Metatron's Cube appears."),
+G("metatron","Metatron's Cube","geo","medieval","All 13 centres joined by all 78 lines — and the five Platonic solids fall out, unasked, inside it."),
+G("merkaba","Merkaba / Star Tetrahedron","geo","antiquity","Two interlocked tetrahedra — spirit descending, matter ascending — the counter-rotating light-vehicle."),
+G("sriyantra","Sri Yantra","geo","≥1st millennium","Nine interlocking triangles radiating 43 smaller ones around a bindu — a standing wave you can draw, the body of the goddess."),
+G("tree","Tree of Life","geo","medieval","Ten emanations joined by 22 paths — the Kabbalistic map of how the infinite condenses into the world."),
+G("borromean","Borromean Rings","geo","antiquity","Three rings locked so cutting any one frees the other two — trinity, interdependence, the irreducible knot."),
+G("goldenspiral","Golden Spiral","geo","Renaissance","A logarithmic spiral at the ratio φ — growth that keeps its shape at every scale, nautilus to galaxy."),
+G("loshu","Lo Shu / Saturn Square","geo","antiquity","The 3×3 magic square, every line summing to 15 — the oldest kamea, ancestor of the planetary seals."),
+G("pentagram","Pentagram","geo","antiquity","Five points of the golden ratio — the human microcosm, spirit ruling the four elements when point-up."),
+G("hexagram","Hexagram / Seal of Solomon","geo","antiquity","Fire and water, above and below, interlocked — 'as above, so below' as two triangles."),
+/* PLANETARY & ASTROLOGICAL */
+U("Sun","astro","classical","☉","u-sym","Sol — the self, vitality, the radiant centre; gold among the metals."),
+U("Moon","astro","classical","☽","u-sym","Luna — instinct, emotion, the tides of the unconscious; silver."),
+U("Mercury","astro","classical","☿","u-sym","Mind, language, exchange, the messenger between worlds; quicksilver."),
+U("Venus","astro","classical","♀","u-sym","Love, value, attraction, harmony; copper."),
+U("Mars","astro","classical","♂","u-sym","Drive, conflict, courage, the cutting edge; iron."),
+U("Jupiter","astro","classical","♃","u-sym","Expansion, fortune, law, benevolence; tin."),
+U("Saturn","astro","classical","♄","u-sym","Limit, time, structure, the teacher of hard lessons; lead."),
+U("Uranus","astro","modern","♅","u-sym","Disruption, awakening, sudden reversal, the lightning of the new."),
+U("Neptune","astro","modern","♆","u-sym","Dissolution, dream, mysticism, the fog that erases edges."),
+U("Pluto","astro","modern","♇","u-sym","Death and rebirth, buried power, transformation under pressure."),
+U("Earth","astro","classical","🜨","u-sym2","The terrestrial ground — body, manifestation, the cross within the circle."),
+U("Aries","astro","classical","♈","u-sym","The ram — cardinal fire, the first spark, raw initiation."),
+U("Taurus","astro","classical","♉","u-sym","The bull — fixed earth, the body, what endures and possesses."),
+U("Gemini","astro","classical","♊","u-sym","The twins — mutable air, duality, the restless mind."),
+U("Cancer","astro","classical","♋","u-sym","The crab — cardinal water, home, the protective shell."),
+U("Leo","astro","classical","♌","u-sym","The lion — fixed fire, the radiant ego, sovereignty."),
+U("Virgo","astro","classical","♍","u-sym","The maiden — mutable earth, discernment, the sacred craft of refinement."),
+U("Libra","astro","classical","♎","u-sym","The scales — cardinal air, balance, relationship, justice."),
+U("Scorpio","astro","classical","♏","u-sym","The scorpion — fixed water, depth, death, regeneration."),
+U("Sagittarius","astro","classical","♐","u-sym","The archer — mutable fire, the quest, the arrow toward meaning."),
+U("Capricorn","astro","classical","♑","u-sym","The sea-goat — cardinal earth, ambition, the long climb."),
+U("Aquarius","astro","classical","♒","u-sym","The water-bearer — fixed air, the collective, the future poured out."),
+U("Pisces","astro","classical","♓","u-sym","The fishes — mutable water, dissolution, compassion, the dreaming sea."),
+U("North Node","astro","classical","☊","u-sym","The dragon's head — the soul's growth-edge, what you're moving toward."),
+U("South Node","astro","classical","☋","u-sym","The dragon's tail — past mastery, comfort, what you're releasing."),
+U("Conjunction","astro","classical","☌","u-sym","0° — fusion, two forces acting as one."),
+U("Opposition","astro","classical","☍","u-sym","180° — tension, the axis of awareness through another."),
+U("Retrograde","astro","classical","℞","u-sym","Apparent backward motion — turning inward, review, the inner pass."),
+U("Black Moon Lilith","astro","modern","⚸","u-sym2","The lunar apogee — the wild feminine, exile, the un-tamed in the chart."),
+/* ALCHEMY */
+U("Fire","alch","classical","🜂","u-sym2","Hot and dry — will, transformation, the ascending principle."),
+U("Water","alch","classical","🜄","u-sym2","Cold and moist — emotion, dissolution, the descending principle."),
+U("Air","alch","classical","🜁","u-sym2","Hot and moist — intellect, the medium, the breath between."),
+U("Earth","alch","classical","🜃","u-sym2","Cold and dry — body, fixation, the ground of manifestation."),
+U("Sulphur","alch","medieval","🜍","u-sym2","The soul — the combustible, fiery, masculine principle; the consciousness that animates."),
+U("Salt","alch","medieval","🜔","u-sym2","The body — the fixed, crystalline, mineral principle; what remains."),
+U("Quintessence","alch","medieval","🜀","u-sym2","The fifth element — aether, spirit, the hidden essence drawn from the four."),
+U("Gold","alch","medieval","☉","u-sym","Sol — the perfected metal, the goal of the Work, incorruptible."),
+U("Silver","alch","medieval","☽","u-sym","Luna — the white, reflective metal of the soul's purification."),
+U("Iron","alch","medieval","♂","u-sym","Mars — the warrior metal, blood and force."),
+U("Copper","alch","medieval","♀","u-sym","Venus — the green metal of love and verdigris."),
+U("Tin","alch","medieval","♃","u-sym","Jupiter — the metal of expansion and benevolent fortune."),
+U("Lead","alch","medieval","♄","u-sym","Saturn — the prima materia, the heavy black starting-point of the Work."),
+U("Antimony","alch","medieval","♁","u-sym","The wolf of the metals — the feral, devouring agent that purifies gold."),
+U("Vitriol","alch","medieval","🜖","u-sym2","V.I.T.R.I.O.L. — 'Visit the interior of the earth; rectifying, you will find the hidden stone.'"),
+U("Aqua Vitae","alch","medieval","🜈","u-sym2","The water of life — distilled spirit, the volatile fire-water."),
+U("Amalgam","alch","medieval","🜘","u-sym2","The marriage of a metal with mercury — conjunction made literal."),
+U("Caput Mortuum","alch","medieval","🜑","u-sym2","The 'dead head' — the residue after distillation; what must be discarded."),
+G("ouroboros","Ouroboros","alch","antiquity","The serpent eating its tail — eternal return, the unity of beginning and end, 'the all is one.'"),
+G("squaredcircle","Squaring the Circle","alch","medieval","Circle, square, triangle, circle — the emblem of reconciling spirit and matter into the Stone."),
+/* ANGELIC & THEURGIC */
+G("sigillumdei","Sigillum Dei Aemeth","ang","1582 · Dee","Dee's nested heptagon/heptagram lattice of divine names — the addressing system, drawn as a circuit, for angelic contact."),
+SEAL("_seal_Michael_ang","Michael · Sol","ang","Heptameron","Archangel of the Sun — fire, sovereignty, the warrior of light who leads the heavenly host."),
+SEAL("_seal_Gabriel_ang","Gabriel · Luna","ang","Heptameron","Archangel of the Moon — the messenger, annunciation, dreams and the waters of the unconscious."),
+SEAL("_seal_Raphael_ang","Raphael · Mercury","ang","Heptameron","Archangel of Mercury — healing, travel, the divine physician and teacher of arts."),
+SEAL("_seal_Sachiel_ang","Sachiel · Jupiter","ang","Heptameron","Archangel of Jupiter — expansion, mercy, benevolence and lawful increase."),
+SEAL("_seal_Cassiel_ang","Cassiel · Saturn","ang","Heptameron","Archangel of Saturn — time, boundary, solitude, the tempering of patience."),
+SEAL("_seal_Samael_ang","Samael · Mars","ang","Heptameron","Archangel of Mars — severity, force, the burning blade of judgment."),
+SEAL("_seal_Anael_ang","Anael · Venus","ang","Heptameron","Archangel of Venus — love, beauty, harmony and desire."),
+SEAL("_seal_Agiel_ang","Agiel · Intelligence of Saturn","ang","Agrippa","The benevolent mind of Saturn, name walked across the 3×3 kamea — discipline made luminous."),
+SEAL("_seal_Zazel_goe2","Zazel · Spirit of Saturn","ang","Agrippa","The raw planetary force of Saturn, derived from the Saturn square — the heavy, binding power."),
+SEAL("_seal_Iophiel_ang","Iophiel · Intelligence of Jupiter","ang","Agrippa","The mind of Jupiter, walked across the 4×4 Dürer kamea — the beauty of the law."),
+SEAL("_seal_Hismael_goe2","Hismael · Spirit of Jupiter","ang","Agrippa","The planetary force of Jupiter, derived from the Jupiter square."),
+SEAL("_seal_Graphiel_ang","Graphiel · Intelligence of Mars","ang","Agrippa","The mind of Mars, walked across the 5×5 kamea — focused force."),
+SEAL("_seal_Bartzabel_goe2","Bartzabel · Spirit of Mars","ang","Agrippa","The planetary force of Mars, derived from the Mars square — the spirit of war."),
+SEAL("_seal_Nakhiel_ang","Nakhiel · Intelligence of the Sun","ang","Agrippa","The solar mind, walked across the 6×6 kamea — the intelligence of light."),
+SEAL("_seal_Sorath_goe2","Sorath · Spirit of the Sun","ang","Agrippa","The solar daemon (number 666), the raw force of the Sun's square."),
+SEAL("_seal_Hagiel_ang","Hagiel · Intelligence of Venus","ang","Agrippa","The Venusian mind, walked across the 7×7 kamea — intelligent harmony."),
+SEAL("_seal_Kedemel_goe2","Kedemel · Spirit of Venus","ang","Agrippa","The planetary force of Venus, derived from the Venus square."),
+SEAL("_seal_Tiriel_ang","Tiriel · Intelligence of Mercury","ang","Agrippa","The Mercurial mind, walked across the 8×8 kamea — quicksilver intellect."),
+SEAL("_seal_Taph_goe2","Taphthartharath · Spirit of Mercury","ang","Agrippa","The planetary force of Mercury, derived from the Mercury square."),
+SEAL("_seal_Aratron_olym","Aratron · Olympic Spirit of Saturn","ang","Arbatel 1575","Governor of 49 provinces — teaches alchemy and invisibility, turns the living to stone, confers long life."),
+SEAL("_seal_Bethor_olym","Bethor · Olympic Spirit of Jupiter","ang","Arbatel 1575","Governor of 42 provinces — answers swiftly, raises to high office, opens hidden treasure."),
+SEAL("_seal_Phaleg_olym","Phaleg · Olympic Spirit of Mars","ang","Arbatel 1575","Governor of 35 provinces — the War-Lord, granter of martial honour."),
+SEAL("_seal_Och_olym","Och · Olympic Spirit of the Sun","ang","Arbatel 1575","Governor of 28 provinces — the alchemist-physician, perfects gold and grants 600 years of health."),
+SEAL("_seal_Hagith_olym","Hagith · Olympic Spirit of Venus","ang","Arbatel 1575","Governor of 21 provinces — transmuter of metals, bestower of beauty and faithful familiars."),
+SEAL("_seal_Ophiel_olym","Ophiel · Olympic Spirit of Mercury","ang","Arbatel 1575","Governor of 14 provinces — teaches all arts, turns quicksilver into the Philosopher's Stone."),
+SEAL("_seal_Phul_olym","Phul · Olympic Spirit of the Moon","ang","Arbatel 1575","Governor of 7 provinces — transmutes all metals to silver, heals, commands the spirits of water."),
+/* GOETIC & INFERNAL */
+G("baphomet","Sigil of Baphomet","goe","modern","Inverted pentagram in two circles, the five points lettered LVITN — Leviathan — the Sabbatic Goat as emblem of matter and the lower will."),
+G("leviathancross","Leviathan Cross","goe","medieval","The Cross of Sulphur / brimstone — a double cross over the infinity loop, the alchemical 'fire' adopted as a sign of the abyss."),
+G("lucifersigil","Sigil of Lucifer","goe","18th c.","From the Grimorium Verum — the 'light-bringer' rendered as an abstract seal of chalice, staff and crossing paths."),
+SEAL("_seal_Bael_goe","Bael","goe","Lemegeton","First king of the 72 — grants invisibility and wisdom; appears with the heads of cat, toad and man."),
+SEAL("_seal_Paimon_goe","Paimon","goe","Lemegeton","A great king who teaches all arts, sciences and secrets; comes with a host and great noise."),
+SEAL("_seal_Asmoday_goe","Asmoday","goe","Lemegeton","King of the 72 — teaches mathematics and the powers of treasure; guardian of hidden things."),
+SEAL("_seal_Belial_goe","Belial","goe","Lemegeton","A mighty king of lawlessness — grants favour, senatorships and the loyalty of friends and foes."),
+SEAL("_seal_Astaroth_goe","Astaroth","goe","Lemegeton","A great duke — reveals the past and future and the secrets of the fall of spirits."),
+SEAL("_seal_Bune_goe","Bune","goe","Lemegeton","A duke who moves the dead and grants riches, wisdom and eloquence."),
+SEAL("_seal_Stolas_goe","Stolas","goe","Lemegeton","A prince in the form of a crowned owl — teaches astronomy and the virtues of herbs and stones."),
+SEAL("_seal_Andromalius_goe","Andromalius","goe","Lemegeton","The 72nd earl — returns stolen goods, exposes thieves and wickedness, punishes the deceitful."),
+SEAL("_seal_Vassago_goe","Vassago","goe","Lemegeton","A benign prince — declares things past and to come, finds what is lost or hidden."),
+/* KABBALAH & HEBREW */
+U("Aleph · א","kab","ancient","א","u-heb","Value 1 — the ox, breath, the silent unity before sound; the Fool of the Tarot."),
+U("Bet · ב","kab","ancient","ב","u-heb","Value 2 — the house, the container, the first duality; the Magus."),
+U("Gimel · ג","kab","ancient","ג","u-heb","Value 3 — the camel crossing the desert between the supernals; the High Priestess."),
+U("Dalet · ד","kab","ancient","ד","u-heb","Value 4 — the door, the threshold; the Empress."),
+U("He · ה","kab","ancient","ה","u-heb","Value 5 — the window, breath, revelation; the Emperor."),
+U("Vav · ו","kab","ancient","ו","u-heb","Value 6 — the nail that joins heaven and earth; the Hierophant."),
+U("Zayin · ז","kab","ancient","ז","u-heb","Value 7 — the sword, discrimination; the Lovers."),
+U("Chet · ח","kab","ancient","ח","u-heb","Value 8 — the fence, the field of the heart; the Chariot."),
+U("Tet · ט","kab","ancient","ט","u-heb","Value 9 — the serpent coiled, hidden good; Strength / Lust."),
+U("Yod · י","kab","ancient","י","u-heb","Value 10 — the hand, the seed-point from which all letters spring; the Hermit."),
+U("Kaf · כ","kab","ancient","כ","u-heb","Value 20 — the open palm, grasping; the Wheel of Fortune."),
+U("Lamed · ל","kab","ancient","ל","u-heb","Value 30 — the ox-goad, teaching and aspiration; Justice."),
+U("Mem · מ","kab","ancient","מ","u-heb","Value 40 — the waters, the great deep; the Hanged Man."),
+U("Nun · נ","kab","ancient","נ","u-heb","Value 50 — the fish in the waters, death and regeneration; Death."),
+U("Samekh · ס","kab","ancient","ס","u-heb","Value 60 — the prop, the supporting circle; Temperance / Art."),
+U("Ayin · ע","kab","ancient","ע","u-heb","Value 70 — the eye, perception and its illusions; the Devil."),
+U("Pe · פ","kab","ancient","פ","u-heb","Value 80 — the mouth, speech that shatters; the Tower."),
+U("Tsadi · צ","kab","ancient","צ","u-heb","Value 90 — the fish-hook that draws up; the Star."),
+U("Qof · ק","kab","ancient","ק","u-heb","Value 100 — the back of the head, the dreaming sleep; the Moon."),
+U("Resh · ר","kab","ancient","ר","u-heb","Value 200 — the head, the face of consciousness; the Sun."),
+U("Shin · ש","kab","ancient","ש","u-heb","Value 300 — the tooth, the threefold flame of spirit; Judgement / the Aeon."),
+U("Tav · ת","kab","ancient","ת","u-heb","Value 400 — the cross/mark, completion, the seal on all things; the Universe."),
+U("Tetragrammaton","kab","ancient","יהוה","u-heb","The unspoken four-letter Name — the formula of the whole, read but never pronounced."),
+/* RUNIC & NORSE */
+U("Fehu · ᚠ","rune","Elder Futhark","ᚠ","u-runic","Cattle, wealth — mobile abundance, energy that must circulate or rot."),
+U("Uruz · ᚢ","rune","Elder Futhark","ᚢ","u-runic","The aurochs — primal strength, vitality, the untamed shaping force."),
+U("Thurisaz · ᚦ","rune","Elder Futhark","ᚦ","u-runic","The thorn / giant — reactive force, defence, the hammer of Thor."),
+U("Ansuz · ᚨ","rune","Elder Futhark","ᚨ","u-runic","The god, Odin's breath — speech, inspiration, the word that orders."),
+U("Raidho · ᚱ","rune","Elder Futhark","ᚱ","u-runic","The ride, the journey — right motion, rhythm, the wheel of the path."),
+U("Kenaz · ᚲ","rune","Elder Futhark","ᚲ","u-runic","The torch — controlled fire, knowledge, the craft that reveals."),
+U("Gebo · ᚷ","rune","Elder Futhark","ᚷ","u-runic","The gift — exchange, the sacred bond, the X of giving and receiving."),
+U("Wunjo · ᚹ","rune","Elder Futhark","ᚹ","u-runic","Joy — harmony, fulfilment, the kinship of things in accord."),
+U("Hagalaz · ᚺ","rune","Elder Futhark","ᚺ","u-runic","Hail — disruption, the destructive seed, crisis that reorders."),
+U("Nauthiz · ᚾ","rune","Elder Futhark","ᚾ","u-runic","Need — constraint, the friction-fire, necessity as teacher."),
+U("Isa · ᛁ","rune","Elder Futhark","ᛁ","u-runic","Ice — stillness, stasis, the frozen single will."),
+U("Jera · ᛃ","rune","Elder Futhark","ᛃ","u-runic","Year, harvest — cycles, the reward of right timing, the turning seasons."),
+U("Eihwaz · ᛇ","rune","Elder Futhark","ᛇ","u-runic","The yew — the world-axis, life and death, the spine between worlds."),
+U("Perthro · ᛈ","rune","Elder Futhark","ᛈ","u-runic","The lot-cup — fate, chance, mystery, the dice of the Norns."),
+U("Algiz · ᛉ","rune","Elder Futhark","ᛉ","u-runic","The elk, the warding hand — protection, the bridge to the higher self."),
+U("Sowilo · ᛊ","rune","Elder Futhark","ᛊ","u-runic","The sun — victory, the guiding light, the wholeness of will."),
+U("Tiwaz · ᛏ","rune","Elder Futhark","ᛏ","u-runic","Tyr — justice, sacrifice, the spear of honour pointing true."),
+U("Berkano · ᛒ","rune","Elder Futhark","ᛒ","u-runic","The birch — birth, growth, the nurturing feminine, new beginnings."),
+U("Ehwaz · ᛖ","rune","Elder Futhark","ᛖ","u-runic","The horse — partnership, trust, the harmonious pair in motion."),
+U("Mannaz · ᛗ","rune","Elder Futhark","ᛗ","u-runic","Humankind — the self, intelligence, the social and divine in one."),
+U("Laguz · ᛚ","rune","Elder Futhark","ᛚ","u-runic","Water, lake — flow, the unconscious, intuition and life-energy."),
+U("Ingwaz · ᛜ","rune","Elder Futhark","ᛜ","u-runic","Ing — the stored seed, gestation, potential held until release."),
+U("Dagaz · ᛞ","rune","Elder Futhark","ᛞ","u-runic","Day — dawn, breakthrough, the threshold between dark and light."),
+U("Othala · ᛟ","rune","Elder Futhark","ᛟ","u-runic","The ancestral homeland — heritage, the inheritance you guard and pass on."),
+G("vegvisir","Vegvísir","rune","Huld MS 1847","The Icelandic wayfinder — eight staved arms in a wheel so the bearer 'will not lose their way in storms.'"),
+G("aegishjalmur","Ægishjálmur · Helm of Awe","rune","Galdrabók 17c.","Eight Algiz-armed tridents radiating from a centre — worn between the eyes to instil terror and ward the self."),
+G("veldismagn","Veldismagn","rune","galdrastafir","Eight spokes meeting at a point — 'to give power and strength,' carried for protection and safe return."),
+G("valknut","Valknut","rune","Norse","Three interlocked triangles — the knot of the slain, Odin's binding of the mind between worlds."),
+G("webofwyrd","Web of Wyrd","rune","Norse","Nine staves woven into a matrix — the loom of fate, every line a thread of past, present and becoming."),
+/* EGYPTIAN */
+U("Ankh","egy","Old Kingdom","☥","u-sym","The key of life — the union of male and female principles, breath and eternity held in a loop."),
+G("eyehorus","Eye of Horus · Wedjat","egy","Old Kingdom","The restored eye — healing, protection, royal power; its parts encode the fractions of perception."),
+U("Eye of Ra · 𓁹","egy","Old Kingdom","𓁹","u-hiero","The solar eye — the burning, protective, feminine fury of the sun-god."),
+U("Djed · 𓊽","egy","Old Kingdom","𓊽","u-hiero","The backbone of Osiris — stability, endurance, the pillar that raises the world upright."),
+U("Was · 𓌀","egy","Old Kingdom","𓌀","u-hiero","The was-sceptre — dominion, the power of the gods to uphold order."),
+U("Scarab · 𓆣","egy","Old Kingdom","𓆣","u-hiero","Khepri's beetle — becoming, the self-renewing sun rolled up each dawn from nothing."),
+U("Feather of Maat · 𓆄","egy","Old Kingdom","𓆄","u-hiero","The ostrich feather against which the heart is weighed — truth, balance, cosmic order."),
+U("Nefer · 𓄤","egy","Old Kingdom","𓄤","u-hiero","Beauty, goodness, perfection — the heart-and-windpipe sign of all that is well-made."),
+U("Sun · 𓇳","egy","Old Kingdom","𓇳","u-hiero","Ra — the disc, the source, the daily death and resurrection of light."),
+G("tyet","Tyet · Knot of Isis","egy","Old Kingdom","The blood-knot of Isis — protection of the goddess, the girdle that guards the living and the dead."),
+G("akhet","Akhet · Horizon","egy","Old Kingdom","The sun between two peaks — the horizon of becoming, the gate of dawn and the afterlife."),
+G("sa","Sa · Protection","egy","Old Kingdom","The rolled herdsman's shelter — the hieroglyph for magical protection itself."),
+/* HERMETIC & UNIVERSAL */
+G("monas","Monas Hieroglyphica","herm","1564 · Dee","One composite character — moon, sun, cross and Aries stacked — Dee's claim to encode the unity of the cosmos."),
+G("rosecross","Rose Cross","herm","Rosicrucian","The rose blooming at the heart of the cross — matter and spirit, sacrifice and unfolding consciousness."),
+G("unicursalhex","Unicursal Hexagram","herm","Thelema","The six-pointed star drawn in one stroke — the macrocosm traced without lifting the pen, the rose at centre."),
+G("eyeprov","Eye of Providence","herm","Renaissance","The all-seeing eye in the radiant triangle — divine omniscience watching over the manifest world."),
+G("triquetra","Triquetra","herm","Celtic","Three interlocked vesicas — the trinity, the three realms, the eternal woven without beginning."),
+G("triskele","Triskelion","herm","antiquity","Three spiralling legs — motion, progress, the triple turning of life, death and rebirth."),
+G("triplemoon","Triple Moon","herm","modern","Waxing, full and waning — Maiden, Mother and Crone, the threefold goddess and the lunar cycle."),
+G("hecate","Hecate's Wheel · Strophalos","herm","Greek","The triple labyrinth of the crossroads-goddess — her three faces guarding the ways between worlds."),
+G("hamsa","Hamsa","herm","Near East","The protective hand with the eye in its palm — warding the evil eye, the open hand of blessing."),
+U("Yin-Yang","herm","Taoist","☯","u-sym","The Taijitu — the dynamic balance of complements, each carrying the seed of the other."),
+U("Pentacle","herm","modern","⛤","u-sym2","The encircled pentagram — spirit crowning the four elements, bound in the wheel of protection."),
+U("Caduceus","herm","Greek","☤","u-sym","Twin serpents on the winged staff of Hermes — exchange, the reconciliation of opposites."),
+U("Chi-Rho","herm","late antiquity","☧","u-sym","The first letters of Christos — Constantine's labarum, the conquering monogram."),
+/* CHAOS & MODERN */
+G("chaosstar","Chaos Star","chaos","1970s","Eight arrows radiating in every direction — the Symbol of Chaos, all possibilities, belief as a tool."),
+G("chaossphere","Chaosphere","chaos","modern","The chaos star wrapped onto a sphere — a three-dimensional focus for the magician's intent."),
+/* I CHING & TAOIST */
+U("Qián · ☰","ich","Zhou","☰","u-sym","Heaven — the Creative, pure yang, the originating force."),
+U("Duì · ☱","ich","Zhou","☱","u-sym","Lake — the Joyous, openness, pleasure, the still water."),
+U("Lí · ☲","ich","Zhou","☲","u-sym","Fire — the Clinging, clarity, that which depends and illuminates."),
+U("Zhèn · ☳","ich","Zhou","☳","u-sym","Thunder — the Arousing, shock, the sudden movement that wakes."),
+U("Xùn · ☴","ich","Zhou","☴","u-sym","Wind / Wood — the Gentle, penetration, persistent quiet influence."),
+U("Kǎn · ☵","ich","Zhou","☵","u-sym","Water — the Abysmal, danger, the flowing depth one must move through."),
+U("Gèn · ☶","ich","Zhou","☶","u-sym","Mountain — Keeping Still, stillness, the limit, meditation."),
+U("Kūn · ☷","ich","Zhou","☷","u-sym","Earth — the Receptive, pure yin, the yielding that sustains."),
+U("Hexagram 1 · ䷀","ich","Zhou","䷀","u-sym2","Qián, the Creative doubled — heaven upon heaven, pure initiating power."),
+U("Hexagram 2 · ䷁","ich","Zhou","䷁","u-sym2","Kūn, the Receptive doubled — earth upon earth, total devoted yielding."),
+/* ADINKRA */
+G("gyenyame","Gye Nyame","adk","Akan","'Except for God' — the supremacy and omnipotence of the divine; the most beloved Adinkra symbol."),
+G("sankofa","Sankofa","adk","Akan","'Go back and fetch it' — the wisdom of learning from the past to build the future."),
+G("adinkrahene","Adinkrahene","adk","Akan","Concentric circles — greatness, charisma, leadership; the chief of all Adinkra symbols."),
+G("dwennimmen","Dwennimmen","adk","Akan","Ram's horns — strength tempered by humility; even the strong submit when they must."),
+G("akoma","Akoma","adk","Akan","The heart — patience, tolerance, endurance; 'take heart,' the long-suffering of love."),
+G("eban","Eban","adk","Akan","The fence — security, safety, the love whose boundary protects the home."),
+G("nkyinkyim","Nkyinkyim","adk","Akan","The twisting — dynamism, adaptability, the winding initiative of a life well-navigated."),
+/* VODOU VEVE */
+G("damballa","Damballa Wedo","vod","Vodou","The great serpent-lwa — two snakes flanking the world-pillar; creation, purity, the cosmic life-force."),
+G("legba","Papa Legba","vod","Vodou","Keeper of the crossroads — the gate between humanity and the lwa; nothing passes without him first."),
+G("erzulie","Erzulie Freda","vod","Vodou","The lwa of love and beauty — the ornate heart, luxury, the sweetness and sorrow of desire."),
+G("baronsamedi","Baron Samedi","vod","Vodou","Master of the dead and the cemetery — the cross of the Gede, guardian of the threshold of death.")
+];
+
+/* register generated seals */
+DATA.forEach(d=>{
+  if(d.id&&d.id.indexOf("_seal_")===0){
+    const parts=d.id.split("_"), suff=parts[parts.length-1].replace(/[0-9]/g,"");
+    const nm=d.n.split("·")[0].trim();
+    const style=suff==="ang"?"ang":suff==="olym"?"olym":"goe";
+    D[d.id]=(svg)=>seedSeal(svg,nm,style);
+  }
+});
+
+/* ───────── render ───────── */
+const grid=document.getElementById("grid");
+function makeGlyph(d){
+  if(d.d){const svg=S("svg",{viewBox:"0 0 100 100",role:"img","aria-label":d.n});svg.style.color="var("+T[d.t][1]+")";(D[d.id]||(()=>{}))(svg);return svg;}
+  const span=document.createElement("span");span.className="uni "+d.f;span.textContent=d.g;span.style.color="var("+T[d.t][1]+")";return span;
+}
+DATA.forEach((d,i)=>{
+  const tile=document.createElement("button");tile.className="tile";tile.dataset.i=i;
+  tile.dataset.search=(d.n+" "+T[d.t][0]+" "+d.m).toLowerCase();tile.dataset.t=d.t;
+  const gw=document.createElement("div");gw.className="gw";
+  const corner=document.createElement("span");corner.className="corner";corner.style.color="var("+T[d.t][1]+")";gw.appendChild(corner);
+  gw.appendChild(makeGlyph(d));
+  const nm=document.createElement("div");nm.className="nm";nm.textContent=d.n.split(" · ")[0].split(" (")[0];
+  tile.appendChild(gw);tile.appendChild(nm);
+  tile.addEventListener("mouseenter",()=>select(i));
+  tile.addEventListener("click",()=>select(i));
+  tile.addEventListener("focus",()=>select(i));
+  grid.appendChild(tile);
+});
+
+/* inspector */
+function select(i){
+  const d=DATA[i];if(!d)return;
+  document.querySelectorAll(".tile.sel").forEach(t=>t.classList.remove("sel"));
+  const tile=grid.children[i];if(tile)tile.classList.add("sel");
+  const gw=document.getElementById("insp-glyph");gw.innerHTML="";
+  if(d.d){const svg=S("svg",{viewBox:"0 0 100 100"});svg.style.color="var("+T[d.t][1]+")";(D[d.id]||(()=>{}))(svg);gw.appendChild(svg);}
+  else{const sp=document.createElement("span");sp.className="uni "+d.f;sp.textContent=d.g;sp.style.color="var("+T[d.t][1]+")";gw.appendChild(sp);}
+  document.getElementById("insp-name").textContent=d.n;
+  const tr=document.getElementById("insp-trad");tr.textContent=T[d.t][0];tr.style.color="var("+T[d.t][1]+")";tr.style.borderColor="var("+T[d.t][1]+")";
+  document.getElementById("insp-era").textContent=d.e;
+  document.getElementById("insp-mean").textContent=d.m;
+  if(typeof wireSelect==="function")wireSelect(d);
+}
+
+/* filter */
+const chips=document.getElementById("chips"), active=new Set(), searchEl=document.getElementById("search");
+function applyFilter(){
+  const q=searchEl.value.trim().toLowerCase();let shown=0;
+  [...grid.children].forEach(t=>{
+    const okT=active.size===0||active.has(t.dataset.t);
+    const okQ=!q||t.dataset.search.indexOf(q)>=0;
+    const vis=okT&&okQ;t.classList.toggle("hidden",!vis);if(vis)shown++;
+  });
+  document.getElementById("count").textContent=shown+" of "+DATA.length+" marks"+(active.size?" · "+[...active].map(k=>T[k][0]).join(" + "):"");
+}
+Object.keys(T).forEach(key=>{
+  const b=document.createElement("button");b.className="chip";b.setAttribute("aria-pressed","false");
+  b.innerHTML='<span class="d" style="background:var('+T[key][1]+')"></span>'+T[key][0];
+  b.addEventListener("click",()=>{
+    if(active.has(key)){active.delete(key);b.setAttribute("aria-pressed","false");}
+    else{active.add(key);b.setAttribute("aria-pressed","true");b.style.background="var("+T[key][1]+")";}
+    if(!active.has(key))b.style.background="";
+    applyFilter();
+  });
+  chips.appendChild(b);
+});
+searchEl.addEventListener("input",applyFilter);
+
+/* stats + default */
+document.getElementById("stat").innerHTML=
+  '<span><b>'+DATA.length+'</b> marks</span><span><b>'+Object.keys(T).length+'</b> traditions</span><span>generated · rendered · indexed</span>';
+let di=DATA.findIndex(d=>d.id==="metatron");select(di<0?0:di);
+applyFilter();
+</script>
+<script>
+/* ===== MK·137 · live kamea engine + codex wiring ===== */
+(function(){
+ const NS="http://www.w3.org/2000/svg";
+ const $=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+ const KAM={
+  saturn:{n:3,g:[[4,9,2],[3,5,7],[8,1,6]]},
+  jupiter:{n:4,g:[[16,3,2,13],[5,10,11,8],[9,6,7,12],[4,15,14,1]]},
+  mars:{n:5,g:[[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]]},
+  sol:{n:6,g:[[6,32,3,34,35,1],[7,11,27,28,8,30],[19,14,16,15,23,24],[18,20,22,21,17,13],[25,29,10,9,26,12],[36,5,33,4,2,31]]},
+  venus:{n:7,g:[[22,47,16,41,10,35,4],[5,23,48,17,42,11,29],[30,6,24,49,18,36,12],[13,31,7,25,43,19,37],[38,14,32,1,26,44,20],[21,39,8,33,2,27,45],[46,15,40,9,34,3,28]]},
+  mercury:{n:8,g:[[8,58,59,5,4,62,63,1],[49,15,14,52,53,11,10,56],[41,23,22,44,45,19,18,48],[32,34,35,29,28,38,39,25],[40,26,27,37,36,30,31,33],[17,47,46,20,21,43,42,24],[9,55,54,12,13,51,50,16],[64,2,3,61,60,6,7,57]]},
+  luna:{n:9,g:[[37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],[16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],[67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]}
+ };
+ const PLANETS=["saturn","jupiter","mars","sol","venus","mercury","luna"];
+ const NAEQ_O="ALWHSDOZKVGRCNYJUFQBMXITEP",NAEQ={};for(let i=0;i<26;i++)NAEQ[NAEQ_O[i]]=i+1;
+ function cipher(ch,m){const i=ch.charCodeAt(0)-65;if(i<0||i>25)return 0;
+   if(m==="PYTH")return(i%9)+1;if(m==="NAEQ")return NAEQ[ch];
+   if(i<9)return i+1;if(i<18)return(i-8)*10;return(i-17)*100;}
+ function dsum(v){let s=0;while(v>0){s+=v%10;v=(v/10)|0;}return s;}
+ function reduce(v,max){while(v>max)v=dsum(v);return v===0?max:v;}
+ function posMap(k){const m={};for(let r=0;r<k.n;r++)for(let c=0;c<k.n;c++)m[k.g[r][c]]=[r,c];return m;}
+ function cellXY(r,c,n){const M=26,sp=220-2*M,st=sp/n;return[M+st*(c+.5),M+st*(r+.5)];}
+ function straight(p){return p.map((q,i)=>(i?"L":"M")+q[0].toFixed(1)+" "+q[1].toFixed(1)).join(" ");}
+ function smooth(p,cl){if(p.length<3)return straight(p);
+   const A=cl?[p[p.length-1],...p,p[0],p[1]]:[p[0],...p,p[p.length-1]];let d="M"+p[0][0].toFixed(1)+" "+p[0][1].toFixed(1);
+   const n=cl?p.length:p.length-1;for(let i=0;i<n;i++){const a=A[i],b=A[i+1],c=A[i+2],e=A[i+3];
+     const c1=[b[0]+(c[0]-a[0])/6,b[1]+(c[1]-a[1])/6],c2=[c[0]-(e[0]-b[0])/6,c[1]-(e[1]-b[1])/6];
+     d+=" C"+c1[0].toFixed(1)+" "+c1[1].toFixed(1)+" "+c2[0].toFixed(1)+" "+c2[1].toFixed(1)+" "+c[0].toFixed(1)+" "+c[1].toFixed(1);}
+   if(cl)d+="Z";return d;}
+ const ST={name:"ZAZEL",cipher:"HEB",kamea:"saturn",trace:"AGRIPPA",grid:true};
+ function compute(){const k=KAM[ST.kamea],pm=posMap(k),n=k.n;
+   const all=(ST.name.toUpperCase().replace(/[^A-Z]/g,"")).split("").filter(Boolean);
+   const seq=ST.trace==="SPARE"?all.filter((x,i)=>all.indexOf(x)===i):all;
+   const steps=seq.map(ch=>{const v=cipher(ch,ST.cipher),cell=reduce(v,n*n),p=pm[cell];return{ch,v,cell,r:p[0],c:p[1]};});
+   return{k,n,steps,all,seq};}
+ function setPressed(id,val){const h=document.getElementById(id);if(h)[...h.children].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===val)));}
+ function seg(id,labels,key,vals){const h=document.getElementById(id);labels.forEach((lab,i)=>{const v=vals?vals[i]:lab;
+   const b=document.createElement("button");b.textContent=lab;b.dataset.v=v;b.setAttribute("aria-pressed",String(v===ST[key]));
+   b.addEventListener("click",()=>{ST[key]=v;[...h.children].forEach(x=>x.setAttribute("aria-pressed",String(x===b)));render();});h.appendChild(b);});}
+ function render(){const svg=document.getElementById("mk-sigil");if(!svg)return;
+   const C=compute(),n=C.n;while(svg.firstChild)svg.removeChild(svg.firstChild);
+   if(ST.grid){const M=26,sp=220-2*M,st=sp/n,g=$("g",{opacity:.5});
+     for(let i=0;i<=n;i++){g.appendChild($("line",{x1:M+st*i,y1:M,x2:M+st*i,y2:M+sp,stroke:"var(--line-2)","stroke-width":.5}));g.appendChild($("line",{x1:M,y1:M+st*i,x2:M+sp,y2:M+st*i,stroke:"var(--line-2)","stroke-width":.5}));}
+     if(n<=6){const fs=n<=4?8:6.5;for(let r=0;r<n;r++)for(let c=0;c<n;c++){const xy=cellXY(r,c,n);const t=$("text",{x:xy[0],y:xy[1]+fs*.34,"text-anchor":"middle","font-size":fs,fill:"var(--bone-faint)","font-family":"var(--mono)"});t.textContent=C.k.g[r][c];g.appendChild(t);}}
+     svg.appendChild(g);}
+   const pts=C.steps.map(s=>cellXY(s.r,s.c,n)),col="var(--ang)";
+   if(pts.length>=1){let d,cl=false,caps=false;
+     if(ST.trace==="LINEA")d=straight(pts);
+     else if(ST.trace==="CURVA")d=smooth(pts,false);
+     else if(ST.trace==="ROSETTA"){d=smooth(pts,true);cl=true;caps=true;}
+     else if(ST.trace==="AGRIPPA"){d=straight(pts);caps=true;}
+     else d=smooth(pts,false);
+     if(pts.length>1){const path=$("path",{d,fill:cl?"rgba(138,127,240,.07)":"none",stroke:col,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round",filter:"drop-shadow(0 0 4px rgba(138,127,240,.55))"});
+       const len=pts.length*60;path.setAttribute("stroke-dasharray",len);path.setAttribute("stroke-dashoffset",len);svg.appendChild(path);
+       if(!matchMedia("(prefers-reduced-motion:reduce)").matches)path.animate([{strokeDashoffset:len},{strokeDashoffset:0}],{duration:600,easing:"cubic-bezier(.4,0,.1,1)",fill:"forwards"});else path.setAttribute("stroke-dashoffset",0);}
+     if(ST.trace==="SPARE")pts.forEach(p=>svg.appendChild($("circle",{cx:p[0],cy:p[1],r:2.6,fill:col})));
+     else pts.forEach(p=>svg.appendChild($("circle",{cx:p[0],cy:p[1],r:1.5,fill:col,opacity:.6})));
+     if(caps){const a=pts[0],z=pts[pts.length-1];svg.appendChild($("circle",{cx:a[0],cy:a[1],r:5,fill:"none",stroke:col,"stroke-width":2}));
+       if(pts.length>1){const pen=pts[pts.length-2],ang=Math.atan2(z[1]-pen[1],z[0]-pen[0])+Math.PI/2,bl=7;svg.appendChild($("line",{x1:z[0]+Math.cos(ang)*bl,y1:z[1]+Math.sin(ang)*bl,x2:z[0]-Math.cos(ang)*bl,y2:z[1]-Math.sin(ang)*bl,stroke:col,"stroke-width":2,"stroke-linecap":"round"}));}}}
+   const vS=C.steps.map(s=>s.ch+'<span style="opacity:.5">=</span><span class="a">'+s.v+'</span>').join("  ");
+   const cS=C.steps.map(s=>s.v+'<span style="opacity:.4">→</span><span class="w">'+s.cell+'</span>').join("  ");
+   const mc=n*(n*n+1)/2;
+   document.getElementById("mk-tape").innerHTML=
+     '<span class="k">input</span>'+(C.all.join("")||"—")+
+     '<span class="k">cipher · '+ST.cipher+'</span>'+(vS||"—")+
+     '<span class="k">reduce → cell · Σ='+mc+'</span>'+(cS||"—")+
+     '<span class="k">trace · <span class="em">'+ST.trace+'</span></span>'+(ST.trace==="SPARE"?"reduced — "+(C.all.length-C.seq.length)+" dup(s) stripped → "+C.seq.join(""):ST.trace.toLowerCase()+" · "+C.steps.length+" nodes");
+   document.getElementById("mk-sub").textContent=ST.kamea+" "+n+"×"+n+" · Σ"+mc+" · "+ST.trace.toLowerCase();}
+ function serial(){const c=document.getElementById("mk-sigil").cloneNode(true);c.setAttribute("xmlns",NS);c.setAttribute("width","1024");c.setAttribute("height","1024");const bg=$("rect",{x:0,y:0,width:220,height:220,fill:"#060a0f"});c.insertBefore(bg,c.firstChild);return new XMLSerializer().serializeToString(c);}
+ function fname(ext){return "sigil_"+(ST.name.toUpperCase().replace(/[^A-Z]/g,"")||"mark")+"_"+ST.kamea+"_"+ST.trace+"."+ext;}
+ function dl(b,n){const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+ function exSVG(){dl(new Blob([serial()],{type:"image/svg+xml"}),fname("svg"));}
+ function exPNG(){const SZ=2048,svg=serial(),img=new Image(),url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));img.onload=()=>{const cv=document.createElement("canvas");cv.width=SZ;cv.height=SZ;const x=cv.getContext("2d");x.fillStyle="#060a0f";x.fillRect(0,0,SZ,SZ);x.drawImage(img,0,0,SZ,SZ);URL.revokeObjectURL(url);cv.toBlob(b=>dl(b,fname("png")),"image/png");};img.src=url;}
+ function parsePlanet(name){const s=name.toLowerCase();
+   if(/saturn/.test(s))return"saturn";if(/jupiter/.test(s))return"jupiter";if(/mars/.test(s))return"mars";
+   if(/venus/.test(s))return"venus";if(/mercury/.test(s))return"mercury";
+   if(/\b(luna|moon)\b/.test(s))return"luna";if(/\b(sol|sun)\b/.test(s))return"sol";return null;}
+ window.wireSelect=function(d){if(!d)return;const planet=d.t==="ang"?parsePlanet(d.n):null;
+   const hint=document.getElementById("mk-hint");
+   if(!planet){if(hint)hint.textContent="← select a Spirit, Intelligence, Archangel or Olympic seal to auto-derive — or type any name above.";return;}
+   ST.name=(d.n.split(" · ")[0]||d.n).trim().toUpperCase();ST.kamea=planet;ST.trace="AGRIPPA";
+   const ni=document.getElementById("mk-name");if(ni)ni.value=ST.name;
+   setPressed("mk-kamea",ST.kamea);setPressed("mk-trace",ST.trace);
+   if(hint)hint.textContent="deriving "+ST.name+" by walking its name across the "+planet+" kamea (Agrippa's method).";
+   render();};
+ function build(){const host=document.querySelector(".inspector");if(!host)return;
+   const sec=document.createElement("section");sec.className="mk-engine";
+   sec.innerHTML=
+    '<div class="mk-bar"><span class="t">Kamea Walk · MK·137</span><span class="sub" id="mk-sub">—</span></div>'+
+    '<div class="mk-body">'+
+      '<div class="mk-pane"><div class="mk-view"><svg id="mk-sigil" viewBox="0 0 220 220" role="img" aria-label="Derived sigil"></svg></div>'+
+        '<div class="mk-ex"><button id="mk-svg">↓ SVG</button><button id="mk-png">↓ 2K PNG</button></div></div>'+
+      '<div class="mk-pane">'+
+        '<label class="mk-lab" for="mk-name">name / word</label>'+
+        '<input id="mk-name" class="mk-in" type="text" spellcheck="false" autocomplete="off" maxlength="24">'+
+        '<div style="height:10px"></div>'+
+        '<label class="mk-lab">cipher · letter → number</label><div class="mk-seg" id="mk-cipher"></div>'+
+        '<label class="mk-lab">kamea · the grid walked</label><div class="mk-seg" id="mk-kamea"></div>'+
+        '<label class="mk-lab">trace · how the line is drawn</label><div class="mk-seg" id="mk-trace"></div>'+
+        '<div class="mk-tape" id="mk-tape"></div>'+
+        '<div class="mk-hint" id="mk-hint">deriving '+ST.name+' across the '+ST.kamea+' kamea.</div>'+
+      '</div>'+
+    '</div>';
+   host.after(sec);
+   seg("mk-cipher",["NAEQ","PYTH","HEB"],"cipher");
+   seg("mk-kamea",PLANETS.map(p=>p.charAt(0).toUpperCase()+p.slice(1,3)),"kamea",PLANETS);
+   seg("mk-trace",["LINEA","CURVA","ROSETTA","AGRIPPA","SPARE"],"trace");
+   const ni=document.getElementById("mk-name");ni.value=ST.name;ni.addEventListener("input",()=>{ST.name=ni.value;document.getElementById("mk-hint").textContent="manual derivation.";render();});
+   document.getElementById("mk-svg").addEventListener("click",exSVG);
+   document.getElementById("mk-png").addEventListener("click",exPNG);
+   render();}
+ if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",build);else build();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Derivation Codex · MK·137</title>
+<style>
+/* ─────────────────────────────────────────────────────────────
+   DERIVATION CODEX — Studio 137
+   Every mark is output, not ornament. The palette grades how much
+   rule survives under the symbol. One typeface, held with discipline.
+   Spacing follows Fibonacci. No clock. No decoration that isn't load-bearing.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  /* surface */
+  --void:#07090c; --void-2:#0b1016; --panel:#0d141c; --ink:#090d12;
+  --line:#1a2531; --line-2:#243443;
+  /* type */
+  --bone:#c9d2da; --bone-dim:#75828f; --bone-faint:#48535f;
+  /* semantic — each class is a colour, colour is information */
+  --generative:#5ef2c4;   /* fully rule-born */
+  --walk:#56c9ff;         /* born from a path across a grid */
+  --partial:#f4b942;      /* part rule, part hand (constructive / approximate) */
+  --control:#d2603a;      /* no rule under it — the honest exception */
+  --coagula:#8a7ff0;      /* the live instrument */
+  --alpha:#e8c46a;        /* α ≈ 1/137 — golden accent, used once or twice */
+  /* fib spacing */
+  --s1:2px;--s2:3px;--s3:5px;--s5:8px;--s8:13px;--s13:21px;--s21:34px;--s34:55px;--s55:89px;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:
+    radial-gradient(1200px 700px at 78% -8%, rgba(94,242,196,.05), transparent 60%),
+    radial-gradient(900px 600px at 8% 108%, rgba(138,127,240,.06), transparent 60%),
+    var(--void);
+  color:var(--bone); font-family:var(--mono); line-height:1.5;
+  -webkit-font-smoothing:antialiased; letter-spacing:.01em;
+}
+::selection{background:rgba(94,242,196,.22)}
+a{color:var(--walk);text-decoration:none}
+.wrap{max-width:1120px;margin:0 auto;padding:var(--s21) var(--s13) var(--s55)}
+
+/* ── masthead ───────────────────────────────────────────── */
+.mast{border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.012),transparent);
+  padding:var(--s13) var(--s13) var(--s8);position:relative;overflow:hidden}
+.mast::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px);
+  mix-blend-mode:overlay;opacity:.5}
+.eyebrow{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--bone-dim)}
+.eyebrow .a{color:var(--alpha)}
+h1{font-size:clamp(26px,5.2vw,44px);line-height:1.02;margin:var(--s8) 0 var(--s5);
+  font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+h1 .thin{color:var(--bone-dim);font-weight:400}
+.thesis{max-width:62ch;color:var(--bone);font-size:14px}
+.thesis b{color:var(--generative);font-weight:600}
+.thesis .d{color:var(--control)}
+
+/* ── legend ─────────────────────────────────────────────── */
+.legend{display:flex;flex-wrap:wrap;gap:var(--s5) var(--s13);margin-top:var(--s13);
+  padding-top:var(--s8);border-top:1px solid var(--line)}
+.lk{display:flex;align-items:center;gap:var(--s5);font-size:11px;letter-spacing:.06em;color:var(--bone-dim)}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 8px currentColor}
+.lk b{color:var(--bone);font-weight:600;text-transform:uppercase;letter-spacing:.12em}
+
+/* ── section heads ──────────────────────────────────────── */
+.shead{display:flex;align-items:baseline;gap:var(--s8);margin:var(--s34) 0 var(--s13)}
+.shead .ix{font-size:11px;color:var(--bone-faint);letter-spacing:.3em}
+.shead h2{font-size:13px;text-transform:uppercase;letter-spacing:.34em;margin:0;color:var(--bone);font-weight:600}
+.shead .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line-2),transparent)}
+
+/* ── archive grid ───────────────────────────────────────── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(244px,1fr));gap:var(--s8)}
+.card{border:1px solid var(--line);background:var(--void-2);display:flex;flex-direction:column;
+  transition:border-color .25s, transform .25s}
+.card:hover{border-color:var(--line-2);transform:translateY(-2px)}
+.card .glyph{aspect-ratio:1;display:grid;place-items:center;position:relative;
+  background:radial-gradient(120% 120% at 50% 35%,rgba(255,255,255,.018),transparent 70%);
+  border-bottom:1px solid var(--line)}
+.card svg{width:84%;height:84%;overflow:visible}
+.card .meta{padding:var(--s5) var(--s8) var(--s8)}
+.card .ttl{display:flex;align-items:center;justify-content:space-between;gap:var(--s5)}
+.card .ttl h3{font-size:13px;margin:0;font-weight:600;letter-spacing:.04em}
+.card .era{font-size:10px;color:var(--bone-faint);letter-spacing:.1em}
+.badge{font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:2px 6px;border:1px solid;
+  border-radius:2px;white-space:nowrap}
+.card .note{font-size:11.5px;color:var(--bone-dim);margin:var(--s5) 0 0}
+.tape{margin-top:var(--s5);border-top:1px dashed var(--line-2);padding-top:var(--s5);
+  font-size:10.5px;color:var(--bone-faint);letter-spacing:.02em}
+.tape .row{display:flex;gap:var(--s5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tape .k{color:var(--bone-dim);flex:0 0 auto;width:58px}
+.tape .v{color:var(--bone);overflow:hidden;text-overflow:ellipsis}
+.tape .v.gen{color:var(--generative)} .tape .v.par{color:var(--partial)}
+.tape .v.ctl{color:var(--control)} .tape .v.wlk{color:var(--walk)}
+
+/* ── instrument ─────────────────────────────────────────── */
+.engine{margin-top:var(--s21);border:1px solid var(--line-2);background:
+   linear-gradient(180deg,rgba(138,127,240,.05),transparent 30%), var(--ink);position:relative;overflow:hidden}
+.engine::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(138,127,240,.05) 0 1px,transparent 1px 4px);opacity:.6}
+.engine .bar{display:flex;align-items:center;justify-content:space-between;gap:var(--s8);
+  padding:var(--s8) var(--s13);border-bottom:1px solid var(--line-2);position:relative;z-index:1}
+.engine .bar .t{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--coagula);font-weight:600}
+.engine .bar .sub{font-size:10px;color:var(--bone-faint);letter-spacing:.18em}
+.engine .body{display:grid;grid-template-columns:1.05fr .95fr;gap:1px;background:var(--line);position:relative;z-index:1}
+@media(max-width:760px){.engine .body{grid-template-columns:1fr}}
+.engine .pane{background:var(--ink);padding:var(--s13)}
+.viewport{aspect-ratio:1;background:
+   radial-gradient(130% 130% at 50% 42%,rgba(138,127,240,.08),transparent 68%), #060a0f;
+  border:1px solid var(--line-2);display:grid;place-items:center;position:relative}
+.viewport svg{width:90%;height:90%;overflow:visible}
+.vlabel{position:absolute;top:8px;left:10px;font-size:9px;letter-spacing:.22em;color:var(--bone-faint);text-transform:uppercase}
+.vlabel.r{left:auto;right:10px}
+
+/* controls */
+.ctl-grp{margin-bottom:var(--s8)}
+.ctl-lab{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--bone-dim);margin-bottom:var(--s3);display:block}
+input[type=text]{width:100%;background:#05080c;border:1px solid var(--line-2);color:var(--bone);
+  font-family:var(--mono);font-size:15px;letter-spacing:.16em;text-transform:uppercase;
+  padding:var(--s5) var(--s8);outline:none;border-radius:2px}
+input[type=text]:focus{border-color:var(--coagula);box-shadow:0 0 0 1px rgba(138,127,240,.4)}
+.seg{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.seg button{flex:1 1 auto;min-width:54px;background:#070b10;border:1px solid var(--line-2);color:var(--bone-dim);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;padding:var(--s3) var(--s5);cursor:pointer;
+  text-transform:uppercase;border-radius:2px;transition:all .15s}
+.seg button:hover{color:var(--bone);border-color:var(--bone-faint)}
+.seg button[aria-pressed=true]{color:var(--ink);font-weight:700;border-color:transparent}
+.seg.c1 button[aria-pressed=true]{background:var(--walk)}
+.seg.c2 button[aria-pressed=true]{background:var(--alpha)}
+.seg.c3 button[aria-pressed=true]{background:var(--coagula)}
+.seg button .nu{display:block;font-size:8px;letter-spacing:.06em;opacity:.7;margin-top:1px;text-transform:none}
+
+.exrow{display:flex;gap:var(--s5);margin-top:var(--s8)}
+.exrow button{flex:1;background:transparent;border:1px solid var(--line-2);color:var(--bone-dim);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  padding:var(--s5);cursor:pointer;border-radius:2px;transition:all .15s}
+.exrow button:hover{color:var(--generative);border-color:var(--generative)}
+.toggle{display:flex;align-items:center;gap:var(--s5);font-size:10px;color:var(--bone-dim);
+  letter-spacing:.14em;text-transform:uppercase;margin-top:var(--s8);cursor:pointer;user-select:none}
+.toggle .sw{width:26px;height:14px;border:1px solid var(--line-2);border-radius:8px;position:relative;background:#05080c}
+.toggle .sw i{position:absolute;top:1px;left:1px;width:10px;height:10px;border-radius:50%;background:var(--bone-faint);transition:.18s}
+.toggle[aria-pressed=true] .sw i{left:13px;background:var(--coagula)}
+
+/* live tape */
+.ltape{font-size:11px;line-height:1.7;color:var(--bone-dim);letter-spacing:.02em;
+  white-space:pre-wrap;word-break:break-word}
+.ltape .lk{color:var(--bone-faint);text-transform:uppercase;letter-spacing:.2em;font-size:9.5px;display:block;margin-top:var(--s5)}
+.ltape .em{color:var(--coagula)} .ltape .g{color:var(--generative)} .ltape .a{color:var(--alpha)}
+.ltape .w{color:var(--walk)} .ltape .x{color:var(--control)}
+
+/* footnote / integration */
+.foot{margin-top:var(--s21);border:1px solid var(--line);padding:var(--s13);background:var(--void-2)}
+.foot h4{font-size:11px;letter-spacing:.3em;text-transform:uppercase;margin:0 0 var(--s8);color:var(--bone)}
+.foot p{font-size:12.5px;color:var(--bone-dim);max-width:74ch;margin:0 0 var(--s5)}
+.foot code{color:var(--generative);font-size:12px}
+.foot .sig{color:var(--alpha)}
+.colophon{margin-top:var(--s13);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--bone-faint)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── MASTHEAD ──────────────────────────────────────── -->
+  <header class="mast">
+    <div class="eyebrow">Studio 137 · Transmission &nbsp;<span class="a">α ≈ 1/137</span>&nbsp; · Derivation over decoration</div>
+    <h1>Derivation Codex <span class="thin">/ generated marks</span></h1>
+    <p class="thesis">Every symbol below is <b>drawn by a rule, not pasted</b>. The canon is sorted by how much rule actually survives under the mark — from forms that are pure geometry, to ones that are half hand, to <span class="d">the one with nothing under it at all</span>, included on purpose as the control. Colour is the verdict.</p>
+    <div class="legend">
+      <span class="lk"><span class="dot" style="color:var(--generative)"></span><b>Generative</b> rule-born, exact</span>
+      <span class="lk"><span class="dot" style="color:var(--walk)"></span><b>Walk-derived</b> a path across a grid</span>
+      <span class="lk"><span class="dot" style="color:var(--partial)"></span><b>Partial</b> constructed / approximated</span>
+      <span class="lk"><span class="dot" style="color:var(--control)"></span><b>Control</b> emblem, no rule</span>
+    </div>
+  </header>
+
+  <!-- ── ARCHIVE ───────────────────────────────────────── -->
+  <div class="shead"><span class="ix">I</span><h2>The Archive</h2><span class="rule"></span></div>
+  <main id="grid" class="grid" aria-label="Generated symbol archive"></main>
+
+  <!-- ── INSTRUMENT ────────────────────────────────────── -->
+  <div class="shead"><span class="ix">II</span><h2>The Instrument · MK·137</h2><span class="rule"></span></div>
+  <section class="engine" aria-label="Live sigil instrument">
+    <div class="bar">
+      <span class="t">Kamea Walk</span>
+      <span class="sub">name → cipher → grid → trace</span>
+    </div>
+    <div class="body">
+      <!-- left: viewport -->
+      <div class="pane">
+        <div class="viewport">
+          <span class="vlabel" id="vlab-l">trace · agrippa</span>
+          <span class="vlabel r" id="vlab-r">jupiter 4×4</span>
+          <svg id="sigil" viewBox="0 0 220 220" role="img" aria-label="Derived sigil"></svg>
+        </div>
+        <div class="exrow">
+          <button id="dl-svg">↓ SVG</button>
+          <button id="dl-png">↓ 2K PNG</button>
+        </div>
+        <div class="toggle" id="tg-grid" role="button" aria-pressed="true" tabindex="0">
+          <span class="sw"><i></i></span> show kamea
+        </div>
+      </div>
+      <!-- right: controls + tape -->
+      <div class="pane">
+        <div class="ctl-grp">
+          <label class="ctl-lab" for="name">Name / word</label>
+          <input id="name" type="text" value="ABRAXAS" spellcheck="false" autocomplete="off" maxlength="22">
+        </div>
+        <div class="ctl-grp">
+          <span class="ctl-lab">Cipher · letter → number</span>
+          <div class="seg c1" id="seg-cipher" role="group" aria-label="Cipher">
+            <button data-v="NAEQ" aria-pressed="true">NAEQ<span class="nu">ALW order</span></button>
+            <button data-v="PYTH" aria-pressed="false">PYTH<span class="nu">1–9 reduce</span></button>
+            <button data-v="HEB" aria-pressed="false">HEB<span class="nu">place value</span></button>
+          </div>
+        </div>
+        <div class="ctl-grp">
+          <span class="ctl-lab">Kamea · the grid walked</span>
+          <div class="seg c2" id="seg-kamea" role="group" aria-label="Kamea">
+            <button data-v="SATURN" aria-pressed="false">Saturn<span class="nu">3×3 · Σ15</span></button>
+            <button data-v="JUPITER" aria-pressed="true">Jupiter<span class="nu">4×4 · Σ34</span></button>
+            <button data-v="MARS" aria-pressed="false">Mars<span class="nu">5×5 · Σ65</span></button>
+            <button data-v="LUNA" aria-pressed="false">Luna<span class="nu">9×9 · Σ369</span></button>
+          </div>
+        </div>
+        <div class="ctl-grp">
+          <span class="ctl-lab">Trace · how the line is drawn</span>
+          <div class="seg c3" id="seg-trace" role="group" aria-label="Trace mode">
+            <button data-v="LINEA" aria-pressed="false">Linea<span class="nu">straight</span></button>
+            <button data-v="CURVA" aria-pressed="false">Curva<span class="nu">smoothed</span></button>
+            <button data-v="ROSETTA" aria-pressed="false">Rosetta<span class="nu">closed</span></button>
+            <button data-v="AGRIPPA" aria-pressed="true">Agrippa<span class="nu">·new· capped</span></button>
+            <button data-v="SPARE" aria-pressed="false">Spare<span class="nu">·new· reduced</span></button>
+          </div>
+        </div>
+        <div class="ltape" id="ltape" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INTEGRATION NOTES ─────────────────────────────── -->
+  <div class="foot">
+    <h4>Wiring the two new modes into the real engine</h4>
+    <p>Both new traces are pure functions of the same contract your existing <span class="sig">LINEA / CURVA / ROSETTA</span> modes already satisfy — they take a cell sequence and return a path — so they splice in without touching the rest of MK·137.</p>
+    <p><code>AGRIPPA</code> — classical name-walk: each letter → cipher value → theosophic-reduce into <code>1…n²</code> → that number's cell → connect in letter order, open circle on the first node, terminal bar on the last. It's <span class="sig">ROSETTA without the return</span>, plus caps.</p>
+    <p><code>SPARE</code> — chaos reduction: strip repeated letters first (keep first occurrence), walk only the survivors, smooth the result into a knot. Deterministic by construction — same word, same glyph, forever — which is the whole point of a meaning-compiler. The only design decision Spare left open was the knot layout; here it's <span class="sig">the kamea cell of each survivor</span>, so even the chaos mode derives.</p>
+    <p>Cell-selection rule: <code>SPARE</code> dedupes the letter set; every other mode walks the full name. Line style is orthogonal: straight (LINEA) · smoothed (CURVA/SPARE/AGRIPPA) · smoothed-and-closed (ROSETTA). Drop the two cases into your trace switch and the gallery becomes a superset of the Televisor.</p>
+    <div class="colophon">No clock · Fibonacci spacing · one typeface · 8 marks, 7 with a rule</div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SVG primitives
+   ════════════════════════════════════════════════════════════ */
+const NS="http://www.w3.org/2000/svg";
+function el(t,a={}){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+const TAU=Math.PI*2, R3=Math.sqrt(3);
+function poly(pts){return pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" ");}
+
+/* Catmull-Rom → cubic bezier path (open or closed) */
+function smooth(pts,closed=false){
+  if(pts.length<3) return poly(pts);
+  const P=closed?[pts[pts.length-1],...pts,pts[0],pts[1]]:[pts[0],...pts,pts[pts.length-1]];
+  let d="M"+pts[0][0].toFixed(2)+" "+pts[0][1].toFixed(2);
+  const n=closed?pts.length:pts.length-1;
+  for(let i=0;i<n;i++){
+    const p0=P[i],p1=P[i+1],p2=P[i+2],p3=P[i+3];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6];
+    const c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=" C"+c1[0].toFixed(2)+" "+c1[1].toFixed(2)+" "+c2[0].toFixed(2)+" "+c2[1].toFixed(2)+" "+p2[0].toFixed(2)+" "+p2[1].toFixed(2);
+  }
+  if(closed)d+="Z";
+  return d;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ARCHIVE — each entry derives its own geometry and reports
+   a derivation tape. cls drives the colour verdict.
+   ════════════════════════════════════════════════════════════ */
+const C={gen:"var(--generative)",wlk:"var(--walk)",par:"var(--partial)",ctl:"var(--control)"};
+const cx=100,cy=100;
+
+const ARCHIVE=[
+{
+  id:"vesica", title:"Vesica Piscis", era:"pre-antiquity", cls:"gen", clsLabel:"Generative", col:C.gen,
+  note:"The first cut. Two circles, each through the other's centre — and √3 falls out uninvited.",
+  tape:[["rule","circle ∩ circle"],["sep","d = r"],["yield","lens = r·√3"]],
+  draw(svg){const r=46,d=r,x1=cx-d/2,x2=cx+d/2,h=r*R3/2;
+    svg.append(el("circle",{cx:x1,cy,r,fill:"none",stroke:C.gen,"stroke-width":1.4,opacity:.85}));
+    svg.append(el("circle",{cx:x2,cy,r,fill:"none",stroke:C.gen,"stroke-width":1.4,opacity:.85}));
+    const lens=`M${cx} ${cy-h} A ${r} ${r} 0 0 1 ${cx} ${cy+h} A ${r} ${r} 0 0 1 ${cx} ${cy-h} Z`;
+    svg.append(el("path",{d:lens,fill:"rgba(94,242,196,.10)",stroke:C.gen,"stroke-width":1.4}));
+    svg.append(el("circle",{cx:x1,cy,r:1.6,fill:C.gen}));svg.append(el("circle",{cx:x2,cy,r:1.6,fill:C.gen}));
+  }
+},
+{
+  id:"seed", title:"Seed of Life", era:"antiquity", cls:"gen", clsLabel:"Generative", col:C.gen,
+  note:"Six iterations of the first cut around a seventh. Hexagonal packing is the only thing it 'decides'.",
+  tape:[["rule","6 · vesica + 1"],["lattice","hex, 60°"],["count","7 circles"]],
+  draw(svg){const r=30;svg.append(el("circle",{cx,cy,r,fill:"none",stroke:C.gen,"stroke-width":1.3,opacity:.9}));
+    for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;
+      svg.append(el("circle",{cx:cx+Math.cos(a)*r,cy:cy+Math.sin(a)*r,r,fill:"none",stroke:C.gen,"stroke-width":1.3,opacity:.9}));}
+  }
+},
+{
+  id:"flower", title:"Flower of Life", era:"antiquity", cls:"gen", clsLabel:"Generative", col:C.gen,
+  note:"Keep iterating; clip to a circle. Everything 'sacred' about it is just the lattice continuing.",
+  tape:[["rule","triangular lattice"],["radius","≤ 2r"],["count","19 circles"]],
+  draw(svg){const r=20, lim=2*r*1.02, id="fclip"+Math.random().toString(36).slice(2);
+    const defs=el("defs");const cp=el("clipPath",{id});cp.append(el("circle",{cx,cy,r:2*r}));defs.append(cp);svg.append(defs);
+    const g=el("g",{"clip-path":`url(#${id})`});
+    const v1=[r,0],v2=[r/2,r*R3/2];
+    for(let i=-3;i<=3;i++)for(let j=-3;j<=3;j++){
+      const x=i*v1[0]+j*v2[0], y=i*v1[1]+j*v2[1];
+      if(Math.hypot(x,y)<=lim) g.append(el("circle",{cx:cx+x,cy:cy+y,r,fill:"none",stroke:C.gen,"stroke-width":1,opacity:.85}));
+    }
+    svg.append(g);
+    svg.append(el("circle",{cx,cy,r:2*r,fill:"none",stroke:C.gen,"stroke-width":1.4}));
+  }
+},
+{
+  id:"metatron", title:"Metatron's Cube", era:"medieval", cls:"gen", clsLabel:"Generative", col:C.gen,
+  note:"Take 13 centres, connect every pair. 78 edges, and all five Platonic solids show up unasked.",
+  tape:[["rule","K₁₃ on Fruit nodes"],["nodes","13"],["edges","78"]],
+  draw(svg){const s=26;const nodes=[[cx,cy]];
+    for(let ring=1;ring<=2;ring++)for(let i=0;i<6;i++){const a=-Math.PI/2+i*TAU/6;nodes.push([cx+Math.cos(a)*s*ring,cy+Math.sin(a)*s*ring]);}
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)
+      svg.append(el("line",{x1:nodes[i][0],y1:nodes[i][1],x2:nodes[j][0],y2:nodes[j][1],stroke:C.gen,"stroke-width":.5,opacity:.5}));
+    nodes.forEach(n=>{svg.append(el("circle",{cx:n[0],cy:n[1],r:s/2,fill:"none",stroke:C.gen,"stroke-width":.9,opacity:.55}));
+      svg.append(el("circle",{cx:n[0],cy:n[1],r:1.6,fill:C.gen}));});
+  }
+},
+{
+  id:"sriyantra", title:"Sri Yantra", era:"≥ 1st millennium", cls:"par", clsLabel:"Approximate", col:C.par,
+  note:"Nine interlocking triangles — a standing wave. The exact figure has no closed form; this is a tuned approximation, and saying so is the honest part.",
+  tape:[["rule","9 △ interlock → 43 △"],["status","approx · no solve"],["centre","bindu"]],
+  draw(svg){
+    // tuned approximation: 4 upward + 5 downward, shared axis. Not the exact concurrency solve.
+    const up=[[58,168,52],[68,150,40],[80,130,30],[92,116,20]];      // [apexY, baseY, halfW]
+    const dn=[[176,66,54],[158,78,42],[140,92,31],[124,104,21],[112,108,12]];
+    const tri=(apexY,baseY,hw,up)=>{const a=up?[cx,apexY]:[cx,apexY];
+      return up?[[cx,apexY],[cx-hw,baseY],[cx+hw,baseY]]:[[cx,apexY],[cx-hw,baseY],[cx+hw,baseY]];};
+    const drawT=(arr,upward)=>arr.forEach(([ay,by,hw])=>{
+      const p=tri(ay,by,hw,upward);
+      svg.append(el("path",{d:poly(p)+"Z",fill:"none",stroke:C.par,"stroke-width":.9,opacity:.85}));});
+    drawT(up,true); drawT(dn,false);
+    svg.append(el("circle",{cx,cy:118,r:3,fill:C.par}));
+    // two lotus rings (schematic) + bhupura gate
+    [70,82].forEach((rr,k)=>{for(let i=0;i<(k?16:8);i++){const a=i*TAU/(k?16:8);
+      svg.append(el("circle",{cx:cx+Math.cos(a)*rr,cy:118+Math.sin(a)*rr,r:1.1,fill:C.par,opacity:.5}));}});
+    svg.append(el("rect",{x:cx-92,y:26,width:184,height:184,fill:"none",stroke:C.par,"stroke-width":.8,opacity:.5}));
+  }
+},
+{
+  id:"monas", title:"Monas Hieroglyphica", era:"1564 · Dee", cls:"par", clsLabel:"Constructive", col:C.par,
+  note:"Dee's one-keystroke cosmos: moon, sun, cross, ram — stacked, with a whole book proving the stack. Built from primitives, not generated.",
+  tape:[["rule","moon∘sun∘cross∘aries"],["parts","4 glyphs"],["status","constructed"]],
+  draw(svg){const k=C.par;
+    // crescent (top)
+    svg.append(el("path",{d:"M76 56 A 24 24 0 0 0 124 56",fill:"none",stroke:k,"stroke-width":1.6}));
+    // sun circle + dot (mid)
+    svg.append(el("circle",{cx,cy:88,r:18,fill:"none",stroke:k,"stroke-width":1.6}));
+    svg.append(el("circle",{cx,cy:88,r:2.2,fill:k}));
+    // cross (below)
+    svg.append(el("line",{x1:cx,y1:106,x2:cx,y2:150,stroke:k,"stroke-width":1.6}));
+    svg.append(el("line",{x1:cx-14,y1:124,x2:cx+14,y2:124,stroke:k,"stroke-width":1.6}));
+    // aries horns (bottom)
+    svg.append(el("path",{d:"M86 168 A 10 10 0 0 1 100 150 A 10 10 0 0 1 114 168",fill:"none",stroke:k,"stroke-width":1.6}));
+  }
+},
+{
+  id:"sigillum", title:"Sigillum Dei Aemeth", era:"1582 · Dee", cls:"par", clsLabel:"Constructive", col:C.par,
+  note:"An addressing system for angels, drawn as a circuit board. The polygon lattice is exact; the divine-name ring is shown as ticks, not letters.",
+  tape:[["rule","{7} · {7/2} · {5/2}"],["names","ring · omitted"],["status","schematic"]],
+  draw(svg){const k=C.par, R=80;
+    svg.append(el("circle",{cx,cy,r:R,fill:"none",stroke:k,"stroke-width":1.3}));
+    svg.append(el("circle",{cx,cy,r:R-10,fill:"none",stroke:k,"stroke-width":.8,opacity:.7}));
+    for(let i=0;i<40;i++){const a=i*TAU/40;
+      svg.append(el("circle",{cx:cx+Math.cos(a)*(R-5),cy:cy+Math.sin(a)*(R-5),r:.9,fill:k,opacity:.55}));}
+    const ngon=(n,rad,step)=>{const p=[];for(let i=0;i<n;i++){const a=-Math.PI/2+(i*step%n)*TAU/n;p.push([cx+Math.cos(a)*rad,cy+Math.sin(a)*rad]);}return p;};
+    // heptagon {7}
+    svg.append(el("path",{d:poly(ngon(7,R-14,1))+"Z",fill:"none",stroke:k,"stroke-width":1,opacity:.85}));
+    // heptagram {7/2}
+    svg.append(el("path",{d:poly(ngon(7,R-14,2))+"Z",fill:"none",stroke:k,"stroke-width":1,opacity:.9}));
+    // inner pentagram {5/2}
+    svg.append(el("path",{d:poly(ngon(5,28,2))+"Z",fill:"none",stroke:k,"stroke-width":1,opacity:.9}));
+  }
+},
+{
+  id:"ouroboros", title:"Ouroboros", era:"antiquity", cls:"ctl", clsLabel:"Control", col:C.ctl,
+  note:"The honest exception. Pure emblem — there's no rule under it, only an image of a snake eating its tail. Included so 'derived' means something next to it.",
+  tape:[["rule","— none —"],["form","iconographic"],["status","decoration"]],
+  draw(svg){const k=C.ctl, r=58;
+    // body: near-full ring with a mouth gap
+    svg.append(el("path",{d:`M ${cx+Math.cos(-1.05)*r} ${cy+Math.sin(-1.05)*r} A ${r} ${r} 0 1 1 ${cx+Math.cos(-0.18)*r} ${cy+Math.sin(-0.18)*r}`,
+      fill:"none",stroke:k,"stroke-width":5.5,"stroke-linecap":"round",opacity:.85}));
+    // scales (marks along the body)
+    for(let i=0;i<22;i++){const a=-0.95+i*(TAU+0.7)/22;if(a> -0.25)continue;
+      svg.append(el("line",{x1:cx+Math.cos(a)*(r-4),y1:cy+Math.sin(a)*(r-4),x2:cx+Math.cos(a)*(r+4),y2:cy+Math.sin(a)*(r+4),stroke:k,"stroke-width":.6,opacity:.5}));}
+    // head wedge biting the tail
+    const ha=-0.18, hx=cx+Math.cos(ha)*r, hy=cy+Math.sin(ha)*r;
+    svg.append(el("path",{d:`M ${hx-7} ${hy-9} L ${hx+9} ${hy} L ${hx-7} ${hy+9} Z`,fill:k,opacity:.9}));
+    svg.append(el("circle",{cx:hx-2,cy:hy-3,r:1.3,fill:"#060a0f"}));
+  }
+}
+];
+
+/* render archive */
+const gridEl=document.getElementById("grid");
+ARCHIVE.forEach(s=>{
+  const card=document.createElement("article");card.className="card";
+  const gw=document.createElement("div");gw.className="glyph";
+  const svg=el("svg",{viewBox:"0 0 200 200",role:"img","aria-label":s.title});
+  s.draw(svg);gw.append(svg);
+  const meta=document.createElement("div");meta.className="meta";
+  meta.innerHTML=`<div class="ttl"><h3>${s.title}</h3>
+      <span class="badge" style="color:${s.col};border-color:${s.col}">${s.clsLabel}</span></div>
+    <div class="era">${s.era}</div>
+    <p class="note">${s.note}</p>
+    <div class="tape">${s.tape.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v ${s.cls}">${v}</span></div>`).join("")}</div>`;
+  card.append(gw,meta);gridEl.append(card);
+});
+
+/* ════════════════════════════════════════════════════════════
+   INSTRUMENT — MK·137 kamea walk
+   ════════════════════════════════════════════════════════════ */
+
+/* ciphers: A..Z → number */
+const PYTH = i => (i%9)+1;                              // 0=A → 1 ; J(9) → 1
+const NAEQ_ORDER="ALWHSDOZKVGRCNYJUFQBMXITEP";         // ALW / New Aeon English Qabalah
+const NAEQ = {}; for(let i=0;i<26;i++)NAEQ[NAEQ_ORDER[i]]=i+1;
+function cipherVal(ch,mode){
+  const i=ch.charCodeAt(0)-65; if(i<0||i>25)return null;
+  if(mode==="PYTH")return PYTH(i);
+  if(mode==="NAEQ")return NAEQ[ch];
+  // HEB — place value: A–I 1–9, J–R 10–90, S–Z 100–800
+  if(i<9)return i+1; if(i<18)return (i-8)*10; return (i-17)*100;
+}
+
+/* magic squares (kameas) */
+const KAMEA={
+  SATURN:{n:3,g:[[4,9,2],[3,5,7],[8,1,6]]},
+  JUPITER:{n:4,g:[[16,3,2,13],[5,10,11,8],[9,6,7,12],[4,15,14,1]]},
+  MARS:{n:5,g:[[11,24,7,20,3],[4,12,25,8,16],[17,5,13,21,9],[10,18,1,14,22],[23,6,19,2,15]]},
+  LUNA:{n:9,g:[
+    [37,78,29,70,21,62,13,54,5],[6,38,79,30,71,22,63,14,46],[47,7,39,80,31,72,23,55,15],
+    [16,48,8,40,81,32,64,24,56],[57,17,49,9,41,73,33,65,25],[26,58,18,50,1,42,74,34,66],
+    [67,27,59,10,51,2,43,75,35],[36,68,19,60,11,52,3,44,76],[77,28,69,20,61,12,53,4,45]]}
+};
+function posMap(k){const m={};for(let r=0;r<k.n;r++)for(let c=0;c<k.n;c++)m[k.g[r][c]]=[r,c];return m;}
+function digitSum(v){let s=0;while(v>0){s+=v%10;v=(v/10)|0;}return s;}
+function reduceTo(v,max){while(v>max)v=digitSum(v);return v===0?max:v;}  // theosophic reduction
+
+/* state */
+let S={name:"ABRAXAS",cipher:"NAEQ",kamea:"JUPITER",trace:"AGRIPPA",showGrid:true};
+
+function letters(str){return str.toUpperCase().replace(/[^A-Z]/g,"").split("");}
+function dedupe(arr){const seen=new Set();return arr.filter(x=>seen.has(x)?false:(seen.add(x),true));}
+
+function compute(){
+  const k=KAMEA[S.kamea], pm=posMap(k), n=k.n;
+  const all=letters(S.name);
+  const used = S.trace==="SPARE" ? dedupe(all) : all;
+  const steps = used.map(ch=>{
+    const v=cipherVal(ch,S.cipher);
+    const cell=reduceTo(v,n*n);
+    const [r,c]=pm[cell];
+    return {ch,v,cell,r,c};
+  });
+  return {k,n,all,used,steps,removed:all.length-used.length};
+}
+
+/* viewport geometry: kamea cells mapped into 220-box with margin */
+function cellXY(r,c,n){const M=26,span=220-2*M,step=span/n;return [M+step*(c+.5), M+step*(r+.5)];}
+
+const sigilSVG=document.getElementById("sigil");
+function render(){
+  const D=compute(), n=D.n;
+  while(sigilSVG.firstChild)sigilSVG.removeChild(sigilSVG.firstChild);
+
+  // kamea grid (the derivation made visible)
+  if(S.showGrid){
+    const M=26,span=220-2*M,step=span/n, g=el("g",{opacity:.5});
+    for(let i=0;i<=n;i++){
+      g.append(el("line",{x1:M+step*i,y1:M,x2:M+step*i,y2:M+span,stroke:"var(--line-2)","stroke-width":.5}));
+      g.append(el("line",{x1:M,y1:M+step*i,x2:M+span,y2:M+step*i,stroke:"var(--line-2)","stroke-width":.5}));
+    }
+    if(n<=5){const fs=n===3?9:n===4?7.5:6;
+      for(let r=0;r<n;r++)for(let c=0;c<n;c++){const[x,y]=cellXY(r,c,n);
+        const t=el("text",{x,y:y+fs*0.34,"text-anchor":"middle","font-size":fs,fill:"var(--bone-faint)","font-family":"var(--mono)"});
+        t.textContent=D.k.g[r][c];g.append(t);}}
+    sigilSVG.append(g);
+  }
+
+  // the walk
+  const pts=D.steps.map(s=>cellXY(s.r,s.c,n));
+  if(pts.length>=1){
+    const col="var(--coagula)";
+    let d, closed=false, smoothed=false, caps=false;
+    switch(S.trace){
+      case"LINEA": d=poly(pts); break;
+      case"CURVA": d=smooth(pts,false); smoothed=true; break;
+      case"ROSETTA": d=smooth(pts,true); closed=true; smoothed=true; caps=true; break;
+      case"AGRIPPA": d=poly(pts); caps=true; break;
+      case"SPARE": d=smooth(pts,false); smoothed=true; break;
+    }
+    if(pts.length>1){
+      const path=el("path",{d,fill:closed?"rgba(138,127,240,.07)":"none",stroke:col,
+        "stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round",
+        filter:"drop-shadow(0 0 4px rgba(138,127,240,.55))"});
+      // draw-on animation
+      const len = pts.length*60;
+      path.setAttribute("stroke-dasharray",len);path.setAttribute("stroke-dashoffset",len);
+      sigilSVG.append(path);
+      const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+      if(!reduce){path.animate([{strokeDashoffset:len},{strokeDashoffset:0}],{duration:650,easing:"cubic-bezier(.4,0,.1,1)",fill:"forwards"});}
+      else path.setAttribute("stroke-dashoffset",0);
+    }
+    // SPARE: mark the surviving nodes
+    if(S.trace==="SPARE")pts.forEach(p=>sigilSVG.append(el("circle",{cx:p[0],cy:p[1],r:2.6,fill:col})));
+    // caps: open circle on first node, bar on last
+    if(caps){
+      const a=pts[0], z=pts[pts.length-1];
+      sigilSVG.append(el("circle",{cx:a[0],cy:a[1],r:5,fill:"none",stroke:col,"stroke-width":2}));
+      if(pts.length>1){
+        const pen=pts[pts.length-2], ang=Math.atan2(z[1]-pen[1],z[0]-pen[0])+Math.PI/2, bl=7;
+        sigilSVG.append(el("line",{x1:z[0]+Math.cos(ang)*bl,y1:z[1]+Math.sin(ang)*bl,
+          x2:z[0]-Math.cos(ang)*bl,y2:z[1]-Math.sin(ang)*bl,stroke:col,"stroke-width":2,"stroke-linecap":"round"}));
+      }
+    }
+    // node ticks for non-spare walks (faint)
+    if(S.trace!=="SPARE")pts.forEach((p,i)=>sigilSVG.append(el("circle",{cx:p[0],cy:p[1],r:1.5,fill:col,opacity:.6})));
+  }
+
+  // labels
+  document.getElementById("vlab-l").textContent="trace · "+S.trace.toLowerCase();
+  document.getElementById("vlab-r").textContent=S.kamea.toLowerCase()+" "+n+"×"+n;
+  renderTape(D);
+}
+
+function renderTape(D){
+  const el2=document.getElementById("ltape");
+  const cleaned=D.all.join("");
+  const valStr=D.steps.map(s=>`${s.ch}<span style="opacity:.5">=</span><span class="a">${s.v}</span>`).join("  ");
+  const cellStr=D.steps.map(s=>`${s.v}<span style="opacity:.4">→</span><span class="w">${s.cell}</span>`).join("  ");
+  const modeNote = S.trace==="SPARE"
+      ? `<span class="g">reduced</span> — ${D.removed} dup${D.removed===1?"":"s"} stripped → ${D.used.join("")}`
+      : S.trace==="AGRIPPA" ? `<span class="g">capped walk</span> · ${D.steps.length} nodes`
+      : `${S.trace.toLowerCase()} · ${D.steps.length} nodes`;
+  el2.innerHTML =
+    `<span class="lk">input</span>${cleaned||"—"}` +
+    `<span class="lk">cipher · ${S.cipher}</span>${valStr||"—"}` +
+    `<span class="lk">reduce → cell · Σ=${magicConst(D.n)}</span>${cellStr||"—"}` +
+    `<span class="lk">trace · <span class="em">${S.trace}</span></span>${modeNote}`;
+}
+function magicConst(n){return n*(n*n+1)/2;}
+
+/* ── controls ─────────────────────────────────────────── */
+function seg(id,key){
+  const grp=document.getElementById(id);
+  grp.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    [...grp.querySelectorAll("button")].forEach(x=>x.setAttribute("aria-pressed",x===b));
+    S[key]=b.dataset.v;render();});
+}
+seg("seg-cipher","cipher");seg("seg-kamea","kamea");seg("seg-trace","trace");
+
+const nameIn=document.getElementById("name");
+nameIn.addEventListener("input",()=>{S.name=nameIn.value;render();});
+
+const tg=document.getElementById("tg-grid");
+function toggleGrid(){S.showGrid=!S.showGrid;tg.setAttribute("aria-pressed",S.showGrid);render();}
+tg.addEventListener("click",toggleGrid);
+tg.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();toggleGrid();}});
+
+/* ── export ───────────────────────────────────────────── */
+function serialize(){
+  const clone=sigilSVG.cloneNode(true);
+  clone.setAttribute("xmlns",NS);clone.setAttribute("width","1024");clone.setAttribute("height","1024");
+  const bg=el("rect",{x:0,y:0,width:220,height:220,fill:"#060a0f"});clone.insertBefore(bg,clone.firstChild);
+  return new XMLSerializer().serializeToString(clone);
+}
+function fname(ext){return `sigil_${S.name.toUpperCase().replace(/[^A-Z]/g,"")||"mark"}_${S.kamea}_${S.trace}.${ext}`;}
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+
+document.getElementById("dl-svg").addEventListener("click",()=>{
+  dl(new Blob([serialize()],{type:"image/svg+xml"}),fname("svg"));});
+
+document.getElementById("dl-png").addEventListener("click",()=>{
+  const SZ=2048, svg=serialize();
+  const img=new Image();
+  const url=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"}));
+  img.onload=()=>{
+    const cv=document.createElement("canvas");cv.width=SZ;cv.height=SZ;
+    const ctx=cv.getContext("2d");ctx.fillStyle="#060a0f";ctx.fillRect(0,0,SZ,SZ);
+    ctx.drawImage(img,0,0,SZ,SZ);URL.revokeObjectURL(url);
+    cv.toBlob(b=>dl(b,fname("png")),"image/png");
+  };
+  img.onerror=()=>URL.revokeObjectURL(url);
+  img.src=url;
+});
+
+render();
+</script>
+</body>
+</html>
